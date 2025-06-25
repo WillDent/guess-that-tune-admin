@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ToastContainer } from "@/components/ui/toast"
 import { Sidebar } from "@/components/layout/sidebar"
 import { OfflineIndicator } from "@/components/ui/offline-indicator"
+import { MigrationPrompt } from "@/components/migration/migration-prompt"
 
 export function LayoutClient({ children }: { children: React.ReactNode }) {
   const { toasts, dismiss } = useToast()
@@ -20,6 +21,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
       </div>
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
       <OfflineIndicator />
+      <MigrationPrompt />
     </>
   )
 }

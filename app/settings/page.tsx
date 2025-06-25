@@ -23,7 +23,8 @@ import {
   Key,
   Eye,
   EyeOff,
-  ArrowLeft
+  ArrowLeft,
+  Database
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { useProfile } from '@/hooks/use-profile'
@@ -476,6 +477,22 @@ export default function SettingsPage() {
                   )}
                 </Button>
               </div>
+            </Card>
+            
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Data Migration
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Migrate your locally stored data to your account
+              </p>
+              <Link href="/settings/migration">
+                <Button variant="outline">
+                  <Database className="h-4 w-4 mr-2" />
+                  Manage Migration
+                </Button>
+              </Link>
             </Card>
             
             <Card className="p-6">
