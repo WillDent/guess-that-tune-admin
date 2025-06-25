@@ -7,10 +7,14 @@ import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Save, Shuffle, Music, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import { useQuestionSets } from '@/hooks/use-question-sets'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ProtectedRoute } from '@/components/auth/protected-route'
 
 interface SelectedSong {
   id: string
@@ -23,10 +27,13 @@ interface SelectedSong {
 
 export default function NewQuestionSetPage() {
   const router = useRouter()
+  const { createQuestionSet } = useQuestionSets()
   const [setName, setSetName] = useState('')
+  const [description, setDescription] = useState('')
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium')
   const [selectedSongs, setSelectedSongs] = useState<SelectedSong[]>([])
   const [generating, setGenerating] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [preview, setPreview] = useState<any[]>([])
 
   // Load selected songs from sessionStorage
@@ -72,68 +79,90 @@ export default function NewQuestionSetPage() {
       return
     }
 
+    if (preview.length === 0) {
+      alert('Please generate questions before saving')
+      return
+    }
+
+    setSaving(true)
     try {
-      // For now, save to localStorage (in a real app, this would be saved to a database)
-      const existingQuestionSets = JSON.parse(localStorage.getItem('questionSets') || '[]')
-      
-      const newQuestionSet = {
-        id: Date.now().toString(),
-        name: setName,
-        questionCount: preview.length,
+      // Transform preview data to match Supabase schema
+      const questions = preview.map((q, index) => ({
+        correct_song_id: q.correctSong.id,
+        correct_song_name: q.correctSong.name,
+        correct_song_artist: q.correctSong.artist,
+        correct_song_album: q.correctSong.album || null,
+        correct_song_artwork_url: q.correctSong.artwork || null,
+        correct_song_preview_url: q.correctSong.previewUrl || null,
+        order_index: index,
+        detractors: q.detractors.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          artist: d.artist,
+          album: d.album || '',
+          artwork: d.artwork || '',
+          previewUrl: d.previewUrl || ''
+        }))
+      }))
+
+      const { error } = await createQuestionSet(
+        setName,
+        description || null,
         difficulty,
-        questions: preview,
-        createdAt: new Date().toISOString(),
-        playCount: 0
+        questions
+      )
+
+      if (error) {
+        throw error
       }
-      
-      existingQuestionSets.push(newQuestionSet)
-      localStorage.setItem('questionSets', JSON.stringify(existingQuestionSets))
       
       // Clear the selected songs from session storage
       sessionStorage.removeItem('selectedSongs')
-      
-      // Show success message
-      alert('Question set saved successfully!')
       
       // Redirect to questions page
       router.push('/questions')
     } catch (error) {
       console.error('Failed to save question set:', error)
       alert('Failed to save question set. Please try again.')
+    } finally {
+      setSaving(false)
     }
   }
 
   if (selectedSongs.length === 0) {
     return (
-      <div>
-        <Link href="/browse">
-          <Button variant="ghost" className="mb-6">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Browse
-          </Button>
-        </Link>
+      <ProtectedRoute>
+        <div>
+          <Link href="/browse">
+            <Button variant="ghost" className="mb-6">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Browse
+            </Button>
+          </Link>
 
-        <Card className="p-12">
-          <div className="text-center">
-            <AlertCircle className="h-16 w-16 mx-auto mb-4 text-yellow-500" />
-            <h2 className="text-xl font-semibold mb-2">No Songs Selected</h2>
-            <p className="text-gray-600 mb-6">
-              Please select songs from the music browser first
-            </p>
-            <Link href="/browse">
-              <Button>
-                <Music className="h-4 w-4 mr-2" />
-                Browse Music
-              </Button>
-            </Link>
-          </div>
-        </Card>
-      </div>
+          <Card className="p-12">
+            <div className="text-center">
+              <AlertCircle className="h-16 w-16 mx-auto mb-4 text-yellow-500" />
+              <h2 className="text-xl font-semibold mb-2">No Songs Selected</h2>
+              <p className="text-gray-600 mb-6">
+                Please select songs from the music browser first
+              </p>
+              <Link href="/browse">
+                <Button>
+                  <Music className="h-4 w-4 mr-2" />
+                  Browse Music
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </ProtectedRoute>
     )
   }
 
   return (
-    <div>
+    <ProtectedRoute>
+      <div>
       <div className="mb-8">
         <Link href="/browse">
           <Button variant="ghost" className="mb-4">
@@ -162,6 +191,18 @@ export default function NewQuestionSetPage() {
                   value={setName}
                   onChange={(e) => setSetName(e.target.value)}
                   placeholder="e.g. 80s Rock Classics"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Description (optional)
+                </label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Describe this question set..."
+                  rows={3}
                 />
               </div>
 
@@ -221,9 +262,18 @@ export default function NewQuestionSetPage() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-semibold">Preview</h2>
               {preview.length > 0 && (
-                <Button onClick={handleSave}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Question Set
+                <Button onClick={handleSave} disabled={saving}>
+                  {saving ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Question Set
+                    </>
+                  )}
                 </Button>
               )}
             </div>
@@ -282,5 +332,6 @@ export default function NewQuestionSetPage() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   )
 }

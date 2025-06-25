@@ -2,36 +2,62 @@
 // ABOUTME: Lists question sets with preview and management options
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Play, Trash2, Music } from 'lucide-react'
+import { Plus, Play, Trash2, Music, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { PreviewModal } from '@/components/questions/preview-modal'
-import type { QuestionSet } from '@/types'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useQuestionSets } from '@/hooks/use-question-sets'
+import { ProtectedRoute } from '@/components/auth/protected-route'
+import type { Question } from '@/types'
 
 export default function QuestionsPage() {
-  const [questionSets, setQuestionSets] = useState<QuestionSet[]>([])
-  const [previewSet, setPreviewSet] = useState<QuestionSet | null>(null)
+  const { questionSets, loading, error, deleteQuestionSet } = useQuestionSets()
+  const [previewSet, setPreviewSet] = useState<any>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Load question sets from localStorage
-    const savedQuestionSets = JSON.parse(localStorage.getItem('questionSets') || '[]')
-    setQuestionSets(savedQuestionSets)
-  }, [])
-
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this question set?')) {
-      const updatedSets = questionSets.filter((set) => set.id !== id)
-      setQuestionSets(updatedSets)
-      localStorage.setItem('questionSets', JSON.stringify(updatedSets))
+      setIsDeleting(id)
+      const { error } = await deleteQuestionSet(id)
+      if (error) {
+        console.error('Error deleting question set:', error)
+        alert('Failed to delete question set. Please try again.')
+      }
+      setIsDeleting(null)
     }
   }
 
-  const handlePreview = (set: QuestionSet) => {
-    setPreviewSet(set)
+  const handlePreview = (set: any) => {
+    // Transform Supabase data to match expected format
+    const transformedSet = {
+      id: set.id,
+      name: set.name,
+      description: set.description,
+      difficulty: set.difficulty,
+      questionCount: set.questions.length,
+      playCount: set.play_count || 0,
+      createdAt: set.created_at,
+      questions: set.questions
+        .sort((a: any, b: any) => a.order_index - b.order_index)
+        .map((q: any) => ({
+          correctSong: {
+            id: q.correct_song_id,
+            name: q.correct_song_name,
+            artist: q.correct_song_artist,
+            album: q.correct_song_album,
+            artwork: q.correct_song_artwork_url,
+            previewUrl: q.correct_song_preview_url
+          },
+          detractors: q.detractors as Question['detractors']
+        }))
+    }
+    setPreviewSet(transformedSet)
     setIsPreviewOpen(true)
   }
 
@@ -45,95 +71,115 @@ export default function QuestionsPage() {
   }
 
   return (
-    <div>
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Question Sets</h1>
-          <p className="mt-2 text-gray-600">Manage your question collections for games</p>
-        </div>
-        <Link href="/questions/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Set
-          </Button>
-        </Link>
-      </div>
-
-      {questionSets.length === 0 ? (
-        <Card className="p-12">
-          <div className="text-center">
-            <Music className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-            <h2 className="text-xl font-semibold mb-2">No Question Sets Yet</h2>
-            <p className="text-gray-600 mb-6">
-              Create your first question set by selecting songs from Apple Music
-            </p>
-            <Link href="/browse">
-              <Button>
-                <Music className="h-4 w-4 mr-2" />
-                Browse Music
-              </Button>
-            </Link>
+    <ProtectedRoute>
+      <div>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Question Sets</h1>
+            <p className="mt-2 text-gray-600">Manage your question collections for games</p>
           </div>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {questionSets.map((set) => (
-            <Card key={set.id} className="p-6 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg font-semibold">{set.name}</h3>
-                <Badge variant="outline" className={getDifficultyColor(set.difficulty)}>
-                  {set.difficulty}
-                </Badge>
-              </div>
-              
-              <div className="space-y-2 mb-4">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">{set.questionCount}</span> questions
-                </p>
-                <p className="text-sm text-gray-600">
-                  Played <span className="font-medium">{set.playCount}</span> times
-                </p>
-                <p className="text-sm text-gray-500">
-                  Created {new Date(set.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => handlePreview(set)}
-                >
-                  <Play className="h-4 w-4 mr-1" />
-                  Preview
-                </Button>
-                <Link href={`/questions/${set.id}/edit`}>
-                  <Button size="sm" variant="outline" className="flex-1">
-                    Edit
-                  </Button>
-                </Link>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="text-red-600"
-                  onClick={() => handleDelete(set.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </Card>
-          ))}
+          <Link href="/questions/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Create New Set
+            </Button>
+          </Link>
         </div>
-      )}
 
-      <PreviewModal
-        isOpen={isPreviewOpen}
-        onClose={() => {
-          setIsPreviewOpen(false)
-          setPreviewSet(null)
-        }}
-        questionSet={previewSet}
-      />
-    </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : error ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Failed to load question sets. Please try refreshing the page.
+            </AlertDescription>
+          </Alert>
+        ) : questionSets.length === 0 ? (
+          <Card className="p-12">
+            <div className="text-center">
+              <Music className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+              <h2 className="text-xl font-semibold mb-2">No Question Sets Yet</h2>
+              <p className="text-gray-600 mb-6">
+                Create your first question set by selecting songs from Apple Music
+              </p>
+              <Link href="/browse">
+                <Button>
+                  <Music className="h-4 w-4 mr-2" />
+                  Browse Music
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {questionSets.map((set) => (
+              <Card key={set.id} className="p-6 hover:shadow-lg transition-shadow">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-semibold">{set.name}</h3>
+                  <Badge variant="outline" className={getDifficultyColor(set.difficulty)}>
+                    {set.difficulty}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2 mb-4">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">{set.questions.length}</span> questions
+                  </p>
+                  {set.description && (
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {set.description}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-500">
+                    Created {new Date(set.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handlePreview(set)}
+                  >
+                    <Play className="h-4 w-4 mr-1" />
+                    Preview
+                  </Button>
+                  <Link href={`/questions/${set.id}/edit`}>
+                    <Button size="sm" variant="outline" className="flex-1">
+                      Edit
+                    </Button>
+                  </Link>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="text-red-600"
+                    onClick={() => handleDelete(set.id)}
+                    disabled={isDeleting === set.id}
+                  >
+                    {isDeleting === set.id ? (
+                      <LoadingSpinner size="sm" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        <PreviewModal
+          isOpen={isPreviewOpen}
+          onClose={() => {
+            setIsPreviewOpen(false)
+            setPreviewSet(null)
+          }}
+          questionSet={previewSet}
+        />
+      </div>
+    </ProtectedRoute>
   )
 }
