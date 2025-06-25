@@ -10,7 +10,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Save, Shuffle, Music, AlertCircle } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { ArrowLeft, Save, Shuffle, Music, AlertCircle, Globe, Lock, X } from 'lucide-react'
 import Link from 'next/link'
 import { useQuestionSets } from '@/hooks/use-question-sets'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -38,6 +40,9 @@ export default function NewQuestionSetPage() {
   const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [preview, setPreview] = useState<any[]>([])
+  const [isPublic, setIsPublic] = useState(false)
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState('')
 
   // Load selected songs from sessionStorage
   useEffect(() => {
@@ -47,6 +52,20 @@ export default function NewQuestionSetPage() {
       sessionStorage.removeItem('selectedSongs') // Clear after loading
     }
   }, [])
+
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault()
+      if (!tags.includes(tagInput.trim())) {
+        setTags([...tags, tagInput.trim()])
+        setTagInput('')
+      }
+    }
+  }
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove))
+  }
 
   const generatePreview = async () => {
     setGenerating(true)
@@ -113,7 +132,9 @@ export default function NewQuestionSetPage() {
         setName,
         description || null,
         difficulty,
-        questions
+        questions,
+        isPublic,
+        tags
       )
 
       if (error) {
@@ -139,10 +160,10 @@ export default function NewQuestionSetPage() {
     return (
       <ProtectedRoute>
         <div>
-          <Link href="/browse">
+          <Link href="/music">
             <Button variant="ghost" className="mb-6">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Browse
+              Back to Music Browser
             </Button>
           </Link>
 
@@ -153,7 +174,7 @@ export default function NewQuestionSetPage() {
               <p className="text-gray-600 mb-6">
                 Please select songs from the music browser first
               </p>
-              <Link href="/browse">
+              <Link href="/music">
                 <Button>
                   <Music className="h-4 w-4 mr-2" />
                   Browse Music
@@ -170,10 +191,10 @@ export default function NewQuestionSetPage() {
     <ProtectedRoute>
       <div>
       <div className="mb-8">
-        <Link href="/browse">
+        <Link href="/music">
           <Button variant="ghost" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Browse
+            Back to Music Browser
           </Button>
         </Link>
         <h1 className="text-3xl font-bold text-gray-900">Create Question Set</h1>
@@ -226,6 +247,59 @@ export default function NewQuestionSetPage() {
                     <SelectItem value="hard">Hard - Very similar songs</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="public-toggle">
+                    {isPublic ? (
+                      <span className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        Public Set
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Lock className="h-4 w-4" />
+                        Private Set
+                      </span>
+                    )}
+                  </Label>
+                  <Switch
+                    id="public-toggle"
+                    checked={isPublic}
+                    onCheckedChange={setIsPublic}
+                  />
+                </div>
+                <p className="text-xs text-gray-500">
+                  {isPublic ? 'Others can play and fork this set' : 'Only you can see this set'}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Tags
+                </label>
+                <Input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleAddTag}
+                  placeholder="Add tags (press Enter)"
+                />
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {tags.map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="outline"
+                        className="cursor-pointer"
+                        onClick={() => removeTag(tag)}
+                      >
+                        {tag}
+                        <X className="h-3 w-3 ml-1" />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="pt-4">

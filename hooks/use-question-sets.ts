@@ -58,7 +58,9 @@ export function useQuestionSets() {
     name: string,
     description: string | null,
     difficulty: 'easy' | 'medium' | 'hard',
-    questions: Omit<Question, 'id' | 'question_set_id' | 'created_at' | 'updated_at'>[]
+    questions: Omit<Question, 'id' | 'question_set_id' | 'created_at' | 'updated_at'>[],
+    isPublic: boolean = false,
+    tags: string[] = []
   ) => {
     try {
       setError(null)
@@ -71,7 +73,8 @@ export function useQuestionSets() {
           name,
           description,
           difficulty,
-          is_public: false
+          is_public: isPublic,
+          tags: tags.length > 0 ? tags : null
         })
         .select()
         .single()
@@ -110,6 +113,7 @@ export function useQuestionSets() {
       description?: string | null
       difficulty?: 'easy' | 'medium' | 'hard'
       is_public?: boolean
+      tags?: string[] | null
     },
     questions?: Omit<Question, 'id' | 'question_set_id' | 'created_at' | 'updated_at'>[]
   ) => {
