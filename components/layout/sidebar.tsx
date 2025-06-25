@@ -25,6 +25,7 @@ const navigation = [
   { name: 'Apple Music', href: '/music', icon: Music },
   { name: 'My Sets', href: '/questions', icon: ListMusic },
   { name: 'Games', href: '/games', icon: Gamepad2 },
+  { name: 'Profile', href: '/profile', icon: User },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
