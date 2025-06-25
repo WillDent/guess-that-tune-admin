@@ -21,8 +21,9 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
-  { name: 'Browse Music', href: '/browse', icon: Search },
-  { name: 'Question Sets', href: '/questions', icon: ListMusic },
+  { name: 'Browse Sets', href: '/browse', icon: Search },
+  { name: 'Apple Music', href: '/music', icon: Music },
+  { name: 'My Sets', href: '/questions', icon: ListMusic },
   { name: 'Games', href: '/games', icon: Gamepad2 },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]

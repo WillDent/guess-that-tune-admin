@@ -6,7 +6,8 @@ const protectedRoutes = [
   '/questions',
   '/games',
   '/profile',
-  '/settings'
+  '/settings',
+  '/music'
 ]
 
 const publicRoutes = [
