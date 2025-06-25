@@ -145,12 +145,16 @@ export async function POST(request: Request) {
         },
         options: [correctSong, ...detractors]
           .filter(Boolean)
-          .map(song => ({
-            id: song.id,
-            name: song.attributes.name,
-            artist: song.attributes.artistName,
-            album: song.attributes.albumName
-          }))
+          .map(song => {
+            if (!song) return null
+            return {
+              id: song.id,
+              name: song.attributes.name,
+              artist: song.attributes.artistName,
+              album: song.attributes.albumName
+            }
+          })
+          .filter(Boolean)
           .sort(() => Math.random() - 0.5), // Shuffle options
         difficulty: q.difficulty
       }

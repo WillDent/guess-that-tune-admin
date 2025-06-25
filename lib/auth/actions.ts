@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
-export async function signIn(email: string, password: string) {
+export async function signIn(email: string, password: string, redirectTo?: string) {
   const supabase = await createServerSupabaseClient()
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -17,7 +17,7 @@ export async function signIn(email: string, password: string) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/')
+  redirect(redirectTo || '/')
 }
 
 export async function signUp(email: string, password: string) {

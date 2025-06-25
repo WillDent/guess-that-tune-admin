@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Users, Trophy, Calendar, Gamepad2 } from 'lucide-react'
 import Link from 'next/link'
+import type { QuestionSet } from '@/types'
 
 interface Game {
   id: string
@@ -27,7 +28,7 @@ interface Game {
 
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([])
-  const [questionSets, setQuestionSets] = useState([])
+  const [questionSets, setQuestionSets] = useState<QuestionSet[]>([])
 
   useEffect(() => {
     // Load games from localStorage

@@ -11,8 +11,13 @@ import {
   Gamepad2, 
   BarChart3, 
   Settings,
-  Search
+  Search,
+  User,
+  LogOut
 } from 'lucide-react'
+import { useAuth } from '@/contexts/auth-context'
+import { Button } from '@/components/ui/button'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
@@ -24,6 +29,7 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { user, loading, signOut } = useAuth()
 
   return (
     <div className="flex h-full w-64 flex-col bg-gray-900">
@@ -60,6 +66,42 @@ export function Sidebar() {
           )
         })}
       </nav>
+      
+      {/* User section */}
+      <div className="border-t border-gray-800 p-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-2">
+            <LoadingSpinner size="sm" />
+          </div>
+        ) : user ? (
+          <div className="space-y-3">
+            <div className="flex items-center text-sm text-gray-300">
+              <User className="mr-2 h-4 w-4" />
+              <span className="truncate">{user.email}</span>
+            </div>
+            <Button
+              onClick={() => signOut()}
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
+        ) : (
+          <Link href="/login">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
+            >
+              <User className="mr-2 h-4 w-4" />
+              Sign In
+            </Button>
+          </Link>
+        )}
+      </div>
     </div>
   )
 }

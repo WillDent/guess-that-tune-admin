@@ -9,10 +9,11 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Play, Trash2, Music } from 'lucide-react'
 import Link from 'next/link'
 import { PreviewModal } from '@/components/questions/preview-modal'
+import type { QuestionSet } from '@/types'
 
 export default function QuestionsPage() {
-  const [questionSets, setQuestionSets] = useState([])
-  const [previewSet, setPreviewSet] = useState(null)
+  const [questionSets, setQuestionSets] = useState<QuestionSet[]>([])
+  const [previewSet, setPreviewSet] = useState<QuestionSet | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   useEffect(() => {
@@ -23,13 +24,13 @@ export default function QuestionsPage() {
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this question set?')) {
-      const updatedSets = questionSets.filter((set: any) => set.id !== id)
+      const updatedSets = questionSets.filter((set) => set.id !== id)
       setQuestionSets(updatedSets)
       localStorage.setItem('questionSets', JSON.stringify(updatedSets))
     }
   }
 
-  const handlePreview = (set: any) => {
+  const handlePreview = (set: QuestionSet) => {
     setPreviewSet(set)
     setIsPreviewOpen(true)
   }

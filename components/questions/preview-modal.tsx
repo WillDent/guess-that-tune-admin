@@ -6,31 +6,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Music, X } from "lucide-react"
+import type { QuestionSet } from '@/types'
 
 interface PreviewModalProps {
   isOpen: boolean
   onClose: () => void
-  questionSet: {
-    id: string
-    name: string
-    difficulty: string
-    questions: Array<{
-      correctSong: {
-        id: string
-        name: string
-        artist: string
-        album: string
-        artwork?: string
-      }
-      detractors: Array<{
-        id: string
-        name: string
-        artist: string
-        album: string
-        artwork?: string
-      }>
-    }>
-  } | null
+  questionSet: QuestionSet | null
 }
 
 export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps) {
@@ -89,7 +70,9 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
                   <div>
                     <p className="font-semibold text-lg">{question.correctSong.name}</p>
                     <p className="text-gray-600">{question.correctSong.artist}</p>
-                    <p className="text-sm text-gray-500">{question.correctSong.album}</p>
+                    {question.correctSong.album && (
+                      <p className="text-sm text-gray-500">{question.correctSong.album}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -103,7 +86,7 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
                       {detractor.artwork ? (
                         <img 
                           src={detractor.artwork} 
-                          alt={detractor.album}
+                          alt={detractor.album || detractor.name}
                           className="w-12 h-12 rounded flex-shrink-0"
                         />
                       ) : (

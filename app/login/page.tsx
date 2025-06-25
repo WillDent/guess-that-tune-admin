@@ -1,15 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn, signInWithMagicLink } from '@/lib/auth/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Music } from 'lucide-react'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const next = searchParams.get('next') || '/'
+  
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,7 +23,7 @@ export default function LoginPage() {
     setLoading(true)
     setMessage(null)
 
-    const result = await signIn(email, password)
+    const result = await signIn(email, password, next)
     
     if (result?.error) {
       setMessage({ type: 'error', text: result.error })
@@ -122,5 +125,23 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+          <div className="flex items-center justify-center mb-8">
+            <Music className="h-12 w-12 text-purple-600 mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900">Guess That Tune</h1>
+          </div>
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
