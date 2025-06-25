@@ -15,6 +15,8 @@ import Link from 'next/link'
 import { useQuestionSets } from '@/hooks/use-question-sets'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ProtectedRoute } from '@/components/auth/protected-route'
+import { useToast } from '@/hooks/use-toast'
+import { errorHandler } from '@/lib/errors/handler'
 
 interface SelectedSong {
   id: string
@@ -28,6 +30,7 @@ interface SelectedSong {
 export default function NewQuestionSetPage() {
   const router = useRouter()
   const { createQuestionSet } = useQuestionSets()
+  const { toast } = useToast()
   const [setName, setSetName] = useState('')
   const [description, setDescription] = useState('')
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium')
@@ -65,9 +68,10 @@ export default function NewQuestionSetPage() {
 
       const data = await response.json()
       setPreview(data.questions)
+      toast.success('Questions generated successfully!')
     } catch (error) {
-      console.error('Failed to generate preview:', error)
-      alert('Failed to generate questions. Please try again.')
+      const appError = errorHandler.handle(error)
+      toast.error(errorHandler.getErrorMessage(appError))
     } finally {
       setGenerating(false)
     }
@@ -75,12 +79,12 @@ export default function NewQuestionSetPage() {
 
   const handleSave = async () => {
     if (!setName.trim()) {
-      alert('Please enter a name for the question set')
+      toast.error('Please enter a name for the question set')
       return
     }
 
     if (preview.length === 0) {
-      alert('Please generate questions before saving')
+      toast.error('Please generate questions before saving')
       return
     }
 
@@ -119,11 +123,13 @@ export default function NewQuestionSetPage() {
       // Clear the selected songs from session storage
       sessionStorage.removeItem('selectedSongs')
       
+      toast.success('Question set saved successfully!')
+      
       // Redirect to questions page
       router.push('/questions')
     } catch (error) {
-      console.error('Failed to save question set:', error)
-      alert('Failed to save question set. Please try again.')
+      const appError = errorHandler.handle(error)
+      toast.error(errorHandler.getErrorMessage(appError))
     } finally {
       setSaving(false)
     }

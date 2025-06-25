@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { AuthError } from '@/lib/errors/types'
 
 export async function signIn(email: string, password: string, redirectTo?: string) {
   const supabase = await createServerSupabaseClient()

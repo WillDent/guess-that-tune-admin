@@ -1,0 +1,25 @@
+'use client'
+
+import { useToast } from "@/hooks/use-toast"
+import { ToastContainer } from "@/components/ui/toast"
+import { Sidebar } from "@/components/layout/sidebar"
+import { OfflineIndicator } from "@/components/ui/offline-indicator"
+
+export function LayoutClient({ children }: { children: React.ReactNode }) {
+  const { toasts, dismiss } = useToast()
+  
+  return (
+    <>
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            {children}
+          </div>
+        </main>
+      </div>
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      <OfflineIndicator />
+    </>
+  )
+}

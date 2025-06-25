@@ -6,17 +6,21 @@ import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Play, Trash2, Music, AlertCircle } from 'lucide-react'
+import { Plus, Play, Trash2, Music, AlertCircle, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { PreviewModal } from '@/components/questions/preview-modal'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useQuestionSets } from '@/hooks/use-question-sets'
 import { ProtectedRoute } from '@/components/auth/protected-route'
+import { QuestionSetGridSkeleton } from '@/components/loading/question-set-skeleton'
+import { useToast } from '@/hooks/use-toast'
+import { errorHandler } from '@/lib/errors/handler'
 import type { Question } from '@/types'
 
 export default function QuestionsPage() {
-  const { questionSets, loading, error, deleteQuestionSet } = useQuestionSets()
+  const { questionSets, loading, error, deleteQuestionSet, refetch } = useQuestionSets()
+  const { toast } = useToast()
   const [previewSet, setPreviewSet] = useState<any>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
@@ -26,8 +30,10 @@ export default function QuestionsPage() {
       setIsDeleting(id)
       const { error } = await deleteQuestionSet(id)
       if (error) {
-        console.error('Error deleting question set:', error)
-        alert('Failed to delete question set. Please try again.')
+        const appError = errorHandler.handle(error)
+        toast.error(errorHandler.getErrorMessage(appError))
+      } else {
+        toast.success('Question set deleted successfully')
       }
       setIsDeleting(null)
     }
@@ -87,14 +93,21 @@ export default function QuestionsPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <LoadingSpinner size="lg" />
-          </div>
+          <QuestionSetGridSkeleton />
         ) : error ? (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Failed to load question sets. Please try refreshing the page.
+            <AlertDescription className="flex items-center justify-between">
+              <span>Failed to load question sets. Please try again.</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => refetch()}
+                className="ml-4"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
             </AlertDescription>
           </Alert>
         ) : questionSets.length === 0 ? (

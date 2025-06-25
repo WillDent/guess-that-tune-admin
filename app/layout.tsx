@@ -4,6 +4,8 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Sidebar } from "@/components/layout/sidebar"
 import { AuthProvider } from "@/contexts/auth-context"
+import { ToastProvider } from "@/hooks/use-toast"
+import { LayoutClient } from "@/components/layout/layout-client"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -22,14 +24,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <div className="flex h-screen bg-gray-50">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto">
-              <div className="p-8">
-                {children}
-              </div>
-            </main>
-          </div>
+          <ToastProvider>
+            <LayoutClient>{children}</LayoutClient>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>
