@@ -59,7 +59,10 @@ export function useProfile(userId?: string) {
 
   // Fetch user profile
   const fetchProfile = useCallback(async () => {
-    if (!targetUserId) return
+    if (!targetUserId) {
+      setLoading(false)
+      return
+    }
 
     try {
       setLoading(true)
@@ -85,7 +88,7 @@ export function useProfile(userId?: string) {
           .eq('user_id', targetUserId)
 
         if (gamesError) {
-          console.error('Error fetching game stats:', gamesError)
+          console.error('Error fetching game stats:', gamesError.message || gamesError)
           // Don't throw - just set empty stats
           setStats({
             totalGamesPlayed: 0,
@@ -158,7 +161,7 @@ export function useProfile(userId?: string) {
     } finally {
       setLoading(false)
     }
-  }, [targetUserId, supabase, toast])
+  }, [targetUserId])
 
   // Update profile
   const updateProfile = async (updates: ProfileUpdateData) => {
@@ -312,7 +315,8 @@ export function useProfile(userId?: string) {
 
   useEffect(() => {
     fetchProfile()
-  }, [fetchProfile])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetUserId])
 
   return {
     profile,
