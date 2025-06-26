@@ -269,7 +269,8 @@ export const gameService = {
     const supabase = createClient()
     
     try {
-      let query = supabase
+      // First get games where user is host
+      let hostQuery = supabase
         .from('games')
         .select(`
           *,
@@ -284,18 +285,60 @@ export const gameService = {
             score
           )
         `)
-        .or(`host_user_id.eq.${userId},participants.user_id.eq.${userId}`)
-        .order('created_at', { ascending: false })
+        .eq('host_user_id', userId)
 
       if (status) {
-        query = query.eq('status', status)
+        hostQuery = hostQuery.eq('status', status)
       }
 
-      const { data, error } = await query
+      const { data: hostGames, error: hostError } = await hostQuery
 
-      if (error) throw error
+      if (hostError) throw hostError
 
-      return { data, error: null }
+      // Then get games where user is participant
+      let participantQuery = supabase
+        .from('game_participants')
+        .select(`
+          game:games!game_participants_game_id_fkey (
+            *,
+            question_set:question_sets!games_question_set_id_fkey (
+              id,
+              name,
+              difficulty
+            ),
+            participants:game_participants (
+              id,
+              user_id,
+              score
+            )
+          )
+        `)
+        .eq('user_id', userId)
+
+      const { data: participantGames, error: participantError } = await participantQuery
+
+      if (participantError) throw participantError
+
+      // Extract games from participant results
+      const gamesFromParticipation = participantGames?.map(p => p.game).filter(g => g !== null) || []
+
+      // Filter by status if needed
+      const filteredParticipantGames = status 
+        ? gamesFromParticipation.filter(g => g.status === status)
+        : gamesFromParticipation
+
+      // Combine and deduplicate
+      const allGames = [...(hostGames || []), ...filteredParticipantGames]
+      const uniqueGames = Array.from(
+        new Map(allGames.map(game => [game.id, game])).values()
+      )
+
+      // Sort by created_at
+      uniqueGames.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+
+      return { data: uniqueGames, error: null }
     } catch (error) {
       return { data: null, error: error as Error }
     }

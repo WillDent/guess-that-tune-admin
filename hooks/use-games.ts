@@ -69,7 +69,7 @@ export function useGames(status?: Game['status']) {
           event: '*',
           schema: 'public',
           table: 'games',
-          filter: `created_by=eq.${user.id}`
+          filter: `host_user_id=eq.${user.id}`
         },
         () => {
           fetchGames()
