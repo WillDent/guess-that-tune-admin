@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/auth-context'
 import { gameService } from '@/lib/supabase/services/games'
 import type { Database } from '@/lib/supabase/database.types'
+import type { GameStatus } from '@/lib/constants/game-status'
 
 type Game = Database['public']['Tables']['games']['Row']
 type QuestionSet = Database['public']['Tables']['question_sets']['Row']
@@ -16,7 +17,7 @@ export interface GameWithDetails extends Game {
   participant_count?: number
 }
 
-export function useGames(status?: Game['status']) {
+export function useGames(status?: GameStatus) {
   const { user } = useAuth()
   const [games, setGames] = useState<GameWithDetails[]>([])
   const [loading, setLoading] = useState(true)
@@ -130,7 +131,7 @@ export function useGames(status?: Game['status']) {
     }
   }
 
-  const updateGameStatus = async (gameId: string, status: Game['status']) => {
+  const updateGameStatus = async (gameId: string, status: GameStatus) => {
     try {
       setError(null)
       const result = await gameService.updateStatus(gameId, status)

@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
 import { CreateGameModal } from '@/components/games/create-game-modal'
 import { useRouter } from 'next/navigation'
+import { GAME_STATUS } from '@/lib/constants/game-status'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function GamesPage() {
@@ -39,9 +40,9 @@ export default function GamesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   
   // Fetch active games
-  const activeGames = useGames('pending')
-  const inProgressGames = useGames('in_progress')
-  const completedGames = useGames('completed')
+  const activeGames = useGames(GAME_STATUS.PENDING)
+  const inProgressGames = useGames(GAME_STATUS.IN_PROGRESS)
+  const completedGames = useGames(GAME_STATUS.COMPLETED)
   
   const allActiveGames = [
     ...(activeGames.games || []),
@@ -69,7 +70,7 @@ export default function GamesPage() {
   }
 
   const handleStartGame = async (gameId: string) => {
-    const { error } = await activeGames.updateGameStatus(gameId, 'in_progress')
+    const { error } = await activeGames.updateGameStatus(gameId, GAME_STATUS.IN_PROGRESS)
     if (error) {
       const appError = errorHandler.handle(error)
       toast.error(errorHandler.getErrorMessage(appError))
@@ -80,18 +81,18 @@ export default function GamesPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'text-gray-600 border-gray-600'
-      case 'in_progress': return 'text-blue-600 border-blue-600'
-      case 'completed': return 'text-green-600 border-green-600'
+      case GAME_STATUS.PENDING: return 'text-gray-600 border-gray-600'
+      case GAME_STATUS.IN_PROGRESS: return 'text-blue-600 border-blue-600'
+      case GAME_STATUS.COMPLETED: return 'text-green-600 border-green-600'
       default: return ''
     }
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending': return <Calendar className="h-4 w-4" />
-      case 'in_progress': return <Gamepad2 className="h-4 w-4" />
-      case 'completed': return <Trophy className="h-4 w-4" />
+      case GAME_STATUS.PENDING: return <Calendar className="h-4 w-4" />
+      case GAME_STATUS.IN_PROGRESS: return <Gamepad2 className="h-4 w-4" />
+      case GAME_STATUS.COMPLETED: return <Trophy className="h-4 w-4" />
       default: return null
     }
   }

@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
 import type { Database } from '@/lib/supabase/database.types'
+import { GAME_STATUS } from '@/lib/constants/game-status'
 
 type Game = Database['public']['Tables']['games']['Row']
 type GameParticipant = Database['public']['Tables']['game_participants']['Row']
@@ -130,8 +131,8 @@ export function useGameRoom(gameId: string) {
         currentQuestionIndex: 0,
         questions,
         timeRemaining: game.time_limit || 30,
-        gameState: game.status === 'pending' ? 'lobby' : 
-                   game.status === 'in_progress' ? 'playing' : 'finished',
+        gameState: game.status === GAME_STATUS.PENDING ? 'lobby' : 
+                   game.status === GAME_STATUS.IN_PROGRESS ? 'playing' : 'finished',
         isHost: user.id === game.host_user_id
       })
       
@@ -222,11 +223,11 @@ export function useGameRoom(gameId: string) {
         setState(prev => ({
           ...prev,
           game: payload.new as Game,
-          gameState: payload.new.status === 'pending' ? 'lobby' :
-                     payload.new.status === 'in_progress' ? 'playing' : 'finished'
+          gameState: payload.new.status === GAME_STATUS.PENDING ? 'lobby' :
+                     payload.new.status === GAME_STATUS.IN_PROGRESS ? 'playing' : 'finished'
         }))
         
-        if (payload.new.status === 'in_progress') {
+        if (payload.new.status === GAME_STATUS.IN_PROGRESS) {
           // Game started
           startGameTimer()
         }
@@ -391,7 +392,7 @@ export function useGameRoom(gameId: string) {
     const { error } = await supabase
       .from('games')
       .update({ 
-        status: 'in_progress',
+        status: GAME_STATUS.IN_PROGRESS,
         started_at: new Date().toISOString()
       })
       .eq('id', gameId)
@@ -452,7 +453,7 @@ export function useGameRoom(gameId: string) {
     const { error } = await supabase
       .from('games')
       .update({ 
-        status: 'completed',
+        status: GAME_STATUS.COMPLETED,
         ended_at: new Date().toISOString()
       })
       .eq('id', gameId)

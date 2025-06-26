@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/lib/supabase/database.types'
+import { GAME_STATUS, type GameStatus } from '@/lib/constants/game-status'
 
 type Game = Database['public']['Tables']['games']['Row']
 type GameInsert = Database['public']['Tables']['games']['Insert']
@@ -65,16 +66,23 @@ export const gameService = {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('User not authenticated')
 
+      // Get question set name for the game
+      const { data: questionSet } = await supabase
+        .from('question_sets')
+        .select('name')
+        .eq('id', data.question_set_id)
+        .single()
+
       // Create the game
       const gameData: GameInsert = {
         question_set_id: data.question_set_id,
         host_user_id: user.id,
         code: game_code,
-        status: 'pending',
+        status: GAME_STATUS.PENDING,
         game_mode: data.mode,
         max_players: data.max_players || 1,
         time_limit: data.time_limit || 30,
-        name: `Game ${new Date().toLocaleDateString()}`,
+        name: questionSet?.name || `Game ${new Date().toLocaleDateString()}`,
         started_at: null,
         ended_at: null
       }
@@ -171,15 +179,15 @@ export const gameService = {
   },
 
   // Update game status
-  async updateStatus(gameId: string, status: Game['status']) {
+  async updateStatus(gameId: string, status: GameStatus) {
     const supabase = createClient()
     
     try {
       const updates: GameUpdate = { status }
       
-      if (status === 'in_progress') {
+      if (status === GAME_STATUS.IN_PROGRESS) {
         updates.started_at = new Date().toISOString()
-      } else if (status === 'completed') {
+      } else if (status === GAME_STATUS.COMPLETED) {
         updates.ended_at = new Date().toISOString()
       }
 
@@ -265,7 +273,7 @@ export const gameService = {
   },
 
   // Get user's games
-  async getUserGames(userId: string, status?: Game['status']) {
+  async getUserGames(userId: string, status?: GameStatus) {
     const supabase = createClient()
     
     try {
