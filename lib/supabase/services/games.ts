@@ -284,7 +284,7 @@ export const gameService = {
             score
           )
         `)
-        .or(`created_by.eq.${userId},participants.user_id.eq.${userId}`)
+        .or(`host_user_id.eq.${userId},participants.user_id.eq.${userId}`)
         .order('created_at', { ascending: false })
 
       if (status) {
