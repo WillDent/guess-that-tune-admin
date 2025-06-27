@@ -5,6 +5,7 @@ import type { Database } from '@/lib/supabase/database.types'
 
 // Define protected and public routes
 const protectedRoutes = [
+  '/',  // Dashboard should be protected
   '/questions',
   '/games',
   '/profile',
@@ -17,11 +18,11 @@ const adminRoutes = [
 ]
 
 const publicRoutes = [
-  '/',
   '/login',
   '/signup',
   '/browse',
-  '/auth/callback'
+  '/auth/callback',
+  '/auth/signout'
 ]
 
 export async function middleware(request: NextRequest) {
