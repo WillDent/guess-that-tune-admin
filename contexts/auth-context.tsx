@@ -133,40 +133,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (authUser) {
           console.log('Auth user found:', authUser.id, authUser.email)
           
-          // Set basic user info immediately
-          setUser(authUser)
-          setLoading(false)
-          
-          // Then do the database operations asynchronously
-          // This prevents timeouts while still getting the role info
-          (async () => {
-            try {
-              // Ensure user exists in users table
-              await ensureUserExists(authUser)
-              
-              // Check if this user should be promoted to super admin
-              if (authUser.email) {
-                await checkAndPromoteSuperAdmin(authUser.email)
-              }
-              
-              // Fetch user role
-              const role = await fetchUserRole(authUser.id)
-              console.log('User role fetched:', role)
-              
-              if (mounted) {
-                const userWithRole: UserWithRole = {
-                  ...authUser,
-                  role
-                }
-                
-                setUser(userWithRole)
-                setIsAdmin(role === 'admin')
-              }
-            } catch (dbError) {
-              console.error('Error with database operations:', dbError)
-              // Keep the user logged in even if db operations fail
+          // First ensure user exists in database before setting user
+          // This prevents RLS policy failures in other hooks
+          try {
+            await ensureUserExists(authUser)
+            console.log('User row ensured in database')
+            
+            // Check if this user should be promoted to super admin
+            if (authUser.email) {
+              await checkAndPromoteSuperAdmin(authUser.email)
             }
-          })()
+            
+            // Fetch user role
+            const role = await fetchUserRole(authUser.id)
+            console.log('User role fetched:', role)
+            
+            const userWithRole: UserWithRole = {
+              ...authUser,
+              role
+            }
+            
+            if (mounted) {
+              setUser(userWithRole)
+              setIsAdmin(role === 'admin')
+              setLoading(false)
+            }
+          } catch (dbError) {
+            console.error('Error with database operations:', dbError)
+            // Still set the user even if role fetch fails
+            // This allows the app to work with basic functionality
+            if (mounted) {
+              setUser(authUser)
+              setIsAdmin(false)
+              setLoading(false)
+            }
+          }
         } else {
           console.log('No auth user found')
           setUser(null)
@@ -190,30 +191,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         const authUser = session?.user ?? null
         
-        if (authUser) {
-          // Ensure user exists on sign in
-          if (event === 'SIGNED_IN') {
-            await ensureUserExists(authUser)
-          }
-          
-          // Check super admin on sign in
-          if (event === 'SIGNED_IN' && authUser.email) {
-            await checkAndPromoteSuperAdmin(authUser.email)
-          }
-          
-          // Always fetch the latest role
-          const role = await fetchUserRole(authUser.id)
-          const userWithRole: UserWithRole = {
-            ...authUser,
-            role
-          }
-          
-          setUser(userWithRole)
-          setIsAdmin(role === 'admin')
-          
-          // Handle auth events
-          if (event === 'SIGNED_IN') {
-            router.refresh()
+        if (authUser && mounted) {
+          try {
+            // Ensure user exists on sign in
+            if (event === 'SIGNED_IN') {
+              await ensureUserExists(authUser)
+              console.log('User row ensured on sign in')
+            }
+            
+            // Check super admin on sign in
+            if (event === 'SIGNED_IN' && authUser.email) {
+              await checkAndPromoteSuperAdmin(authUser.email)
+            }
+            
+            // Always fetch the latest role
+            const role = await fetchUserRole(authUser.id)
+            const userWithRole: UserWithRole = {
+              ...authUser,
+              role
+            }
+            
+            if (mounted) {
+              setUser(userWithRole)
+              setIsAdmin(role === 'admin')
+            }
+            
+            // Handle auth events
+            if (event === 'SIGNED_IN') {
+              router.refresh()
+            }
+          } catch (error) {
+            console.error('Error in auth state change:', error)
+            // Set user anyway to prevent blocking
+            if (mounted) {
+              setUser(authUser)
+              setIsAdmin(false)
+            }
           }
         } else {
           setUser(null)
