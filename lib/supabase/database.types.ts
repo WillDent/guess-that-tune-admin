@@ -9,6 +9,76 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categories: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string
@@ -156,6 +226,39 @@ export type Database = {
           },
         ]
       }
+      question_set_categories: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          question_set_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          question_set_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          question_set_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_set_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_set_categories_question_set_id_fkey"
+            columns: ["question_set_id"]
+            isOneToOne: false
+            referencedRelation: "question_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       question_sets: {
         Row: {
           created_at: string
@@ -263,6 +366,10 @@ export type Database = {
           display_name: string | null
           email: string
           id: string
+          role: string | null
+          status: string | null
+          suspended_at: string | null
+          suspended_by: string | null
           updated_at: string
           username: string | null
         }
@@ -272,6 +379,10 @@ export type Database = {
           display_name?: string | null
           email: string
           id: string
+          role?: string | null
+          status?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -281,10 +392,22 @@ export type Database = {
           display_name?: string | null
           email?: string
           id?: string
+          role?: string | null
+          status?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
           updated_at?: string
           username?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_suspended_by_fkey"
+            columns: ["suspended_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -294,6 +417,10 @@ export type Database = {
       get_question_set_with_questions: {
         Args: { set_id: string }
         Returns: Json
+      }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
       }
       search_question_sets: {
         Args: { search_term: string }
