@@ -27,6 +27,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const supabase = createClient()
 
+  // Function to ensure user exists in users table
+  const ensureUserExists = async (authUser: User) => {
+    try {
+      // First check if user exists
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', authUser.id)
+        .maybeSingle()
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking user existence:', checkError)
+        return
+      }
+      
+      // If user doesn't exist, create them
+      if (!existingUser) {
+        console.log('Creating user row for:', authUser.id)
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: authUser.id,
+            email: authUser.email,
+            role: 'user',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+        
+        if (insertError) {
+          console.error('Error creating user row:', insertError)
+        } else {
+          console.log('User row created successfully')
+        }
+      }
+    } catch (err) {
+      console.error('Error in ensureUserExists:', err)
+    }
+  }
+
   // Function to check and promote super admin
   const checkAndPromoteSuperAdmin = async (email: string) => {
     const superAdminEmail = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL
@@ -56,9 +95,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('users')
         .select('role')
         .eq('id', userId)
-        .single()
+        .maybeSingle() // Use maybeSingle instead of single to handle missing rows
       
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching user role:', error.message, error.code, error.details)
+        // If it's an RLS error or row not found, return null instead of throwing
+        if (error.code === 'PGRST116' || error.code === '42501') {
+          console.log('User row not found or RLS policy blocked access, continuing without role')
+          return null
+        }
+        throw error
+      }
       return data?.role || null
     } catch (err) {
       console.error('Error fetching user role:', err)
@@ -69,10 +116,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
+      // Set a timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.error('Auth initialization timed out after 10 seconds')
+        setLoading(false)
+        setUser(null)
+        setIsAdmin(false)
+      }, 10000)
+      
       try {
-        const { data: { user: authUser } } = await supabase.auth.getUser()
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+        
+        if (authError) {
+          console.error('Error getting auth user:', authError)
+        }
         
         if (authUser) {
+          console.log('Auth user found:', authUser.id, authUser.email)
+          
+          // Ensure user exists in users table
+          await ensureUserExists(authUser)
+          
           // Check if this user should be promoted to super admin
           if (authUser.email) {
             await checkAndPromoteSuperAdmin(authUser.email)
@@ -80,6 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           // Fetch user role
           const role = await fetchUserRole(authUser.id)
+          console.log('User role fetched:', role)
+          
           const userWithRole: UserWithRole = {
             ...authUser,
             role
@@ -88,6 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(userWithRole)
           setIsAdmin(role === 'admin')
         } else {
+          console.log('No auth user found')
           setUser(null)
           setIsAdmin(false)
         }
@@ -96,6 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null)
         setIsAdmin(false)
       } finally {
+        clearTimeout(timeoutId)
         setLoading(false)
       }
     }
@@ -108,6 +176,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const authUser = session?.user ?? null
         
         if (authUser) {
+          // Ensure user exists on sign in
+          if (event === 'SIGNED_IN') {
+            await ensureUserExists(authUser)
+          }
+          
           // Check super admin on sign in
           if (event === 'SIGNED_IN' && authUser.email) {
             await checkAndPromoteSuperAdmin(authUser.email)
