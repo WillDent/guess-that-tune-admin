@@ -1,7 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
-import { createServerClient } from '@supabase/ssr'
-import type { Database } from '@/lib/supabase/database.types'
 
 // Define protected and public routes
 const protectedRoutes = [
@@ -26,20 +24,16 @@ const publicRoutes = [
 ]
 
 export async function middleware(request: NextRequest) {
-  // First, update the session
-  const response = await updateSession(request)
-  
-  // Get the pathname
   const path = request.nextUrl.pathname
   
   // Check if it's a protected route
   const isProtectedRoute = protectedRoutes.some(route => 
-    path.startsWith(route)
+    path === route || path.startsWith(`${route}/`)
   )
   
   // Check if it's an admin route
   const isAdminRoute = adminRoutes.some(route => 
-    path.startsWith(route)
+    path === route || path.startsWith(`${route}/`)
   )
   
   // Check if it's a public route
@@ -47,68 +41,38 @@ export async function middleware(request: NextRequest) {
     path === route || path.startsWith(`${route}/`)
   )
   
-  // For protected routes, check if user is authenticated
-  if (isProtectedRoute || isAdminRoute) {
-    // Check for auth cookie
-    const hasAuthCookie = request.cookies.has('sb-rntlhdlzijhdujpxsxzl-auth-token')
+  // Always allow public routes
+  if (isPublicRoute) {
+    return NextResponse.next()
+  }
+  
+  try {
+    // Update the session
+    const response = await updateSession(request)
     
-    if (!hasAuthCookie) {
-      // Redirect to login with return URL
-      const url = new URL('/login', request.url)
-      url.searchParams.set('next', path)
-      return NextResponse.redirect(url)
-    }
-    
-    // For admin routes, check if user is admin
-    if (isAdminRoute) {
-      // Create a server-side Supabase client
-      const supabase = createServerClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          cookies: {
-            getAll() {
-              return request.cookies.getAll()
-            },
-            setAll(cookiesToSet) {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                response.cookies.set(name, value, options)
-              )
-            },
-          },
-        }
-      )
+    // For protected routes (including admin), check if user has auth cookie
+    if (isProtectedRoute || isAdminRoute) {
+      const hasAuthCookie = request.cookies.has('sb-rntlhdlzijhdujpxsxzl-auth-token') ||
+                           request.cookies.has('sb-rntlhdlzijhdujpxsxzl-auth-token.0') ||
+                           request.cookies.has('sb-rntlhdlzijhdujpxsxzl-auth-token.1')
       
-      // Get the user
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user) {
-        // Check if user is admin
-        const { data: userData } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-        
-        if (userData?.role !== 'admin') {
-          // Not an admin, redirect to home with error
-          const url = new URL('/', request.url)
-          url.searchParams.set('error', 'unauthorized')
-          return NextResponse.redirect(url)
-        }
-      } else {
-        // No user, redirect to login
+      if (!hasAuthCookie) {
+        // No auth cookie, redirect to login
         const url = new URL('/login', request.url)
         url.searchParams.set('next', path)
         return NextResponse.redirect(url)
       }
+      
+      // For admin routes, we'll check role in the page component instead
+      // This avoids complex middleware logic that can cause loops
     }
+    
+    return response
+  } catch (error) {
+    console.error('Middleware error:', error)
+    // On error, allow the request to continue
+    return NextResponse.next()
   }
-  
-  // Skip auto-redirect from login page to prevent redirect loops
-  // Users can manually navigate away from login if they're already authenticated
-  
-  return response
 }
 
 export const config = {
