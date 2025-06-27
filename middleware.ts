@@ -105,14 +105,8 @@ export async function middleware(request: NextRequest) {
     }
   }
   
-  // For login/signup pages, redirect to home if already authenticated
-  if ((path === '/login' || path === '/signup')) {
-    const hasAuthCookie = request.cookies.has('sb-rntlhdlzijhdujpxsxzl-auth-token')
-    
-    if (hasAuthCookie) {
-      return NextResponse.redirect(new URL('/', request.url))
-    }
-  }
+  // Skip auto-redirect from login page to prevent redirect loops
+  // Users can manually navigate away from login if they're already authenticated
   
   return response
 }
