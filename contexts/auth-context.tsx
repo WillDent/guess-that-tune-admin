@@ -114,57 +114,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    let mounted = true;
+    
     // Get initial session
     const getInitialSession = async () => {
-      // Set a timeout to prevent infinite loading
-      const timeoutId = setTimeout(() => {
-        console.error('Auth initialization timed out after 10 seconds')
-        setLoading(false)
-        setUser(null)
-        setIsAdmin(false)
-      }, 10000)
-      
       try {
+        // First, try to get the user quickly
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+        
+        if (!mounted) return;
         
         if (authError) {
           console.error('Error getting auth user:', authError)
+          setLoading(false)
+          return
         }
         
         if (authUser) {
           console.log('Auth user found:', authUser.id, authUser.email)
           
-          // Ensure user exists in users table
-          await ensureUserExists(authUser)
+          // Set basic user info immediately
+          setUser(authUser)
+          setLoading(false)
           
-          // Check if this user should be promoted to super admin
-          if (authUser.email) {
-            await checkAndPromoteSuperAdmin(authUser.email)
-          }
-          
-          // Fetch user role
-          const role = await fetchUserRole(authUser.id)
-          console.log('User role fetched:', role)
-          
-          const userWithRole: UserWithRole = {
-            ...authUser,
-            role
-          }
-          
-          setUser(userWithRole)
-          setIsAdmin(role === 'admin')
+          // Then do the database operations asynchronously
+          // This prevents timeouts while still getting the role info
+          (async () => {
+            try {
+              // Ensure user exists in users table
+              await ensureUserExists(authUser)
+              
+              // Check if this user should be promoted to super admin
+              if (authUser.email) {
+                await checkAndPromoteSuperAdmin(authUser.email)
+              }
+              
+              // Fetch user role
+              const role = await fetchUserRole(authUser.id)
+              console.log('User role fetched:', role)
+              
+              if (mounted) {
+                const userWithRole: UserWithRole = {
+                  ...authUser,
+                  role
+                }
+                
+                setUser(userWithRole)
+                setIsAdmin(role === 'admin')
+              }
+            } catch (dbError) {
+              console.error('Error with database operations:', dbError)
+              // Keep the user logged in even if db operations fail
+            }
+          })()
         } else {
           console.log('No auth user found')
           setUser(null)
           setIsAdmin(false)
+          setLoading(false)
         }
       } catch (error) {
         console.error('Error getting user:', error)
-        setUser(null)
-        setIsAdmin(false)
-      } finally {
-        clearTimeout(timeoutId)
-        setLoading(false)
+        if (mounted) {
+          setUser(null)
+          setIsAdmin(false)
+          setLoading(false)
+        }
       }
     }
 
@@ -216,7 +231,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [supabase, router])
 
   const signOut = async () => {
