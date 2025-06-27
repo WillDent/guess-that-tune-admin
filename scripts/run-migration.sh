@@ -14,6 +14,13 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Get the script's directory and project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+ENV_FILE="$PROJECT_ROOT/.env.local"
+
+echo "📁 Project root: $PROJECT_ROOT"
+
 # Check if supabase CLI is installed
 if ! command -v supabase &> /dev/null; then
     echo -e "${RED}❌ Supabase CLI is not installed${NC}"
@@ -22,12 +29,15 @@ if ! command -v supabase &> /dev/null; then
 fi
 
 # Check if .env.local exists
-if [ ! -f .env.local ]; then
-    echo -e "${YELLOW}⚠️  .env.local file not found${NC}"
-    echo "Creating .env.local from .env.example..."
-    if [ -f .env.example ]; then
-        cp .env.example .env.local
+if [ ! -f "$ENV_FILE" ]; then
+    echo -e "${YELLOW}⚠️  .env.local file not found at: $ENV_FILE${NC}"
+    echo "Looking for .env.example..."
+    if [ -f "$PROJECT_ROOT/.env.example" ]; then
+        echo "Creating .env.local from .env.example..."
+        cp "$PROJECT_ROOT/.env.example" "$ENV_FILE"
         echo -e "${GREEN}✅ Created .env.local${NC}"
+        echo "Please update it with your Supabase credentials"
+        exit 1
     else
         echo -e "${RED}❌ .env.example not found${NC}"
         echo "Please create .env.local with your Supabase credentials"
@@ -46,9 +56,9 @@ check_supabase_login() {
 
 # Function to get project ref from .env.local
 get_project_ref() {
-    if [ -f .env.local ]; then
+    if [ -f "$ENV_FILE" ]; then
         # Try to extract project ref from NEXT_PUBLIC_SUPABASE_URL
-        local url=$(grep "NEXT_PUBLIC_SUPABASE_URL" .env.local | cut -d '=' -f2 | tr -d '"' | tr -d "'")
+        local url=$(grep "NEXT_PUBLIC_SUPABASE_URL" "$ENV_FILE" | cut -d '=' -f2 | tr -d '"' | tr -d "'")
         if [ ! -z "$url" ]; then
             # Extract project ref from URL (format: https://[project-ref].supabase.co)
             echo "$url" | sed -E 's|https://([^.]+)\.supabase\.co.*|\1|'
@@ -70,6 +80,9 @@ if [ -z "$PROJECT_REF" ]; then
 fi
 
 echo -e "\n${GREEN}🔗 Using project: $PROJECT_REF${NC}"
+
+# Change to project root for all Supabase commands
+cd "$PROJECT_ROOT"
 
 # Link to the project if not already linked
 echo -e "\n📎 Linking to Supabase project..."
