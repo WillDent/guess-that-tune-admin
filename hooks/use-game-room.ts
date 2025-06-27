@@ -143,7 +143,41 @@ export function useGameRoom(gameId: string) {
     } finally {
       setLoading(false)
     }
-  }, [gameId, user, supabase, toast])
+  }, [gameId, user?.id]) // Only depend on stable values
+
+  // Refetch participants
+  const refetchParticipants = useCallback(async () => {
+    const { data: participants, error } = await supabase
+      .from('game_participants')
+      .select(`
+        *,
+        user:users!game_participants_user_id_fkey (
+          id,
+          display_name,
+          email
+        )
+      `)
+      .eq('game_id', gameId)
+      
+    if (!error && participants) {
+      setState(prev => {
+        const players: Player[] = participants.map(p => ({
+          id: p.id,
+          user_id: p.user_id || '',
+          display_name: p.user?.display_name || p.guest_name || 'Anonymous',
+          email: p.user?.email || '',
+          score: p.score || 0,
+          is_ready: false,
+          is_host: p.user_id === prev.game?.host_user_id,
+          answers: (p.answers as any[]) || [],
+          joined_at: p.joined_at,
+          presence_state: 'online'
+        }))
+        
+        return { ...prev, players }
+      })
+    }
+  }, [gameId, supabase])
 
   // Set up real-time subscriptions
   const setupSubscriptions = useCallback(() => {
@@ -250,7 +284,7 @@ export function useGameRoom(gameId: string) {
     })
     
     channelRef.current = channel
-  }, [gameId, user, supabase, toast])
+  }, [gameId, user?.id, refetchParticipants]) // Don't include toast to avoid re-renders
 
   // Handle game events
   const handleGameEvent = (event: GameEvent) => {
@@ -290,38 +324,6 @@ export function useGameRoom(gameId: string) {
         }))
         stopTimer()
         break
-    }
-  }
-
-  // Refetch participants
-  const refetchParticipants = async () => {
-    const { data: participants, error } = await supabase
-      .from('game_participants')
-      .select(`
-        *,
-        user:users!game_participants_user_id_fkey (
-          id,
-          display_name,
-          email
-        )
-      `)
-      .eq('game_id', gameId)
-      
-    if (!error && participants) {
-      const players: Player[] = participants.map(p => ({
-        id: p.id,
-        user_id: p.user_id || '',
-        display_name: p.user?.display_name || p.guest_name || 'Anonymous',
-        email: p.user?.email || '',
-        score: p.score || 0,
-        is_ready: false,
-        is_host: p.user_id === state.game?.host_user_id,
-        answers: (p.answers as any[]) || [],
-        joined_at: p.joined_at,
-        presence_state: 'online'
-      }))
-      
-      setState(prev => ({ ...prev, players }))
     }
   }
 
@@ -480,11 +482,17 @@ export function useGameRoom(gameId: string) {
 
   // Initialize on mount
   useEffect(() => {
+    if (!user || !gameId) return
+    
+    // Initialize the game room
     initializeGameRoom()
+    
+    // Setup subscriptions
     setupSubscriptions()
     
+    // Cleanup on unmount or when dependencies change
     return cleanup
-  }, [initializeGameRoom, setupSubscriptions])
+  }, [gameId, user?.id]) // Only run when gameId or user changes
 
   return {
     ...state,
