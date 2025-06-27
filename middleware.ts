@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+import { createServerClient } from '@supabase/ssr'
+import type { Database } from '@/lib/supabase/database.types'
 
 // Define protected and public routes
 const protectedRoutes = [
@@ -8,6 +10,10 @@ const protectedRoutes = [
   '/profile',
   '/settings',
   '/music'
+]
+
+const adminRoutes = [
+  '/admin'
 ]
 
 const publicRoutes = [
@@ -30,13 +36,18 @@ export async function middleware(request: NextRequest) {
     path.startsWith(route)
   )
   
+  // Check if it's an admin route
+  const isAdminRoute = adminRoutes.some(route => 
+    path.startsWith(route)
+  )
+  
   // Check if it's a public route
   const isPublicRoute = publicRoutes.some(route => 
     path === route || path.startsWith(`${route}/`)
   )
   
   // For protected routes, check if user is authenticated
-  if (isProtectedRoute) {
+  if (isProtectedRoute || isAdminRoute) {
     // Check for auth cookie
     const hasAuthCookie = request.cookies.has('sb-rntlhdlzijhdujpxsxzl-auth-token')
     
@@ -45,6 +56,51 @@ export async function middleware(request: NextRequest) {
       const url = new URL('/login', request.url)
       url.searchParams.set('next', path)
       return NextResponse.redirect(url)
+    }
+    
+    // For admin routes, check if user is admin
+    if (isAdminRoute) {
+      // Create a server-side Supabase client
+      const supabase = createServerClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return request.cookies.getAll()
+            },
+            setAll(cookiesToSet) {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                response.cookies.set(name, value, options)
+              )
+            },
+          },
+        }
+      )
+      
+      // Get the user
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        // Check if user is admin
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        
+        if (userData?.role !== 'admin') {
+          // Not an admin, redirect to home with error
+          const url = new URL('/', request.url)
+          url.searchParams.set('error', 'unauthorized')
+          return NextResponse.redirect(url)
+        }
+      } else {
+        // No user, redirect to login
+        const url = new URL('/login', request.url)
+        url.searchParams.set('next', path)
+        return NextResponse.redirect(url)
+      }
     }
   }
   
