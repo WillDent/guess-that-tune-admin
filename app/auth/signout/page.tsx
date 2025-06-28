@@ -1,55 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import { signOut } from '@/lib/auth/actions'
 
 export default function SignOutPage() {
-  const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-
   useEffect(() => {
-    const signOut = async () => {
-      try {
-        const supabase = createClient()
-        
-        // Clear all auth data
-        const { error } = await supabase.auth.signOut()
-        
-        if (error) {
-          console.error('Sign out error:', error)
-          setError('Failed to sign out. Clearing session manually...')
-        }
-        
-        // Clear local storage and session storage as backup
-        if (typeof window !== 'undefined') {
-          localStorage.clear()
-          sessionStorage.clear()
-          
-          // Delete cookies
-          document.cookie.split(";").forEach((c) => {
-            document.cookie = c
-              .replace(/^ +/, "")
-              .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-          });
-        }
-        
-        // Redirect to login after a short delay
-        setTimeout(() => {
-          window.location.href = '/login'
-        }, 1000)
-        
-      } catch (err) {
-        console.error('Unexpected error during sign out:', err)
-        setError('An error occurred. Redirecting...')
-        
-        // Force redirect even on error
-        setTimeout(() => {
-          window.location.href = '/login'
-        }, 2000)
-      }
-    }
-    
     signOut()
   }, [])
 

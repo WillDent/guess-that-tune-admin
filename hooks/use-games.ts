@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/utils/supabase/client'
 import { useAuth } from '@/contexts/auth-context'
 import { gameService } from '@/lib/supabase/services/games'
 import type { Database } from '@/lib/supabase/database.types'

@@ -1,9 +1,34 @@
 {
   "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "sbp_ebe94fb83298517b1b467b103aff171e0e2e0aa9",
+        "--project-ref",
+        "rntlhdlzijhdujpxsxzl"
+      ]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
+    },
+    "browser-tools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@agentdeskai/browser-tools-mcp@latest"
+      ]
+    },
     "datamate": {
       "url": "http://localhost:7700/sse",
       "type": "sse",
-      "updatedAt": "2025-06-27T13:26:01.752Z"
+      "updatedAt": "2025-06-28T14:33:09.333Z"
     }
   }
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import { useToast } from "@/hooks/use-toast"
 import { ToastContainer } from "@/components/ui/toast"
 import { Sidebar } from "@/components/layout/sidebar"
@@ -8,6 +9,20 @@ import { MigrationPrompt } from "@/components/migration/migration-prompt"
 
 export function LayoutClient({ children }: { children: React.ReactNode }) {
   const { toasts, dismiss } = useToast()
+  const pathname = usePathname()
+  
+  // Don't show sidebar on auth pages
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/signout'
+  
+  if (isAuthPage) {
+    return (
+      <>
+        {children}
+        <ToastContainer toasts={toasts} onDismiss={dismiss} />
+        <OfflineIndicator />
+      </>
+    )
+  }
   
   return (
     <>

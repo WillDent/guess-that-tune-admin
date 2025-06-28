@@ -19,7 +19,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/utils/supabase/client'
 import { QuestionSetGridSkeleton } from '@/components/questions/question-set-grid-skeleton'
 import { debounce } from 'lodash'
 
@@ -29,7 +29,7 @@ export default function EditQuestionSetPage() {
   const questionSetId = params.id as string
   const { updateQuestionSet } = useQuestionSets()
   const { toast } = useToast()
-  const supabase = createClient()
+  const supabaseClient = createClient()
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -53,11 +53,13 @@ export default function EditQuestionSetPage() {
   // Load the question set
   useEffect(() => {
     const loadQuestionSet = async () => {
+      console.log('[EDIT-PAGE] Loading question set:', questionSetId)
       try {
         setLoading(true)
         
         // Fetch question set with questions
-        const { data: questionSet, error } = await supabase
+        console.log('[EDIT-PAGE] Fetching from database...')
+        const { data: questionSet, error } = await supabaseClient
           .from('question_sets')
           .select(`
             *,
@@ -66,13 +68,16 @@ export default function EditQuestionSetPage() {
           .eq('id', questionSetId)
           .single()
           
+        console.log('[EDIT-PAGE] Fetch result:', { questionSet, error })
+          
         if (error || !questionSet) {
+          console.error('[EDIT-PAGE] Error or no data:', error)
           setNotFound(true)
           return
         }
         
         // Check if user owns this question set
-        const { data: { user } } = await supabase.auth.getUser()
+        const { data: { user } } = await supabaseClient.auth.getUser()
         if (!user || questionSet.user_id !== user.id) {
           toast.error('You do not have permission to edit this question set')
           router.push('/questions')
@@ -80,6 +85,7 @@ export default function EditQuestionSetPage() {
         }
         
         // Set form values
+        console.log('[EDIT-PAGE] Setting form values from:', questionSet)
         setSetName(questionSet.name)
         setDescription(questionSet.description || '')
         setDifficulty(questionSet.difficulty as 'easy' | 'medium' | 'hard')
@@ -90,18 +96,21 @@ export default function EditQuestionSetPage() {
         // Extract original song IDs
         const songIds = questionSet.questions.map((q: any) => q.correct_song_id)
         setOriginalSongIds(songIds)
+        console.log('[EDIT-PAGE] Form values set successfully')
         
       } catch (error) {
+        console.error('[EDIT-PAGE] Error in loadQuestionSet:', error)
         const appError = errorHandler.handle(error)
         toast.error(errorHandler.getErrorMessage(appError))
         setNotFound(true)
       } finally {
+        console.log('[EDIT-PAGE] Setting loading to false')
         setLoading(false)
       }
     }
     
     loadQuestionSet()
-  }, [questionSetId, supabase, router, toast])
+  }, [questionSetId, router, toast])
 
   // Auto-save functionality
   const debouncedAutoSave = useMemo(

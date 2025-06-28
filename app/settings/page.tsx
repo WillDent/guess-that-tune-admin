@@ -31,7 +31,7 @@ import { useProfile } from '@/hooks/use-profile'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useToast } from '@/hooks/use-toast'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 
 export default function SettingsPage() {

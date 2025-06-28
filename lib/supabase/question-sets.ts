@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/client'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@/utils/supabase/client'
 import type { TablesInsert } from '@/lib/supabase/database.types'
 
 export interface CreateQuestionSetData {

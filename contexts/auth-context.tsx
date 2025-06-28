@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import type { Database } from '@/lib/supabase/database.types'
 
@@ -21,6 +21,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  console.log('[AUTH-CONTEXT] AuthProvider rendering')
   const [user, setUser] = useState<UserWithRole | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // If user doesn't exist, create them
-      if (!existingUser) {
+      if (!existingUser && authUser.email) {
         console.log('Creating user row for:', authUser.id)
         const { error: insertError } = await supabase
           .from('users')
@@ -72,10 +73,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     if (superAdminEmail && email === superAdminEmail) {
       try {
-        // Call the database function to promote user to admin
-        const { error } = await supabase.rpc('promote_user_to_admin', {
-          user_email: email
-        })
+        // Update user role directly to admin
+        const { error } = await supabase
+          .from('users')
+          .update({ role: 'admin' })
+          .eq('email', email)
         
         if (!error) {
           console.log('Super admin promoted successfully')
@@ -91,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Function to fetch user role
   const fetchUserRole = async (userId: string): Promise<UserRole | null> => {
     try {
+      console.log('Fetching role for user:', userId)
       const { data, error } = await supabase
         .from('users')
         .select('role')
@@ -106,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         throw error
       }
+      console.log('User role fetched:', data?.role)
       return data?.role || null
     } catch (err) {
       console.error('Error fetching user role:', err)
@@ -119,25 +123,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        // First, try to get the user quickly
-        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+        console.log('[AUTH-CONTEXT] Starting getInitialSession...')
+        
+        // Get the session from cookies
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (!mounted) return;
         
-        if (authError) {
-          console.error('Error getting auth user:', authError)
+        if (sessionError) {
+          console.error('[AUTH-CONTEXT] Session error:', sessionError)
           setLoading(false)
           return
         }
         
+        console.log('[AUTH-CONTEXT] Session:', session ? 'exists' : 'none')
+        
+        if (!session) {
+          console.log('[AUTH-CONTEXT] No session found in getInitialSession, waiting for onAuthStateChange...')
+          // Don't set loading to false here - let onAuthStateChange handle it
+          // This is because in Next.js 15, getSession() might not immediately have the session
+          // but onAuthStateChange will fire with the correct session
+          setTimeout(() => {
+            // Only set loading to false if we still don't have a user after 1 second
+            if (mounted && !user) {
+              console.log('[AUTH-CONTEXT] No session after timeout, setting loading to false')
+              setLoading(false)
+            }
+          }, 1000)
+          return
+        }
+        
+        const authUser = session.user
+        
         if (authUser) {
-          console.log('Auth user found:', authUser.id, authUser.email)
+          console.log('[AUTH-CONTEXT] Auth user found:', authUser.id, authUser.email)
           
-          // First ensure user exists in database before setting user
-          // This prevents RLS policy failures in other hooks
+          // Set basic user state immediately to prevent loading hang
+          if (mounted) {
+            console.log('[AUTH-CONTEXT] Setting initial user state immediately')
+            setUser(authUser)
+            setLoading(false)
+          }
+          
+          // Then try to enhance with database operations in the background
           try {
             await ensureUserExists(authUser)
-            console.log('User row ensured in database')
+            console.log('[AUTH-CONTEXT] User row ensured in database')
             
             // Check if this user should be promoted to super admin
             if (authUser.email) {
@@ -146,33 +177,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Fetch user role
             const role = await fetchUserRole(authUser.id)
-            console.log('User role fetched:', role)
+            console.log('[AUTH-CONTEXT] User role fetched:', role)
             
             const userWithRole: UserWithRole = {
               ...authUser,
-              role
+              role: role || undefined
             }
             
             if (mounted) {
+              console.log('[AUTH-CONTEXT] Updating user with role:', userWithRole.email, 'Admin:', role === 'admin')
               setUser(userWithRole)
               setIsAdmin(role === 'admin')
-              setLoading(false)
             }
           } catch (dbError) {
-            console.error('Error with database operations:', dbError)
-            // Still set the user even if role fetch fails
-            // This allows the app to work with basic functionality
-            if (mounted) {
-              setUser(authUser)
-              setIsAdmin(false)
-              setLoading(false)
-            }
+            console.error('[AUTH-CONTEXT] Error with database operations:', dbError)
+            // User is already set, just log the error
           }
         } else {
-          console.log('No auth user found')
-          setUser(null)
-          setIsAdmin(false)
-          setLoading(false)
+          console.log('[AUTH-CONTEXT] No auth user found')
+          if (mounted) {
+            console.log('[AUTH-CONTEXT] Setting null user, loading false')
+            setUser(null)
+            setIsAdmin(false)
+            setLoading(false)
+          }
         }
       } catch (error) {
         console.error('Error getting user:', error)
@@ -189,14 +217,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('[AUTH-CONTEXT] onAuthStateChange event:', event, 'session:', session)
         const authUser = session?.user ?? null
         
         if (authUser && mounted) {
+          // Immediately set user to prevent loading hang
+          console.log('[AUTH-CONTEXT] onAuthStateChange - Immediately setting user')
+          setUser(authUser)
+          setLoading(false)
+          
           try {
             // Ensure user exists on sign in
             if (event === 'SIGNED_IN') {
               await ensureUserExists(authUser)
-              console.log('User row ensured on sign in')
+              console.log('[AUTH-CONTEXT] User row ensured on sign in')
             }
             
             // Check super admin on sign in
@@ -208,45 +242,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const role = await fetchUserRole(authUser.id)
             const userWithRole: UserWithRole = {
               ...authUser,
-              role
+              role: role || undefined
             }
             
             if (mounted) {
+              console.log('[AUTH-CONTEXT] onAuthStateChange - Setting user:', userWithRole.email)
               setUser(userWithRole)
               setIsAdmin(role === 'admin')
+              setLoading(false) // Ensure loading is set to false
             }
             
             // Handle auth events
             if (event === 'SIGNED_IN') {
+              console.log('[AUTH-CONTEXT] SIGNED_IN event - refreshing router')
               router.refresh()
             }
           } catch (error) {
-            console.error('Error in auth state change:', error)
+            console.error('[AUTH-CONTEXT] Error in auth state change:', error)
             // Set user anyway to prevent blocking
             if (mounted) {
               setUser(authUser)
               setIsAdmin(false)
+              setLoading(false) // Ensure loading is set to false even on error
             }
           }
         } else {
+          console.log('[AUTH-CONTEXT] onAuthStateChange - No user, clearing state')
           setUser(null)
           setIsAdmin(false)
+          setLoading(false) // Ensure loading is set to false when no user
           
           if (event === 'SIGNED_OUT') {
+            console.log('[AUTH-CONTEXT] SIGNED_OUT event - redirecting to login')
             router.push('/login')
           }
         }
         
         if (event === 'TOKEN_REFRESHED') {
           // Silent refresh succeeded
-          console.log('Token refreshed successfully')
+          console.log('[AUTH-CONTEXT] Token refreshed successfully')
         }
       }
     )
 
+    // Set up periodic session refresh to prevent logout
+    const refreshInterval = setInterval(async () => {
+      console.log('[AUTH-CONTEXT] Refreshing session...')
+      const { data: { session }, error } = await supabase.auth.getSession()
+      if (error) {
+        console.error('[AUTH-CONTEXT] Error refreshing session:', error)
+      } else if (session) {
+        console.log('[AUTH-CONTEXT] Session refreshed successfully')
+      }
+    }, 10 * 60 * 1000) // Refresh every 10 minutes
+
     return () => {
       mounted = false
       subscription.unsubscribe()
+      clearInterval(refreshInterval)
     }
   }, [supabase, router])
 
@@ -257,6 +310,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error signing out:', error)
     }
   }
+
+  console.log('[AUTH-CONTEXT] Provider rendering. user:', user, 'loading:', loading)
 
   return (
     <AuthContext.Provider value={{ user, loading, signOut, isAdmin }}>

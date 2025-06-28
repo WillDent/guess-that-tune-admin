@@ -2,6 +2,7 @@
 // ABOUTME: Displays overview stats and quick actions
 import { Card } from '@/components/ui/card'
 import { Music, ListMusic, Gamepad2, Users } from 'lucide-react'
+import { ProtectedRoute } from '@/components/auth/protected-route'
 
 const stats = [
   { name: 'Total Songs', value: '0', icon: Music, color: 'text-pink-600' },
@@ -12,7 +13,8 @@ const stats = [
 
 export default function Home() {
   return (
-    <div>
+    <ProtectedRoute>
+      <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="mt-2 text-gray-600">Welcome back, Skooter! Here's your game overview.</p>
@@ -63,5 +65,6 @@ export default function Home() {
         </Card>
       </div>
     </div>
+    </ProtectedRoute>
   )
 }

@@ -1,76 +1,32 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
-
-// Define protected and public routes
-const protectedRoutes = [
-  '/',  // Dashboard should be protected
-  '/questions',
-  '/games',
-  '/profile',
-  '/settings',
-  '/music'
-]
-
-const adminRoutes = [
-  '/admin'
-]
-
-const publicRoutes = [
-  '/login',
-  '/signup',
-  '/browse',
-  '/auth/callback',
-  '/auth/signout'
-]
+import { createClient } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname
-  
-  // Check if it's a protected route
-  const isProtectedRoute = protectedRoutes.some(route => 
-    path === route || path.startsWith(`${route}/`)
-  )
-  
-  // Check if it's an admin route
-  const isAdminRoute = adminRoutes.some(route => 
-    path === route || path.startsWith(`${route}/`)
-  )
-  
-  // Check if it's a public route
-  const isPublicRoute = publicRoutes.some(route => 
-    path === route || path.startsWith(`${route}/`)
-  )
-  
-  // Always allow public routes
-  if (isPublicRoute) {
-    return NextResponse.next()
-  }
-  
   try {
-    // Update the session
-    const response = await updateSession(request)
+    const { supabase, response } = createClient(request)
+
+    // Refresh session if expired - required for Server Components
+    const { data: { user }, error } = await supabase.auth.getUser()
     
-    // For protected routes (including admin), check if user has auth cookie
-    if (isProtectedRoute || isAdminRoute) {
-      const hasAuthCookie = request.cookies.has('sb-rntlhdlzijhdujpxsxzl-auth-token') ||
-                           request.cookies.has('sb-rntlhdlzijhdujpxsxzl-auth-token.0') ||
-                           request.cookies.has('sb-rntlhdlzijhdujpxsxzl-auth-token.1')
-      
-      if (!hasAuthCookie) {
-        // No auth cookie, redirect to login
-        const url = new URL('/login', request.url)
-        url.searchParams.set('next', path)
-        return NextResponse.redirect(url)
-      }
-      
-      // For admin routes, we'll check role in the page component instead
-      // This avoids complex middleware logic that can cause loops
+    console.log('[MIDDLEWARE]', request.nextUrl.pathname, '- User:', user?.email || 'none', '- Error:', error?.message || 'none')
+
+    // Define public routes that don't require authentication
+    const publicRoutes = ['/login', '/signup', '/browse', '/auth', '/test-new-auth']
+    const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))
+
+    // If user is not signed in and trying to access a protected route, redirect to login
+    if (!user && !isPublicRoute) {
+      console.log('[MIDDLEWARE] Redirecting to login from:', request.nextUrl.pathname)
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('next', request.nextUrl.pathname)
+      return NextResponse.redirect(url)
     }
-    
+
     return response
   } catch (error) {
-    console.error('Middleware error:', error)
-    // On error, allow the request to continue
+    console.error('[MIDDLEWARE] Error:', error)
+    // Return next response on error to prevent breaking the app
     return NextResponse.next()
   }
 }

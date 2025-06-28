@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/utils/supabase/client'
 import { LocalStorageData } from '@/utils/migration/detector'
 import type { Database } from '@/lib/supabase/database.types'
 

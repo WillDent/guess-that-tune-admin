@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/utils/supabase/client'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
@@ -47,7 +47,7 @@ export interface ProfileUpdateData {
 export function useProfile(userId?: string) {
   const { user: currentUser } = useAuth()
   const { toast } = useToast()
-  const supabase = createClient()
+  const supabaseClient = createClient()
   
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [stats, setStats] = useState<UserStats | null>(null)
@@ -59,30 +59,38 @@ export function useProfile(userId?: string) {
 
   // Fetch user profile
   const fetchProfile = useCallback(async () => {
+    console.log('[USE-PROFILE] fetchProfile called, targetUserId:', targetUserId)
     if (!targetUserId) {
+      console.log('[USE-PROFILE] No targetUserId, setting loading false')
       setLoading(false)
       return
     }
 
     try {
+      console.log('[USE-PROFILE] Starting profile fetch...')
       setLoading(true)
       setError(null)
 
       // Fetch user profile
-      const { data: userProfile, error: profileError } = await supabase
+      console.log('[USE-PROFILE] Fetching user from database...')
+      const { data: userProfile, error: profileError } = await supabaseClient
         .from('users')
         .select('*')
         .eq('id', targetUserId)
         .single()
 
-      if (profileError) throw profileError
+      if (profileError) {
+        console.error('[USE-PROFILE] Profile fetch error:', profileError)
+        throw profileError
+      }
 
+      console.log('[USE-PROFILE] Profile fetched successfully:', userProfile?.email)
       setProfile(userProfile)
 
       // Fetch user statistics - wrapped in try-catch to handle RLS errors gracefully
       try {
         // Fetch games data
-        const { data: games, error: gamesError } = await supabase
+        const { data: games, error: gamesError } = await supabaseClient
           .from('game_participants')
           .select('*')
           .eq('user_id', targetUserId)
@@ -122,7 +130,7 @@ export function useProfile(userId?: string) {
 
           // Try to fetch question sets
           try {
-            const { data: questionSets } = await supabase
+            const { data: questionSets } = await supabaseClient
               .from('question_sets')
               .select('id, is_public')
               .eq('user_id', targetUserId)
@@ -155,10 +163,12 @@ export function useProfile(userId?: string) {
       }
 
     } catch (err) {
+      console.error('[USE-PROFILE] Error in fetchProfile:', err)
       const appError = errorHandler.handle(err)
       setError(appError)
       toast.error(errorHandler.getErrorMessage(appError))
     } finally {
+      console.log('[USE-PROFILE] fetchProfile completed, setting loading false')
       setLoading(false)
     }
   }, [targetUserId])
@@ -174,7 +184,7 @@ export function useProfile(userId?: string) {
       setUpdating(true)
       setError(null)
 
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseClient
         .from('users')
         .update({
           ...updates,
@@ -225,7 +235,7 @@ export function useProfile(userId?: string) {
       const filePath = `avatars/${fileName}`
 
       // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabaseClient.storage
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -235,7 +245,7 @@ export function useProfile(userId?: string) {
       if (uploadError) throw uploadError
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      const { data: { publicUrl } } = supabaseClient.storage
         .from('avatars')
         .getPublicUrl(filePath)
 
@@ -267,7 +277,7 @@ export function useProfile(userId?: string) {
       const filePath = url.pathname.split('/').slice(-2).join('/')
 
       // Delete from storage
-      const { error: deleteError } = await supabase.storage
+      const { error: deleteError } = await supabaseClient.storage
         .from('avatars')
         .remove([filePath])
 
@@ -291,7 +301,7 @@ export function useProfile(userId?: string) {
     }
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('users')
         .select('id')
         .eq('username', username)
@@ -314,9 +324,9 @@ export function useProfile(userId?: string) {
   }
 
   useEffect(() => {
+    console.log('[USE-PROFILE] useEffect triggered, targetUserId:', targetUserId)
     fetchProfile()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetUserId])
+  }, [fetchProfile])
 
   return {
     profile,

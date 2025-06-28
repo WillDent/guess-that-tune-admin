@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client-with-singleton'
 import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/lib/supabase/database.types'
 
@@ -14,23 +14,27 @@ export interface QuestionSetWithQuestions extends QuestionSet {
 
 export function useQuestionSets() {
   const { user } = useAuth()
+  console.log('[USE-QUESTION-SETS] Hook run. user:', user)
+  const supabaseClient = getSupabaseBrowserClient()
   const [questionSets, setQuestionSets] = useState<QuestionSetWithQuestions[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
-  const supabase = createClient()
 
   const fetchQuestionSets = useCallback(async () => {
+    console.log('[USE-QUESTION-SETS] useEffect. user:', user)
     if (!user) {
+      console.log('[USE-QUESTION-SETS] No user, clearing question sets')
       setQuestionSets([])
       setLoading(false)
       return
     }
 
     try {
+      console.log('[USE-QUESTION-SETS] Starting fetch for user:', user.id)
       setLoading(true)
       setError(null)
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('question_sets')
         .select(`
           *,
@@ -39,18 +43,24 @@ export function useQuestionSets() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('[USE-QUESTION-SETS] Fetch error:', error)
+        throw error
+      }
 
+      console.log('[USE-QUESTION-SETS] Fetched question sets:', data?.length || 0)
       setQuestionSets(data || [])
     } catch (err) {
       setError(err as Error)
-      console.error('Error fetching question sets:', err)
+      console.error('[USE-QUESTION-SETS] Error fetching question sets:', err)
     } finally {
+      console.log('[USE-QUESTION-SETS] Setting loading false')
       setLoading(false)
     }
-  }, [user, supabase])
+  }, [user])
 
   useEffect(() => {
+    console.log('[USE-QUESTION-SETS] useEffect triggered')
     fetchQuestionSets()
   }, [fetchQuestionSets])
 
@@ -66,7 +76,7 @@ export function useQuestionSets() {
       setError(null)
 
       // Create question set
-      const { data: questionSet, error: createError } = await supabase
+      const { data: questionSet, error: createError } = await supabaseClient
         .from('question_sets')
         .insert({
           user_id: user!.id,
@@ -88,7 +98,7 @@ export function useQuestionSets() {
           question_set_id: questionSet.id
         }))
 
-        const { error: questionsError } = await supabase
+        const { error: questionsError } = await supabaseClient
           .from('questions')
           .insert(questionsToInsert)
 
@@ -121,7 +131,7 @@ export function useQuestionSets() {
       setError(null)
 
       // Update question set
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseClient
         .from('question_sets')
         .update(updates)
         .eq('id', id)
@@ -132,7 +142,7 @@ export function useQuestionSets() {
       // If questions provided, replace all questions
       if (questions) {
         // Delete existing questions
-        const { error: deleteError } = await supabase
+        const { error: deleteError } = await supabaseClient
           .from('questions')
           .delete()
           .eq('question_set_id', id)
@@ -146,7 +156,7 @@ export function useQuestionSets() {
             question_set_id: id
           }))
 
-          const { error: insertError } = await supabase
+          const { error: insertError } = await supabaseClient
             .from('questions')
             .insert(questionsToInsert)
 
@@ -169,7 +179,7 @@ export function useQuestionSets() {
     try {
       setError(null)
 
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('question_sets')
         .delete()
         .eq('id', id)

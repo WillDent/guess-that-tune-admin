@@ -1,49 +1,85 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn, signInWithMagicLink } from '@/lib/auth/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Music } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/contexts/auth-context'
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { toast } = useToast()
+  const { user, loading: authLoading } = useAuth()
   const next = searchParams.get('next') || '/'
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null)
+  const [activeTab, setActiveTab] = useState<string>('magic-link')
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      console.log('User already logged in, redirecting to:', next)
+      router.push(next)
+    }
+  }, [authLoading, user, next, router])
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setMessage(null)
-
-    const result = await signIn(email, password, next)
+    if (!email || !password) {
+      toast.error('Please enter both email and password')
+      return
+    }
     
-    if (result?.error) {
-      setMessage({ type: 'error', text: result.error })
+    setLoading(true)
+    
+    try {
+      const result = await signIn(email, password, next)
+      
+      if (result?.error) {
+        toast.error(result.error)
+        setLoading(false)
+      } else if (result?.success) {
+        // Login successful - redirect on client side
+        toast.success('Login successful!')
+        // Force a hard refresh to ensure auth state is properly updated
+        window.location.href = result.redirectTo || next
+      }
+    } catch (error) {
+      console.error('Sign in error:', error)
+      toast.error('An error occurred during sign in')
       setLoading(false)
     }
   }
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setMessage(null)
-
-    const result = await signInWithMagicLink(email)
-    
-    if (result?.error) {
-      setMessage({ type: 'error', text: result.error })
-    } else if (result?.success) {
-      setMessage({ type: 'success', text: result.message })
+    if (!email) {
+      toast.error('Please enter your email')
+      return
     }
-    setLoading(false)
+    
+    setLoading(true)
+    
+    try {
+      const result = await signInWithMagicLink(email)
+      
+      if (result?.error) {
+        toast.error(result.error)
+      } else if (result?.success) {
+        toast.success(result.message)
+      }
+    } catch (error) {
+      toast.error('An error occurred sending the magic link')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -54,7 +90,7 @@ function LoginForm() {
           <h1 className="text-3xl font-bold text-gray-900">Guess That Tune</h1>
         </div>
 
-        <Tabs defaultValue="magic-link" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="magic-link">Magic Link</TabsTrigger>
             <TabsTrigger value="password">Password</TabsTrigger>
@@ -70,6 +106,7 @@ function LoginForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={loading}
+                  autoComplete="email"
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
@@ -88,6 +125,7 @@ function LoginForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={loading}
+                  autoComplete="email"
                 />
               </div>
               <div>
@@ -98,6 +136,7 @@ function LoginForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={loading}
+                  autoComplete="current-password"
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
@@ -106,16 +145,6 @@ function LoginForm() {
             </form>
           </TabsContent>
         </Tabs>
-
-        {message && (
-          <div className={`mt-4 p-3 rounded text-sm ${
-            message.type === 'error' 
-              ? 'bg-red-50 text-red-600' 
-              : 'bg-green-50 text-green-600'
-          }`}>
-            {message.text}
-          </div>
-        )}
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Don't have an account?{' '}
