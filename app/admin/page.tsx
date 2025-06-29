@@ -20,12 +20,10 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-medium text-white mb-2">Categories</h3>
             <p className="text-gray-400">Manage question set categories</p>
           </Link>
-          
-          <div className="bg-gray-700 rounded-lg p-4 opacity-60 cursor-not-allowed">
+          <Link href="/admin/users" className="bg-gray-700 rounded-lg p-4 hover:bg-pink-900 transition-colors block">
             <h3 className="text-lg font-medium text-white mb-2">Users</h3>
-            <p className="text-gray-400">Manage user accounts and permissions (coming soon)</p>
-          </div>
-          
+            <p className="text-gray-400">Manage user accounts and permissions</p>
+          </Link>
           <div className="bg-gray-700 rounded-lg p-4 opacity-60 cursor-not-allowed">
             <h3 className="text-lg font-medium text-white mb-2">Analytics</h3>
             <p className="text-gray-400">View platform usage statistics (coming soon)</p>

@@ -166,3 +166,29 @@ This document summarizes the current state of the admin feature implementation a
 **Next up:** Integrate Emblor for category assignment 
 
 **Next:** Wire up the frontend to save assignments using this API when categories are changed in the edit page. 
+
+## ✅ COMPLETED
+- Category management (CRUD for categories)
+- Category assignment to question sets (UI + API)
+- API endpoints for category CRUD and assignment
+- Frontend integration for category management and assignment
+- Error handling and logging for category features
+- Dependency and React version fixes for admin UI
+
+## 🚧 IN PROGRESS
+### Admin User Management
+- [ ] List all users (with roles, status, etc.)
+- [ ] Promote/demote users to/from admin
+- [ ] Suspend/activate users
+- [ ] View audit log for user actions
+- [ ] Secure endpoints (admin only)
+- [ ] Frontend admin user management page (table/grid)
+- [ ] Actions: Promote/demote, suspend/activate, view audit log for user
+- [ ] Feedback, error handling, and loading states
+
+## ⏳ PENDING
+- Analytics dashboard (basic stats, charts)
+- Display activity/audit logs (global and per-user)
+- API security review and hardening
+- Add more tests for admin features
+- General UI/UX polish for admin features 
