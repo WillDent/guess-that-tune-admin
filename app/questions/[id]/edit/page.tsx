@@ -22,6 +22,7 @@ import { errorHandler } from '@/lib/errors/handler'
 import { createClient } from '@/utils/supabase/client'
 import { QuestionSetGridSkeleton } from '@/components/questions/question-set-grid-skeleton'
 import { debounce } from 'lodash'
+import { TagInput } from 'emblor'
 
 export default function EditQuestionSetPage() {
   const router = useRouter()
@@ -49,6 +50,15 @@ export default function EditQuestionSetPage() {
   
   // Track unsaved changes
   const [hasChanges, setHasChanges] = useState(false)
+
+  // Fetch all categories and assigned categories
+  const [allCategories, setAllCategories] = useState<{ id: string; text: string }[]>([])
+  const [assignedCategories, setAssignedCategories] = useState<{ id: string; text: string }[]>([])
+  const [catLoading, setCatLoading] = useState(true)
+  const [catError, setCatError] = useState<string | null>(null)
+
+  // New state for activeTagIndex and setActiveTagIndex
+  const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null)
 
   // Load the question set
   useEffect(() => {
@@ -111,6 +121,27 @@ export default function EditQuestionSetPage() {
     
     loadQuestionSet()
   }, [questionSetId, router, toast])
+
+  // Fetch all categories and assigned categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setCatLoading(true)
+      setCatError(null)
+      try {
+        const res = await fetch('/api/admin/categories')
+        const categories = await res.json()
+        setAllCategories(categories.map((c: any) => ({ id: c.id, text: c.name })))
+        // Fetch assigned categories for this question set
+        const res2 = await fetch(`/api/questions/${questionSetId}/categories`)
+        const assigned = await res2.json()
+        setAssignedCategories(assigned.map((c: any) => ({ id: c.category_id, text: c.category_name })))
+      } catch (err) {
+        setCatError('Failed to load categories')
+      }
+      setCatLoading(false)
+    }
+    if (questionSetId) fetchCategories()
+  }, [questionSetId])
 
   // Auto-save functionality
   const debouncedAutoSave = useMemo(
@@ -441,6 +472,25 @@ export default function EditQuestionSetPage() {
                       ))}
                     </div>
                   )}
+                </div>
+
+                <div className="mt-6">
+                  <label className="block font-medium mb-2">Categories</label>
+                  {catLoading ? (
+                    <div>Loading categories...</div>
+                  ) : catError ? (
+                    <div className="text-red-500">{catError}</div>
+                  ) : (
+                    <TagInput
+                      tags={assignedCategories}
+                      setTags={setAssignedCategories}
+                      autocompleteOptions={allCategories}
+                      activeTagIndex={activeTagIndex}
+                      setActiveTagIndex={setActiveTagIndex}
+                      placeholder="Assign categories..."
+                    />
+                  )}
+                  {/* TODO: Save assignments to API on change or save */}
                 </div>
 
                 <div className="pt-4 space-y-2">

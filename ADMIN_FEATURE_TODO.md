@@ -17,6 +17,12 @@ This document summarizes the current state of the admin feature implementation a
     - Extensive error handling and logging added to both API and UI
     - Debugged and resolved issues with NOT NULL constraint, infinite loops, and memory
     - End-to-end tested: category creation, update, and delete all work as expected
+- **Category Assignment Step 2: Edit Page UI**
+    - Emblor TagInput integrated in `app/questions/[id]/edit/page.tsx` with correct state and props.
+    - Ready for API wiring and state management.
+- **Category Assignment Step 3: State Management**
+    - All categories and assigned categories are now fetched from the API and formatted for Emblor.
+    - Loading and error states are handled in the UI.
 
 ---
 
@@ -48,23 +54,19 @@ This document summarizes the current state of the admin feature implementation a
 
 ---
 
-### 2. Category Assignment
-- [ ] **Add UI for assigning categories to question sets (max 5 per set)**
-    - Add category selector to question set edit/create forms (`app/questions/[id]/edit/page.tsx`).
-    - Use multi-select input, limit to 5.
-- [ ] **Implement API logic to enforce assignment rules**
-    - On assignment, check count before insert.
-    - MCP: RLS policy already restricts to owners/admins.
-- [ ] **Connect to `question_set_categories` table**
-    - Use Supabase upsert/delete for assignments.
-- [ ] **Allow only owners/admins to modify assignments**
-    - Enforced by RLS, but double-check in UI/API.
-
-#### Supabase MCP Instructions
-- Use MCP to test RLS by attempting assignment as both owner and non-owner.
-- Use `supabase db query` to check assignments.
-
----
+### 2. Category Assignment (with Emblor Tag Input)
+- [x] **Step 1: Install Emblor**
+    - Installed `emblor` via `pnpm add emblor`.
+    - Note: Peer dependency warnings for React 19, but installation succeeded and ready for use.
+- [x] **Step 2: Update Edit Question Set Page**
+    - Emblor TagInput integrated in edit page, with correct state and props.
+- [x] **Step 3: State Management**
+    - All categories and assigned categories are now fetched from the API and formatted for Emblor.
+    - Loading and error states are handled in the UI.
+- [ ] **Step 4: UI Integration**
+    - Render `TagInput` with current assignments and available categories. Allow adding/removing categories.
+- [ ] **Step 5: API Wiring**
+    - On tag change, update assignments via the API. Show loading and error states.
 
 ### 3. User Management
 - [ ] **Create UI for listing all users (admin only)**
@@ -87,8 +89,6 @@ This document summarizes the current state of the admin feature implementation a
 - Use MCP to test RLS for user updates.
 - Use MCP to call `promote_user_to_admin` for super admin setup.
 
----
-
 ### 4. Analytics & Activity Logs
 - [ ] **Build UI for viewing platform analytics (admin only)**
     - Create `app/admin/analytics/page.tsx`.
@@ -104,8 +104,6 @@ This document summarizes the current state of the admin feature implementation a
 - Use MCP to verify RLS for `activity_logs` (only admins can read).
 - Use `supabase db query` to fetch logs for manual inspection.
 
----
-
 ### 5. Audit Logging
 - [ ] **Ensure all admin actions (category/user management, etc.) are logged to `activity_logs` from the app/API**
     - After each admin action, insert a log entry (Supabase insert to `activity_logs`).
@@ -117,8 +115,6 @@ This document summarizes the current state of the admin feature implementation a
 - Use MCP to verify log entries after admin actions.
 - Use `supabase db query` to check log contents.
 
----
-
 ### 6. API Security
 - [ ] **Add backend API endpoints for admin-only actions (category/user management)**
     - All admin actions should go through `/api/admin/*` endpoints.
@@ -129,8 +125,6 @@ This document summarizes the current state of the admin feature implementation a
 
 #### Supabase MCP Instructions
 - Use `supabase db policies list` and `supabase db policies test` to verify security.
-
----
 
 ### 7. Testing & Verification
 - [ ] **Add integration tests for admin-only features**
@@ -168,4 +162,4 @@ This document summarizes the current state of the admin feature implementation a
 
 **Prioritize Category Management and User Management UIs first, as these are core to the admin experience.**
 
-**Next up:** Category Assignment 
+**Next up:** Integrate Emblor for category assignment 
