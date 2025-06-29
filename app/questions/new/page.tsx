@@ -97,6 +97,8 @@ export default function NewQuestionSetPage() {
   }
 
   const handleSave = async () => {
+    console.log('[NEW-QUESTION-SET] handleSave called')
+    
     if (!setName.trim()) {
       toast.error('Please enter a name for the question set')
       return
@@ -108,6 +110,8 @@ export default function NewQuestionSetPage() {
     }
 
     setSaving(true)
+    console.log('[NEW-QUESTION-SET] Starting save process')
+    
     try {
       // Transform preview data to match Supabase schema
       const questions = preview.map((q, index) => ({
@@ -128,6 +132,16 @@ export default function NewQuestionSetPage() {
         }))
       }))
 
+      console.log('[NEW-QUESTION-SET] Prepared questions:', questions)
+      console.log('[NEW-QUESTION-SET] Calling createQuestionSet with:', {
+        setName,
+        description,
+        difficulty,
+        questionsCount: questions.length,
+        isPublic,
+        tags
+      })
+
       const { error } = await createQuestionSet(
         setName,
         description || null,
@@ -136,6 +150,8 @@ export default function NewQuestionSetPage() {
         isPublic,
         tags
       )
+
+      console.log('[NEW-QUESTION-SET] createQuestionSet returned:', { error })
 
       if (error) {
         throw error
@@ -149,6 +165,7 @@ export default function NewQuestionSetPage() {
       // Redirect to questions page
       router.push('/questions')
     } catch (error) {
+      console.error('[NEW-QUESTION-SET] Save error:', error)
       const appError = errorHandler.handle(error)
       toast.error(errorHandler.getErrorMessage(appError))
     } finally {

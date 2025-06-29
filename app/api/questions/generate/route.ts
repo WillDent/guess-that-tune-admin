@@ -58,7 +58,7 @@ export async function POST(request: Request) {
         const searchResults = await appleMusicClient.search({
           term: searchTerm,
           types: 'songs',
-          limit: 50
+          limit: 25
         })
         
         // Add to candidate pool

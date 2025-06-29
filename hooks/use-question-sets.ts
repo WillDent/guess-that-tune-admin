@@ -57,7 +57,7 @@ export function useQuestionSets() {
       console.log('[USE-QUESTION-SETS] Setting loading false')
       setLoading(false)
     }
-  }, [user])
+  }, [user?.id, supabaseClient])
 
   useEffect(() => {
     console.log('[USE-QUESTION-SETS] useEffect triggered')
@@ -72,9 +72,26 @@ export function useQuestionSets() {
     isPublic: boolean = false,
     tags: string[] = []
   ) => {
+    console.log('[USE-QUESTION-SETS] createQuestionSet called with:', {
+      name,
+      description,
+      difficulty,
+      questionsCount: questions.length,
+      isPublic,
+      tags,
+      userId: user?.id
+    })
+    
     try {
       setError(null)
 
+      if (!user) {
+        console.error('[USE-QUESTION-SETS] No user found!')
+        throw new Error('User not authenticated')
+      }
+
+      console.log('[USE-QUESTION-SETS] Creating question set...')
+      
       // Create question set
       const { data: questionSet, error: createError } = await supabaseClient
         .from('question_sets')
@@ -89,28 +106,41 @@ export function useQuestionSets() {
         .select()
         .single()
 
+      console.log('[USE-QUESTION-SETS] Question set creation result:', { 
+        questionSet, 
+        createError 
+      })
+
       if (createError) throw createError
 
       // Create questions
       if (questions.length > 0) {
+        console.log('[USE-QUESTION-SETS] Creating questions...')
         const questionsToInsert = questions.map(q => ({
           ...q,
           question_set_id: questionSet.id
         }))
 
+        console.log('[USE-QUESTION-SETS] Questions to insert:', questionsToInsert)
+
         const { error: questionsError } = await supabaseClient
           .from('questions')
           .insert(questionsToInsert)
+
+        console.log('[USE-QUESTION-SETS] Questions creation result:', { questionsError })
 
         if (questionsError) throw questionsError
       }
 
       // Refresh the list
+      console.log('[USE-QUESTION-SETS] Refreshing question sets...')
       await fetchQuestionSets()
 
+      console.log('[USE-QUESTION-SETS] createQuestionSet completed successfully')
       return { data: questionSet, error: null }
     } catch (err) {
       const error = err as Error
+      console.error('[USE-QUESTION-SETS] createQuestionSet error:', error)
       setError(error)
       return { data: null, error }
     }

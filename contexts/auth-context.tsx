@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { createClient } from '@/utils/supabase/client'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client-with-singleton'
 import { useRouter } from 'next/navigation'
 import type { Database } from '@/lib/supabase/database.types'
 
@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = getSupabaseBrowserClient()
 
   // Function to ensure user exists in users table
   const ensureUserExists = async (authUser: User) => {

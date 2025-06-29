@@ -21,7 +21,7 @@ export const decadeStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: '60s hits classic 1960s',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -34,7 +34,7 @@ export const decadeStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'disco funk 1970s bee gees earth wind fire',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -47,7 +47,7 @@ export const decadeStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'new wave 80s synth pop depeche mode duran duran',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -60,7 +60,7 @@ export const decadeStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'grunge alternative rock 90s nirvana pearl jam',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -73,7 +73,7 @@ export const decadeStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'pop punk emo 2000s blink 182 fall out boy',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -86,7 +86,7 @@ export const decadeStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'EDM electronic dance 2010s avicii calvin harris',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -103,7 +103,7 @@ export const moodStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'workout motivation pump gym energy',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -116,7 +116,7 @@ export const moodStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'road trip driving highway songs',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -129,7 +129,7 @@ export const moodStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'summer beach vacation tropical vibes',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -142,7 +142,7 @@ export const moodStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'rainy day mellow chill acoustic indie',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -155,7 +155,7 @@ export const moodStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'party anthems dance club hits',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -172,7 +172,7 @@ export const regionalStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'k-pop korean pop BTS blackpink',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -185,7 +185,7 @@ export const regionalStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'reggaeton latin bad bunny daddy yankee',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -198,7 +198,7 @@ export const regionalStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'bollywood hindi film songs',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -211,7 +211,7 @@ export const regionalStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'afrobeats african wizkid burna boy',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -228,7 +228,7 @@ export const specialStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'one hit wonder',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -241,7 +241,7 @@ export const specialStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'movie soundtrack theme oscar winner',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -254,7 +254,7 @@ export const specialStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'tv theme song television show',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -267,7 +267,7 @@ export const specialStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'acoustic version unplugged stripped',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -280,7 +280,7 @@ export const specialStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'remix club mix dance version',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -293,7 +293,7 @@ export const specialStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'duet featuring collaboration feat',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -306,7 +306,7 @@ export const specialStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'cover version tribute',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -319,7 +319,7 @@ export const specialStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'grammy winner award song of the year',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -336,7 +336,7 @@ export const crossGenreStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'country pop crossover taylor swift shania',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -349,7 +349,7 @@ export const crossGenreStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'jazz fusion funk soul contemporary',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -362,7 +362,7 @@ export const crossGenreStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'folk rock bob dylan simon garfunkel',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -375,7 +375,7 @@ export const crossGenreStrategies: SearchStrategy[] = [
       const results = await appleMusicClient.search({
         term: 'rap rock nu metal linkin park',
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       return results.results.songs?.data || []
     }
@@ -471,7 +471,7 @@ export async function executeMixedStrategies(count: number = 3): Promise<{
 }
 
 // Search by multiple terms and combine results
-export async function multiTermSearch(terms: string[], limit = 50): Promise<AppleMusicSong[]> {
+export async function multiTermSearch(terms: string[], limit = 25): Promise<AppleMusicSong[]> {
   const allSongs: AppleMusicSong[] = []
   const songIds = new Set<string>()
   
@@ -530,5 +530,5 @@ export async function getPopularitySongs(type: 'viral' | 'underground' | 'mainst
     mainstream: ['top 40', 'billboard hot 100', 'chart toppers']
   }
   
-  return multiTermSearch(searchTerms[type], 50)
+  return multiTermSearch(searchTerms[type], 25)
 }

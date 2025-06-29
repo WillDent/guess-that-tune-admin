@@ -52,7 +52,7 @@ export function useGames(status?: GameStatus) {
     } finally {
       setLoading(false)
     }
-  }, [user, status])
+  }, [user?.id, status])
 
   useEffect(() => {
     fetchGames()
@@ -93,7 +93,7 @@ export function useGames(status?: GameStatus) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [user, supabase, fetchGames])
+  }, [user?.id, supabase, fetchGames])
 
   const createGame = async (data: Parameters<typeof gameService.create>[0]) => {
     try {

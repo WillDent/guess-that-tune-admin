@@ -37,15 +37,37 @@ export class AppleMusicClient {
    * Search for songs, artists, or albums
    */
   async search(params: SearchParams): Promise<AppleMusicSearchResponse> {
-    const response = await this.client.get('/catalog/us/search', {
-      params: {
-        term: params.term,
-        types: params.types || 'songs',
-        limit: params.limit || 25,
-        offset: params.offset || 0,
-      },
-    })
-    return response.data
+    // Log the actual parameters being sent to Apple Music API
+    console.log('[AppleMusicClient.search] Request params:', params);
+    
+    try {
+      const response = await this.client.get('/catalog/us/search', {
+        params: {
+          term: params.term,
+          types: params.types || 'songs',
+          limit: params.limit || 25,
+          offset: params.offset || 0,
+        },
+      })
+      return response.data
+    } catch (error: any) {
+      // Log detailed error information
+      console.error('[AppleMusicClient.search] Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers,
+      });
+      
+      // Log the actual error message from Apple Music
+      if (error.response?.data?.errors) {
+        console.error('[AppleMusicClient.search] Apple Music API errors:', 
+          JSON.stringify(error.response.data.errors, null, 2)
+        );
+      }
+      
+      throw error;
+    }
   }
 
   /**
@@ -54,18 +76,40 @@ export class AppleMusicClient {
   async getTopCharts(params: ChartParams): Promise<AppleMusicChart> {
     const { storefront = 'us', types = 'songs', limit = 100, genre } = params
     
+    // Log the actual parameters being sent to Apple Music API
+    console.log('[AppleMusicClient.getTopCharts] Request params:', params);
+    
     const url = genre 
       ? `/catalog/${storefront}/charts?types=${types}&genre=${genre}&limit=${limit}`
       : `/catalog/${storefront}/charts?types=${types}&limit=${limit}`
     
-    const response = await this.client.get(url)
-    return response.data
+    try {
+      const response = await this.client.get(url)
+      return response.data
+    } catch (error: any) {
+      // Log detailed error information
+      console.error('[AppleMusicClient.getTopCharts] Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers,
+      });
+      
+      // Log the actual error message from Apple Music
+      if (error.response?.data?.errors) {
+        console.error('[AppleMusicClient.getTopCharts] Apple Music API errors:', 
+          JSON.stringify(error.response.data.errors, null, 2)
+        );
+      }
+      
+      throw error;
+    }
   }
 
   /**
    * Get songs by genre
    */
-  async getSongsByGenre(genreId: string, limit = 50): Promise<AppleMusicSong[]> {
+  async getSongsByGenre(genreId: string, limit = 25): Promise<AppleMusicSong[]> {
     const chartData = await this.getTopCharts({
       types: 'songs',
       genre: genreId,

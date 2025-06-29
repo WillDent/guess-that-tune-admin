@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { getSupabaseBrowserClient } from '@/lib/supabase/client-with-singleton'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
@@ -47,7 +47,7 @@ export interface ProfileUpdateData {
 export function useProfile(userId?: string) {
   const { user: currentUser } = useAuth()
   const { toast } = useToast()
-  const supabaseClient = createClient()
+  const supabaseClient = getSupabaseBrowserClient()
   
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [stats, setStats] = useState<UserStats | null>(null)
@@ -59,33 +59,27 @@ export function useProfile(userId?: string) {
 
   // Fetch user profile
   const fetchProfile = useCallback(async () => {
-    console.log('[USE-PROFILE] fetchProfile called, targetUserId:', targetUserId)
     if (!targetUserId) {
-      console.log('[USE-PROFILE] No targetUserId, setting loading false')
       setLoading(false)
       return
     }
 
     try {
-      console.log('[USE-PROFILE] Starting profile fetch...')
       setLoading(true)
       setError(null)
 
       // Fetch user profile
-      console.log('[USE-PROFILE] Fetching user from database...')
-      const { data: userProfile, error: profileError } = await supabaseClient
+      const { data: userData, error: userError } = await supabaseClient
         .from('users')
         .select('*')
         .eq('id', targetUserId)
         .single()
 
-      if (profileError) {
-        console.error('[USE-PROFILE] Profile fetch error:', profileError)
-        throw profileError
+      if (userError) {
+        throw userError
       }
 
-      console.log('[USE-PROFILE] Profile fetched successfully:', userProfile?.email)
-      setProfile(userProfile)
+      setProfile(userData)
 
       // Fetch user statistics - wrapped in try-catch to handle RLS errors gracefully
       try {
@@ -168,10 +162,9 @@ export function useProfile(userId?: string) {
       setError(appError)
       toast.error(errorHandler.getErrorMessage(appError))
     } finally {
-      console.log('[USE-PROFILE] fetchProfile completed, setting loading false')
       setLoading(false)
     }
-  }, [targetUserId])
+  }, [userId, currentUser?.id])
 
   // Update profile
   const updateProfile = async (updates: ProfileUpdateData) => {

@@ -130,7 +130,7 @@ export function usePublicQuestionSets(options: UsePublicQuestionSetsOptions = {}
     } finally {
       setLoading(false)
     }
-  }, [supabase, user, page, debouncedSearchTerm, options.difficulty, options.sortBy, options.onlyFavorites, pageSize])
+  }, [supabase, user?.id, page, debouncedSearchTerm, options.difficulty, options.sortBy, options.onlyFavorites, pageSize])
 
   // Reset and refetch when filters change
   useEffect(() => {
