@@ -191,41 +191,33 @@ export default function AdminCategoriesPage() {
           </div>
         )}
         {loading ? (
-          <div className="text-gray-400">Loading...</div>
+          <div className="flex items-center gap-2 text-gray-400"><span className="animate-spin">⏳</span> Loading...</div>
         ) : (
-          <table className="min-w-full bg-gray-800 rounded-lg">
-            <thead>
-              <tr>
-                <th className="px-4 py-2 text-left text-gray-300">Name</th>
-                <th className="px-4 py-2 text-left text-gray-300">Description</th>
-                <th className="px-4 py-2 text-left text-gray-300">Created At</th>
-                <th className="px-4 py-2 text-left text-gray-300">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categories.map((cat) => (
-                <tr key={cat.id} className="border-b border-gray-700">
-                  <td className="px-4 py-2 text-white">{cat.name}</td>
-                  <td className="px-4 py-2 text-gray-300">{cat.description || '-'}</td>
-                  <td className="px-4 py-2 text-gray-400">{new Date(cat.created_at).toLocaleString()}</td>
-                  <td className="px-4 py-2">
-                    <button
-                      className="mr-2 text-blue-400 hover:underline"
-                      onClick={() => setEditCategory(cat)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="text-red-400 hover:underline"
-                      onClick={() => setDeleteCategory(cat)}
-                    >
-                      Delete
-                    </button>
-                  </td>
+          <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-800">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-900 sticky top-0 z-10">
+                <tr>
+                  <th className="px-4 py-2 text-left text-gray-300">Name</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Description</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Created At</th>
+                  <th className="px-4 py-2 text-left text-gray-300">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {categories.map((cat) => (
+                  <tr key={cat.id} className="even:bg-gray-900">
+                    <td className="px-4 py-2">{cat.name}</td>
+                    <td className="px-4 py-2">{cat.description}</td>
+                    <td className="px-4 py-2">{new Date(cat.created_at).toLocaleString()}</td>
+                    <td className="px-4 py-2">
+                      <button className="text-blue-500 hover:underline mr-2" onClick={() => setEditCategory(cat)}>Edit</button>
+                      <button className="text-red-500 hover:underline" onClick={() => setDeleteCategory(cat)}>Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </AdminRoute>

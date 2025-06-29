@@ -24,6 +24,9 @@ This document summarizes the current state of the admin feature implementation a
     - [x] Step 4: UI Integration (TagInput interactive)
     - [x] Step 5: **API route for assignment implemented**
         - `/api/questions/[id]/categories` now supports GET (fetch assignments) and POST (replace assignments), with authentication and error handling.
+- **Admin user management (list, promote/demote, suspend/activate, per-user logs)**
+- **Activity/audit logs (global and per-user, UI + API)**
+- **Analytics dashboard (summary stats, UI + API)**
 
 ---
 
@@ -174,21 +177,15 @@ This document summarizes the current state of the admin feature implementation a
 - Frontend integration for category management and assignment
 - Error handling and logging for category features
 - Dependency and React version fixes for admin UI
+- Admin user management (list, promote/demote, suspend/activate, per-user logs)
+- Activity/audit logs (global and per-user, UI + API)
+- Analytics dashboard (summary stats, UI + API)
+- General UI/UX polish for admin features
 
 ## 🚧 IN PROGRESS
-### Admin User Management
-- [ ] List all users (with roles, status, etc.)
-- [ ] Promote/demote users to/from admin
-- [ ] Suspend/activate users
-- [ ] View audit log for user actions
-- [ ] Secure endpoints (admin only)
-- [ ] Frontend admin user management page (table/grid)
-- [ ] Actions: Promote/demote, suspend/activate, view audit log for user
-- [ ] Feedback, error handling, and loading states
+- API security review and hardening
 
 ## ⏳ PENDING
-- Analytics dashboard (basic stats, charts)
-- Display activity/audit logs (global and per-user)
-- API security review and hardening
-- Add more tests for admin features
-- General UI/UX polish for admin features 
+- Advanced filtering/search for logs (date range, action type, keyword)
+- Advanced analytics (charts, time range selection, breakdowns)
+- Add more tests for admin features 
