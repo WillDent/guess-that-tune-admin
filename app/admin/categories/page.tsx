@@ -53,14 +53,17 @@ export default function AdminCategoriesPage() {
         body: JSON.stringify(values),
       })
       const data = await res.json()
-      if (res.ok) {
-        setShowModal(false)
-        fetchCategories()
-      } else {
-        setFormError(data.error || 'Failed to create category')
+      if (!res.ok) {
+        setFormError(data.error || 'Unknown error')
+        console.error('[UI] Create category error:', data.error)
+        setFormLoading(false)
+        return
       }
+      setShowModal(false)
+      fetchCategories()
     } catch (err) {
-      setFormError('Failed to create category')
+      setFormError(String(err))
+      console.error('[UI] Create category exception:', err)
     }
     setFormLoading(false)
   }
