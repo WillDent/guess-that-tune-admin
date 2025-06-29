@@ -13,12 +13,21 @@ interface Log {
   ip_address: string;
 }
 
+const ACTION_TYPES = [
+  "login", "logout", "create_category", "update_category", "delete_category", "promote_user", "demote_user", "suspend_user", "activate_user", "other"
+];
+
 export default function AdminActivityLogsPage() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [usersMap, setUsersMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userFilter, setUserFilter] = useState<string>("");
+  const [start, setStart] = useState<string>("");
+  const [end, setEnd] = useState<string>("");
+  const [action, setAction] = useState<string>("");
+  const [q, setQ] = useState<string>("");
+  const [actionTypes, setActionTypes] = useState<string[]>(ACTION_TYPES);
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
 
   useEffect(() => {
@@ -35,12 +44,23 @@ export default function AdminActivityLogsPage() {
       setLoading(true);
       setError(null);
       try {
-        const url = userFilter ? `/api/admin/activity-logs?user=${userFilter}` : "/api/admin/activity-logs";
+        const params = new URLSearchParams();
+        if (userFilter) params.set('user', userFilter);
+        if (start) params.set('start', start);
+        if (end) params.set('end', end);
+        if (action) params.set('action', action);
+        if (q) params.set('q', q);
+        const url = `/api/admin/activity-logs${params.toString() ? `?${params.toString()}` : ''}`;
         const res = await fetch(url);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to fetch logs");
         setLogs(data.logs);
         setUsersMap(data.usersMap || {});
+        // Dynamically collect action types from logs if not present
+        if (data.logs && data.logs.length > 0) {
+          const types = Array.from(new Set(data.logs.map((l: Log) => String(l.action_type)).filter(Boolean))).map(String);
+          setActionTypes(Array.from(new Set([...ACTION_TYPES, ...types])).map(String));
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -48,25 +68,74 @@ export default function AdminActivityLogsPage() {
       }
     }
     fetchLogs();
-  }, [userFilter]);
+  }, [userFilter, start, end, action, q]);
+
+  function clearFilters() {
+    setUserFilter("");
+    setStart("");
+    setEnd("");
+    setAction("");
+    setQ("");
+  }
 
   return (
     <AdminRoute>
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Admin: Activity Logs</h1>
-        {Object.keys(usersMap).length > 0 && (
-          <div className="mb-4">
-            <label className="mr-2">Filter by user:</label>
-            <select
-              value={userFilter}
-              onChange={e => setUserFilter(e.target.value)}
-              className="border rounded px-2 py-1"
-            >
-              <option value="">All users</option>
-              {Object.entries(usersMap).map(([id, email]) => (
-                <option key={id} value={id}>{email}</option>
+        <div className="mb-4 flex flex-wrap gap-4 items-end">
+          {Object.keys(usersMap).length > 0 && (
+            <div>
+              <label className="mr-2">User:</label>
+              <select
+                value={userFilter}
+                onChange={e => setUserFilter(e.target.value)}
+                className="border rounded px-2 py-1"
+              >
+                <option value="">All users</option>
+                {Object.entries(usersMap).map(([id, email]) => (
+                  <option key={id} value={id}>{email}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div>
+            <label className="mr-2">Start:</label>
+            <input type="date" value={start} onChange={e => setStart(e.target.value)} className="border rounded px-2 py-1" />
+          </div>
+          <div>
+            <label className="mr-2">End:</label>
+            <input type="date" value={end} onChange={e => setEnd(e.target.value)} className="border rounded px-2 py-1" />
+          </div>
+          <div>
+            <label className="mr-2">Action:</label>
+            <select value={action} onChange={e => setAction(e.target.value)} className="border rounded px-2 py-1">
+              <option value="">All actions</option>
+              {actionTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className="mr-2">Keyword:</label>
+            <input
+              type="text"
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder="Search details..."
+              className="border rounded px-2 py-1"
+            />
+          </div>
+          <button onClick={clearFilters} className="ml-2 px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 border">Clear</button>
+        </div>
+        {/* Show active filters */}
+        {(userFilter || start || end || action || q) && (
+          <div className="mb-2 text-xs text-gray-400">
+            <span>Active filters: </span>
+            {userFilter && <span className="mr-2">User: {usersMap[userFilter] || userFilter}</span>}
+            {start && <span className="mr-2">Start: {start}</span>}
+            {end && <span className="mr-2">End: {end}</span>}
+            {action && <span className="mr-2">Action: {action}</span>}
+            {q && <span className="mr-2">Keyword: "{q}"</span>}
           </div>
         )}
         {loading && <div className="flex items-center gap-2 text-gray-400"><span className="animate-spin">⏳</span> Loading logs...</div>}
