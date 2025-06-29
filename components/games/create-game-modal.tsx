@@ -25,8 +25,8 @@ interface CreateGameModalProps {
 
 export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameModalProps) {
   const { toast } = useToast()
-  const { questionSets: mySets, loading: myLoading } = useQuestionSets()
-  const { questionSets: publicSets, loading: publicLoading } = usePublicQuestionSets({ sortBy: 'popular' })
+  const { questionSets: mySets = [], loading: myLoading } = useQuestionSets()
+  const { questionSets: publicSets = [], loading: publicLoading } = usePublicQuestionSets({ sortBy: 'popular' })
   const { createGame } = useGames()
   
   const [selectedSetId, setSelectedSetId] = useState<string>('')
@@ -109,7 +109,7 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                           <div className="flex items-center justify-between w-full">
                             <span>{set.name}</span>
                             <span className="text-sm text-gray-500 ml-2">
-                              {set.questions.length} questions • {set.difficulty}
+                              {set.questions?.length || 0} questions • {set.difficulty}
                             </span>
                           </div>
                         </SelectItem>
@@ -139,7 +139,7 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                           <div className="flex flex-col">
                             <span>{set.name}</span>
                             <span className="text-sm text-gray-500">
-                              by {set.user.display_name || set.user.email} • {set.question_count} questions • {set.difficulty}
+                              by {set.user?.display_name || set.user?.email || 'Unknown'} • {set.question_count || 0} questions • {set.difficulty}
                             </span>
                           </div>
                         </SelectItem>
