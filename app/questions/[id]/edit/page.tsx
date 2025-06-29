@@ -2,7 +2,7 @@
 // ABOUTME: Allows changing name, difficulty, and regenerating questions
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -56,9 +56,12 @@ export default function EditQuestionSetPage() {
   const [assignedCategories, setAssignedCategories] = useState<{ id: string; text: string }[]>([])
   const [catLoading, setCatLoading] = useState(true)
   const [catError, setCatError] = useState<string | null>(null)
-
-  // New state for activeTagIndex and setActiveTagIndex
+  const [catSaving, setCatSaving] = useState(false)
+  const [catSaveError, setCatSaveError] = useState<string | null>(null)
+  const [catSaveSuccess, setCatSaveSuccess] = useState(false)
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null)
+  const prevCategoryIds = useRef<string[]>([])
+  const saveTimeout = useRef<NodeJS.Timeout | null>(null)
 
   // Load the question set
   useEffect(() => {
@@ -290,6 +293,41 @@ export default function EditQuestionSetPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [hasChanges])
 
+  // Debounced save handler for category assignments
+  useEffect(() => {
+    if (catLoading) return
+    const newCategoryIds = assignedCategories.map((c) => c.id).sort()
+    if (JSON.stringify(newCategoryIds) === JSON.stringify(prevCategoryIds.current)) return
+    // Debounce: clear previous timeout
+    if (saveTimeout.current) clearTimeout(saveTimeout.current)
+    saveTimeout.current = setTimeout(async () => {
+      setCatSaving(true)
+      setCatSaveError(null)
+      setCatSaveSuccess(false)
+      try {
+        const res = await fetch(`/api/questions/${questionSetId}/categories`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ categoryIds: newCategoryIds }),
+        })
+        if (!res.ok) {
+          const data = await res.json()
+          setCatSaveError(data.error || 'Failed to save categories')
+        } else {
+          setCatSaveSuccess(true)
+          prevCategoryIds.current = newCategoryIds
+        }
+      } catch (err) {
+        setCatSaveError('Failed to save categories')
+      }
+      setCatSaving(false)
+    }, 600) // 600ms debounce
+    // Cleanup
+    return () => {
+      if (saveTimeout.current) clearTimeout(saveTimeout.current)
+    }
+  }, [assignedCategories, questionSetId, catLoading])
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -481,16 +519,20 @@ export default function EditQuestionSetPage() {
                   ) : catError ? (
                     <div className="text-red-500">{catError}</div>
                   ) : (
-                    <TagInput
-                      tags={assignedCategories}
-                      setTags={setAssignedCategories}
-                      autocompleteOptions={allCategories}
-                      activeTagIndex={activeTagIndex}
-                      setActiveTagIndex={setActiveTagIndex}
-                      placeholder="Assign categories..."
-                    />
+                    <>
+                      <TagInput
+                        tags={assignedCategories}
+                        setTags={setAssignedCategories}
+                        autocompleteOptions={allCategories}
+                        activeTagIndex={activeTagIndex}
+                        setActiveTagIndex={setActiveTagIndex}
+                        placeholder="Assign categories..."
+                      />
+                      {catSaving && <div className="text-sm text-gray-500 mt-1">Saving...</div>}
+                      {catSaveError && <div className="text-sm text-red-500 mt-1">{catSaveError}</div>}
+                      {catSaveSuccess && <div className="text-sm text-green-600 mt-1">Categories saved!</div>}
+                    </>
                   )}
-                  {/* TODO: Save assignments to API on change or save */}
                 </div>
 
                 <div className="pt-4 space-y-2">

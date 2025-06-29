@@ -17,12 +17,13 @@ This document summarizes the current state of the admin feature implementation a
     - Extensive error handling and logging added to both API and UI
     - Debugged and resolved issues with NOT NULL constraint, infinite loops, and memory
     - End-to-end tested: category creation, update, and delete all work as expected
-- **Category Assignment Step 2: Edit Page UI**
-    - Emblor TagInput integrated in `app/questions/[id]/edit/page.tsx` with correct state and props.
-    - Ready for API wiring and state management.
-- **Category Assignment Step 3: State Management**
-    - All categories and assigned categories are now fetched from the API and formatted for Emblor.
-    - Loading and error states are handled in the UI.
+- **Category Assignment (in progress)**
+    - [x] Step 1: Install Emblor
+    - [x] Step 2: Update Edit Question Set Page (Emblor TagInput integrated)
+    - [x] Step 3: State Management (fetch all/assigned categories)
+    - [x] Step 4: UI Integration (TagInput interactive)
+    - [x] Step 5: **API route for assignment implemented**
+        - `/api/questions/[id]/categories` now supports GET (fetch assignments) and POST (replace assignments), with authentication and error handling.
 
 ---
 
@@ -163,3 +164,5 @@ This document summarizes the current state of the admin feature implementation a
 **Prioritize Category Management and User Management UIs first, as these are core to the admin experience.**
 
 **Next up:** Integrate Emblor for category assignment 
+
+**Next:** Wire up the frontend to save assignments using this API when categories are changed in the edit page. 
