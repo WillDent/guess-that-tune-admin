@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Shield } from 'lucide-react'
 
 export default function AdminDashboard() {
@@ -15,19 +16,19 @@ export default function AdminDashboard() {
         </p>
         
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gray-700 rounded-lg p-4">
+          <Link href="/admin/categories" className="bg-gray-700 rounded-lg p-4 hover:bg-pink-900 transition-colors block">
             <h3 className="text-lg font-medium text-white mb-2">Categories</h3>
             <p className="text-gray-400">Manage question set categories</p>
-          </div>
+          </Link>
           
-          <div className="bg-gray-700 rounded-lg p-4">
+          <div className="bg-gray-700 rounded-lg p-4 opacity-60 cursor-not-allowed">
             <h3 className="text-lg font-medium text-white mb-2">Users</h3>
-            <p className="text-gray-400">Manage user accounts and permissions</p>
+            <p className="text-gray-400">Manage user accounts and permissions (coming soon)</p>
           </div>
           
-          <div className="bg-gray-700 rounded-lg p-4">
+          <div className="bg-gray-700 rounded-lg p-4 opacity-60 cursor-not-allowed">
             <h3 className="text-lg font-medium text-white mb-2">Analytics</h3>
-            <p className="text-gray-400">View platform usage statistics</p>
+            <p className="text-gray-400">View platform usage statistics (coming soon)</p>
           </div>
         </div>
       </div>

@@ -33,3 +33,7 @@ export async function createServerSupabaseClient() {
     }
   )
 }
+
+export function createServerClient() {
+  return createServerSupabaseClient();
+}
