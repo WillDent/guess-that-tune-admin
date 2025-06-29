@@ -9,6 +9,14 @@ This document summarizes the current state of the admin feature implementation a
 - **Super admin promotion** logic and function
 - **Admin route protection** and sidebar gating in the app
 - **Admin dashboard skeleton UI**
+- **Category Management (fully implemented and tested)**
+    - UI for listing, creating, editing, and deleting categories (admin only)
+    - API endpoints for CRUD, with admin-only access and error handling
+    - All UI actions use the API (no direct Supabase client in components)
+    - `created_by` field is now set using the authenticated user's ID
+    - Extensive error handling and logging added to both API and UI
+    - Debugged and resolved issues with NOT NULL constraint, infinite loops, and memory
+    - End-to-end tested: category creation, update, and delete all work as expected
 
 ---
 
@@ -158,4 +166,6 @@ This document summarizes the current state of the admin feature implementation a
 
 ---
 
-**Prioritize Category Management and User Management UIs first, as these are core to the admin experience.** 
+**Prioritize Category Management and User Management UIs first, as these are core to the admin experience.**
+
+**Next up:** Category Assignment 
