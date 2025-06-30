@@ -1,0 +1,316 @@
+openapi: 3.1.0
+info:
+  title: Guess That Tune iOS API
+  version: 1.0.0
+  description: API for Guess That Tune iOS app, mapped to Supabase/Next.js backend.
+
+servers:
+  - url: https://your-api-domain.com/api
+
+tags:
+  - name: Home
+  - name: User
+  - name: Category
+  - name: Playlist
+  - name: Game
+  - name: Notifications
+  - name: ErrorLog
+
+paths:
+  /home:
+    get:
+      tags: [Home]
+      summary: Get home data (categories and playlists)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Home data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeResponse'
+
+  /user/profile:
+    get:
+      tags: [User]
+      summary: Get user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  /category/{categoryId}/playlists:
+    get:
+      tags: [Category]
+      summary: Get playlists for a category
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated playlists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistListResponse'
+
+  /playlist/{playlistId}:
+    get:
+      tags: [Playlist]
+      summary: Get playlist details and leaderboard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: playlistId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Playlist details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistDetailResponse'
+
+  /game/complete:
+    post:
+      tags: [Game]
+      summary: Submit game results
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameCompleteRequest'
+      responses:
+        '200':
+          description: Game completion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameCompleteResponse'
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get user notifications
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notifications list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationsResponse'
+
+  /error/log:
+    post:
+      tags: [ErrorLog]
+      summary: Log a client error
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorLogRequest'
+      responses:
+        '204':
+          description: Error logged
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HomeResponse:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        playlists:
+          type: array
+          items:
+            $ref: '#/components/schemas/Playlist'
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        icon:
+          type: string
+
+    Playlist:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        icon:
+          type: string
+        state:
+          type: string
+          enum: [NEW, TRENDING, LOCKED, NORMAL]
+        required_level:
+          type: integer
+        unique_players:
+          type: integer
+        total_plays:
+          type: integer
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        avatar_url:
+          type: string
+        level:
+          type: integer
+        experience:
+          type: integer
+        total_score:
+          type: integer
+
+    PlaylistListResponse:
+      type: object
+      properties:
+        playlists:
+          type: array
+          items:
+            $ref: '#/components/schemas/Playlist'
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+
+    PlaylistDetailResponse:
+      type: object
+      properties:
+        playlist:
+          $ref: '#/components/schemas/Playlist'
+        leaderboard:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        user_id:
+          type: string
+        username:
+          type: string
+        score:
+          type: integer
+        rank:
+          type: integer
+
+    GameCompleteRequest:
+      type: object
+      required: [playlist_id, correct_tracks, total_tracks, completion_time, perfect_score]
+      properties:
+        playlist_id:
+          type: string
+        correct_tracks:
+          type: integer
+        total_tracks:
+          type: integer
+        completion_time:
+          type: integer
+        perfect_score:
+          type: boolean
+
+    GameCompleteResponse:
+      type: object
+      properties:
+        xp_awarded:
+          type: integer
+        score_awarded:
+          type: integer
+        new_level:
+          type: integer
+        leaderboard_position:
+          type: integer
+
+    NotificationsResponse:
+      type: object
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        unread_count:
+          type: integer
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        is_read:
+          type: boolean
+        data:
+          type: object
+
+    ErrorLogRequest:
+      type: object
+      required: [error_type, error_message, device_info]
+      properties:
+        error_type:
+          type: string
+        playlist_id:
+          type: string
+        error_message:
+          type: string
+        device_info:
+          type: object 
