@@ -9,6 +9,7 @@
 > - JWT authentication helpers implemented in `lib/auth/require-auth.ts`, tested in `tests/utils/require-auth.test.ts`.
 > - Rate limiting implemented in `lib/rate-limit.ts`, tested in `tests/utils/rate-limit.test.ts`.
 > - Input validation implemented in `lib/validation.ts`, tested in `tests/utils/validation.test.ts`.
+> - **XP/level system, stats, and leaderboard logic now use shared utilities and are fully tested.**
 
 This document outlines all tasks required to implement the iOS API as specified in `iOSAPISpecs.md` and `docs/openapi.yaml`. Tasks are grouped by area: database, API endpoints, business logic, and testing.
 
@@ -53,7 +54,9 @@ This document outlines all tasks required to implement the iOS API as specified 
 
 - [x] **/api/game/complete**
   - [x] Accept game result, update stats, return XP, score, level, leaderboard position
-  - [x] Implement XP/level logic if not present
+  - [x] Implement XP/level logic using shared utility (`lib/xp.ts`)
+  - [x] Use shared stats and leaderboard utilities (`lib/stats.ts`, `lib/leaderboard.ts`)
+  - [x] Fully tested with unit and integration tests
 
 - [x] **/api/notifications**
   - [x] Return notifications for the user, including unread count
@@ -70,8 +73,9 @@ This document outlines all tasks required to implement the iOS API as specified 
   - [x] Derive leaderboard from `game_results` (top scores per playlist)
   - _Implemented in `lib/leaderboard.ts`, tested in `tests/utils/leaderboard-utils.test.ts`._
 
-- [ ] **XP/Level System**
-  - [ ] Implement XP/level calculation and progression logic
+- [x] **XP/Level System**
+  - [x] Implement XP/level calculation and progression logic using shared utility (`lib/xp.ts`)
+  - [x] Fully tested in isolation and via endpoint integration tests
 
 - [x] **Notification System**
   - [x] Add logic to create and mark notifications as read
@@ -82,8 +86,8 @@ This document outlines all tasks required to implement the iOS API as specified 
   - _Implemented in `lib/playlist-lock.ts`, tested in `tests/utils/playlist-lock.test.ts`._
 
 - [x] **Stats Tracking**
-  - [x] Update `unique_players` and `total_plays` on playlist/game completion
-  - _Implemented in `lib/stats.ts`, tested in `tests/utils/stats.test.ts`._
+  - [x] Update `unique_players` and `total_plays` on playlist/game completion using shared utility (`lib/stats.ts`)
+  - [x] Fully tested in isolation and via endpoint integration tests
 
 ---
 
@@ -113,16 +117,16 @@ This document outlines all tasks required to implement the iOS API as specified 
   - [x] For JWT authentication helpers (`require-auth.test.ts`)
   - [x] For rate limiting (`rate-limit.test.ts`)
   - [x] For input validation (`validation.test.ts`)
-  - [ ] For all new business logic (XP, etc.)
-  - [ ] Place all unit tests in `tests/utils/` or a new `tests/unit/` directory.
-  - [ ] Follow the structure and conventions used in `tests/utils/supabase-mock.ts` (export utility functions, use named exports, and keep tests focused and isolated).
-  - [ ] Use descriptive filenames, e.g. `xp-calc.test.ts`, `leaderboard-utils.test.ts`, etc.
-  - [ ] Mock external dependencies (e.g. Supabase, network calls) using Jest mocks or utility functions.
-  - [ ] Ensure all business logic functions are covered by unit tests, not just API endpoints.
+  - [x] For all new business logic (XP, etc.)
+  - [x] Place all unit tests in `tests/utils/` or a new `tests/unit/` directory.
+  - [x] Follow the structure and conventions used in `tests/utils/supabase-mock.ts` (export utility functions, use named exports, and keep tests focused and isolated).
+  - [x] Use descriptive filenames, e.g. `xp-calc.test.ts`, `leaderboard-utils.test.ts`, etc.
+  - [x] Mock external dependencies (e.g. Supabase, network calls) using Jest mocks or utility functions.
+  - [x] Ensure all business logic functions are covered by unit tests, not just API endpoints.
 
-- [ ] **Integration Tests**
-  - [ ] For all new API endpoints (see `tests/ios-api/` for structure)
-  - [ ] Test authentication, error handling, and edge cases
+- [x] **Integration Tests**
+  - [x] For all new API endpoints (see `tests/ios-api/` for structure)
+  - [x] Test authentication, error handling, and edge cases
 
 - [ ] **End-to-End Tests**
   - [ ] Simulate iOS app flows (home, play game, submit results, view leaderboard, notifications)

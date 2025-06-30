@@ -133,3 +133,45 @@ The application uses the following main tables:
 
 ## Project Status
 ✅ All planned features have been successfully implemented. The application is fully functional with a complete migration from localStorage to Supabase, including authentication, real-time features, and comprehensive user management.
+
+## API Endpoint: /api/game/complete
+
+- **Purpose:** Accepts game results, updates user XP/level, playlist stats, and returns leaderboard position.
+- **Business Logic:**
+  - Uses shared utilities for XP/level calculation (`lib/xp.ts`), playlist stats (`lib/stats.ts`), and leaderboard (`lib/leaderboard.ts`).
+  - Input validation is performed with Zod schemas (`lib/validation.ts`).
+  - All business logic is covered by unit and integration tests.
+- **Rate Limiting:**
+  - Limited to 10 requests per minute per user (returns HTTP 429 if exceeded).
+  - Rate limiting is implemented with the shared utility (`lib/rate-limit.ts`).
+- **API Documentation:**
+  - OpenAPI spec (`docs/openapi.yaml`) is up to date, including request/response examples and 429 error documentation.
+- **Usage Example:**
+  - **Request:**
+    ```json
+    {
+      "playlist_id": "abc123",
+      "correct_tracks": 8,
+      "total_tracks": 10,
+      "completion_time": 120,
+      "perfect_score": false
+    }
+    ```
+  - **Response:**
+    ```json
+    {
+      "xp_awarded": 80,
+      "score_awarded": 800,
+      "new_level": 2,
+      "leaderboard_position": 5
+    }
+    ```
+  - **Rate Limit Exceeded Response:**
+    ```json
+    {
+      "error": "Rate limit exceeded. Please wait before submitting again."
+    }
+    ```
+
+- **Testing:**
+  - Comprehensive unit and integration tests in `tests/utils/` and `tests/ios-api/`.

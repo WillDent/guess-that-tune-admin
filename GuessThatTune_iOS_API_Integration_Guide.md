@@ -1,3 +1,97 @@
+# 🎧 Guess That Tune iOS API – Developer Integration Guide
+
+## Overview
+
+This document provides everything you need to integrate the Guess That Tune iOS app with the Supabase/Next.js backend. It includes:
+
+- High-level API and database mapping
+- Implementation and testing checklist
+- Business logic and rate limiting notes
+- Usage examples for key endpoints
+- **Full OpenAPI YAML** (see end of document) for all endpoints, request/response types, and error codes
+
+---
+
+## 1. API & Database Mapping
+
+See [`iOSAPISpecs.md`](iOSAPISpecs.md) for full details. Key points:
+
+| iOS Endpoint                              | Purpose/Notes                                                                 | Backend Mapping/Action                |
+|-------------------------------------------|-------------------------------------------------------------------------------|---------------------------------------|
+| `GET /api/home`                          | Returns categories and playlists (with stats, lock state, etc.)               | Extend categories & question sets     |
+| `GET /api/user/profile`                   | Returns user profile, level, XP, etc.                                         | Add XP/level fields if needed         |
+| `GET /api/category/{categoryId}/playlists`| Paginated playlists for a category                                            | Add pagination, stats                 |
+| `GET /api/playlist/{playlistId}`          | Playlist detail, leaderboard, metadata                                        | Add leaderboard logic                 |
+| `POST /api/game/complete`                 | Submit game results, return XP, score, level-up, leaderboard position         | New game results table & endpoint     |
+| `GET /api/notifications`                  | List of notifications, unread count                                           | New notifications table & endpoint    |
+| `POST /api/error/log`                     | Client error reporting                                                        | New error logs table & endpoint       |
+
+**Database changes**: See migration SQL in the spec for new fields/tables.
+
+---
+
+## 2. Implementation & Testing Checklist
+
+See [`iOSAPI_TODO.md`](iOSAPI_TODO.md) for full progress and conventions.
+
+- **All endpoints**: JWT authentication required, robust Zod validation, and clear error handling.
+- **Business logic**: Centralized in utilities (`lib/xp.ts`, `lib/leaderboard.ts`, `lib/stats.ts`, etc.), fully unit tested.
+- **Rate limiting**: Sensitive endpoints (e.g., `/api/game/complete`, `/api/error/log`) are rate-limited (10 requests/min/user).
+- **Testing**: All business logic and endpoints have comprehensive unit and integration tests (`tests/utils/`, `tests/ios-api/`).
+
+---
+
+## 3. Business Logic & Rate Limiting
+
+- **XP/Level Calculation**: Handled by `lib/xp.ts`, with progression and multi-level-up support.
+- **Leaderboard**: Derived from `game_results` table, logic in `lib/leaderboard.ts`.
+- **Stats**: Playlist stats updated via `lib/stats.ts`.
+- **Rate Limiting**: Implemented via `lib/rate-limit.ts`, returns HTTP 429 with error message if exceeded.
+
+---
+
+## 4. Example Usage: `/api/game/complete`
+
+- **Request:**
+  ```json
+  {
+    "playlist_id": "abc123",
+    "correct_tracks": 8,
+    "total_tracks": 10,
+    "completion_time": 120,
+    "perfect_score": false
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "xp_awarded": 80,
+    "score_awarded": 800,
+    "new_level": 2,
+    "leaderboard_position": 5
+  }
+  ```
+- **Rate Limit Exceeded:**
+  ```json
+  {
+    "error": "Rate limit exceeded. Please wait before submitting again."
+  }
+  ```
+
+---
+
+## 5. Implementation Progress
+
+See [`PROGRESS.md`](PROGRESS.md) for a full summary of completed features, technical stack, and next steps.
+
+---
+
+## 6. Full OpenAPI YAML
+
+<details>
+<summary>Click to expand full OpenAPI YAML</summary>
+
+```yaml
 openapi: 3.1.0
 info:
   title: Guess That Tune iOS API
@@ -345,3 +439,17 @@ components:
           type: string
         device_info:
           type: object 
+```
+</details>
+
+---
+
+## 7. Additional Notes
+
+- **All endpoints require JWT Bearer authentication.**
+- **All responses are JSON.**
+- **Contact the backend team for any questions or if you need further examples or test tokens.**
+
+---
+
+**This document is your single source of truth for integrating the iOS app with the backend.** If you need further breakdowns, handler skeletons, or test data, just ask! 

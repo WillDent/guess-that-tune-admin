@@ -1,95 +1,116 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { z, validate } from '@/lib/validation';
+import { calculateXPLevel } from '@/lib/xp';
+import { updateTotalPlays, updateUniquePlayers } from '@/lib/stats';
+import { getLeaderboard } from '@/lib/leaderboard';
+import { rateLimit } from '@/lib/rate-limit';
+
+const GameCompleteSchema = z.object({
+  playlist_id: z.string(),
+  correct_tracks: z.number().int().min(0),
+  total_tracks: z.number().int().min(1),
+  completion_time: z.number().int().min(0),
+  perfect_score: z.boolean(),
+});
 
 export async function POST(request: Request) {
-  const supabase = await createServerClient();
-  const body = await request.json();
+  try {
+    const supabase = await createServerClient();
+    const body = await request.json();
 
-  // Get user session from Supabase
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    // Validate input
+    const { success, errors, data } = validate(GameCompleteSchema, body);
+    if (!success || !data) {
+      return NextResponse.json({ error: 'Invalid input', details: errors }, { status: 400 });
+    }
+    const { playlist_id, correct_tracks, total_tracks, completion_time, perfect_score } = data;
 
-  if (userError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Get user session from Supabase
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limiting: 10 requests per minute per user
+    const allowed = rateLimit(user.id, 10, 60 * 1000);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Rate limit exceeded. Please wait before submitting again.' }, { status: 429 });
+    }
+
+    // XP/score logic
+    const baseXP = 10;
+    const xp_awarded = baseXP * correct_tracks + (perfect_score ? 50 : 0);
+    const score_awarded = correct_tracks * 100 + (perfect_score ? 500 : 0);
+
+    // Update user XP, score, and level
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('id, experience, total_score, level')
+      .eq('id', user.id)
+      .single();
+    if (profileError || !userProfile) {
+      return NextResponse.json({ error: profileError?.message || 'User not found' }, { status: 404 });
+    }
+    const xpResult = calculateXPLevel(userProfile.experience || 0, userProfile.level || 1, xp_awarded);
+    const newScore = (userProfile.total_score || 0) + score_awarded;
+    await supabase
+      .from('users')
+      .update({ experience: xpResult.newXP, total_score: newScore, level: xpResult.newLevel })
+      .eq('id', user.id);
+
+    // Insert game result
+    await supabase.from('game_results').insert({
+      user_id: user.id,
+      playlist_id,
+      correct_tracks,
+      total_tracks,
+      completion_time,
+      perfect_score,
+      score_awarded,
+      xp_awarded,
+    });
+
+    // Update playlist stats
+    // Increment total_plays, and unique_players if first time
+    const { data: prevResults } = await supabase
+      .from('game_results')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('playlist_id', playlist_id);
+    const isFirstPlay = prevResults && prevResults.length === 0;
+    await supabase.rpc('increment_playlist_stats', {
+      playlist_id,
+      total_plays_inc: 1,
+      unique_players_inc: isFirstPlay ? 1 : 0,
+    });
+
+    // Get leaderboard position using shared utility
+    const { data: leaderboardData } = await supabase
+      .from('game_results')
+      .select('user_id, score_awarded')
+      .eq('playlist_id', playlist_id)
+      .order('score_awarded', { ascending: false });
+    let leaderboard_position = 0;
+    if (leaderboardData) {
+      const results = leaderboardData.map((entry: any) => ({
+        userId: entry.user_id,
+        score: entry.score_awarded,
+      }));
+      const leaderboard = getLeaderboard(results, leaderboardData.length);
+      leaderboard_position = leaderboard.findIndex(e => e.userId === user.id) + 1;
+    }
+
+    return NextResponse.json({
+      xp_awarded,
+      score_awarded,
+      new_level: xpResult.newLevel,
+      leaderboard_position,
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: 'Internal server error', details: err?.message }, { status: 500 });
   }
-
-  const { playlist_id, correct_tracks, total_tracks, completion_time, perfect_score } = body;
-  if (!playlist_id || typeof correct_tracks !== 'number' || typeof total_tracks !== 'number') {
-    return NextResponse.json({ error: 'Missing or invalid fields' }, { status: 400 });
-  }
-
-  // XP/score logic (simple example)
-  const baseXP = 10;
-  const xp_awarded = baseXP * correct_tracks + (perfect_score ? 50 : 0);
-  const score_awarded = correct_tracks * 100 + (perfect_score ? 500 : 0);
-
-  // Update user XP, score, and level
-  const { data: userProfile, error: profileError } = await supabase
-    .from('users')
-    .select('id, experience, total_score, level')
-    .eq('id', user.id)
-    .single();
-  if (profileError || !userProfile) {
-    return NextResponse.json({ error: profileError?.message || 'User not found' }, { status: 404 });
-  }
-  let newXP = (userProfile.experience || 0) + xp_awarded;
-  let newScore = (userProfile.total_score || 0) + score_awarded;
-  let newLevel = userProfile.level || 1;
-  // Level up for every 1000 XP (example)
-  while (newXP >= newLevel * 1000) {
-    newXP -= newLevel * 1000;
-    newLevel += 1;
-  }
-  await supabase
-    .from('users')
-    .update({ experience: newXP, total_score: newScore, level: newLevel })
-    .eq('id', user.id);
-
-  // Insert game result
-  await supabase.from('game_results').insert({
-    user_id: user.id,
-    playlist_id,
-    correct_tracks,
-    total_tracks,
-    completion_time,
-    perfect_score,
-    score_awarded,
-    xp_awarded,
-  });
-
-  // Update playlist stats
-  // Increment total_plays, and unique_players if first time
-  const { data: prevResults } = await supabase
-    .from('game_results')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('playlist_id', playlist_id);
-  const isFirstPlay = prevResults && prevResults.length === 0;
-  const updates: any = { total_plays: { increment: 1 } };
-  if (isFirstPlay) updates.unique_players = { increment: 1 };
-  await supabase.rpc('increment_playlist_stats', {
-    playlist_id,
-    total_plays_inc: 1,
-    unique_players_inc: isFirstPlay ? 1 : 0,
-  });
-
-  // Get leaderboard position
-  const { data: leaderboardData } = await supabase
-    .from('game_results')
-    .select('user_id, score_awarded')
-    .eq('playlist_id', playlist_id)
-    .order('score_awarded', { ascending: false });
-  let leaderboard_position = 0;
-  if (leaderboardData) {
-    leaderboard_position = leaderboardData.findIndex((entry: any) => entry.user_id === user.id) + 1;
-  }
-
-  return NextResponse.json({
-    xp_awarded,
-    score_awarded,
-    new_level: newLevel,
-    leaderboard_position,
-  });
 } 
