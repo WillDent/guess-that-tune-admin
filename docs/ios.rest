@@ -1,0 +1,49 @@
+# Set your API base URL here
+@baseUrl = http://localhost:3000/api
+
+###
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "will@dent.ly",
+  "password": "Odessa99!"
+}
+
+###
+# Extract the access token from the login response
+@accessToken = {{login.response.body.access_token}}
+
+###
+# @name getUserProfile
+GET {{baseUrl}}/user/profile
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+# @name getHome
+GET {{baseUrl}}/home
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+# @name getNotifications
+GET {{baseUrl}}/notifications
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+# @name getCategoryPlaylists
+# Replace categoryId with a real value
+GET {{baseUrl}}/category/your-category-id/playlists
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+# @name getPlaylistDetails
+# Replace playlistId with a real value
+GET {{baseUrl}}/playlist/your-playlist-id
+Authorization: Bearer {{accessToken}}
+Accept: application/json

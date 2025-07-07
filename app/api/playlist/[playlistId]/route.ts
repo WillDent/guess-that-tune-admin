@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 
-export async function GET(request: Request, { params }: { params: { playlistId: string } }) {
+// NOTE: Next.js App Router API routes do not support a second argument for params.
+// Dynamic params must be extracted from the URL.
+export async function GET(request: Request) {
   const supabase = await createServerClient();
+
+  // Extract playlistId from the URL pathname
+  const pathname = new URL(request.url).pathname;
+  // /api/playlist/{playlistId}
+  const match = pathname.match(/\/api\/playlist\/([^/]+)/);
+  const playlistId = match ? match[1] : undefined;
 
   // Authentication check
   const {
@@ -12,8 +20,6 @@ export async function GET(request: Request, { params }: { params: { playlistId: 
   if (userError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  const { playlistId } = params;
 
   if (!playlistId) {
     return NextResponse.json({ error: 'Missing playlistId' }, { status: 400 });

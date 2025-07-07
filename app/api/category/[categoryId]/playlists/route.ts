@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 
-export async function GET(request: Request, { params }: { params: { categoryId: string } }) {
+export async function GET(request: Request) {
   const supabase = await createServerClient();
+
+  // Extract categoryId from the URL pathname
+  const pathname = new URL(request.url).pathname;
+  // /api/category/{categoryId}/playlists
+  const match = pathname.match(/\/api\/category\/([^/]+)\/playlists/);
+  const categoryId = match ? match[1] : undefined;
 
   // Authentication check
   const {
@@ -14,7 +20,6 @@ export async function GET(request: Request, { params }: { params: { categoryId: 
   }
 
   const { searchParams } = new URL(request.url);
-  const { categoryId } = params;
 
   if (!categoryId) {
     return NextResponse.json({ error: 'Missing categoryId' }, { status: 400 });

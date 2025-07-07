@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
-  const questionSetId = context.params.id
+// NOTE: Next.js App Router API routes do not support a second argument for params.
+// Dynamic params must be extracted from the URL.
+export async function GET(req: NextRequest) {
+  // Extract id from the URL pathname
+  const pathname = new URL(req.url).pathname;
+  // /api/questions/{id}/categories
+  const match = pathname.match(/\/api\/questions\/([^/]+)\/categories/);
+  const questionSetId = match ? match[1] : undefined;
   console.log('[API] GET /api/questions/[id]/categories', questionSetId)
   try {
     const supabase = await createServerClient()
@@ -26,8 +32,12 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
   }
 }
 
-export async function POST(req: NextRequest, context: { params: { id: string } }) {
-  const questionSetId = context.params.id
+export async function POST(req: NextRequest) {
+  // Extract id from the URL pathname
+  const pathname = new URL(req.url).pathname;
+  // /api/questions/{id}/categories
+  const match = pathname.match(/\/api\/questions\/([^/]+)\/categories/);
+  const questionSetId = match ? match[1] : undefined;
   console.log('[API] POST /api/questions/[id]/categories', questionSetId)
   try {
     const supabase = await createServerClient()

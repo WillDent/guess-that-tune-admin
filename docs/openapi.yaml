@@ -15,6 +15,7 @@ tags:
   - name: Game
   - name: Notifications
   - name: ErrorLog
+  - name: Auth
 
 paths:
   /home:
@@ -184,6 +185,41 @@ components:
       bearerFormat: JWT
 
   schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            email:
+              type: string
+    SignupRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    SignupResponse:
+      type: object
+      properties:
+        message:
+          type: string
     HomeResponse:
       type: object
       properties:
@@ -195,36 +231,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Playlist'
-
     Category:
       type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        icon:
-          type: string
-
-    Playlist:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        icon:
-          type: string
-        state:
-          type: string
-          enum: [NEW, TRENDING, LOCKED, NORMAL]
-        required_level:
-          type: integer
-        unique_players:
-          type: integer
-        total_plays:
-          type: integer
-
     UserProfile:
       type: object
       properties:
@@ -240,7 +248,6 @@ components:
           type: integer
         total_score:
           type: integer
-
     PlaylistListResponse:
       type: object
       properties:
@@ -254,7 +261,6 @@ components:
           type: integer
         total:
           type: integer
-
     PlaylistDetailResponse:
       type: object
       properties:
@@ -264,7 +270,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LeaderboardEntry'
-
     LeaderboardEntry:
       type: object
       properties:
@@ -276,7 +281,6 @@ components:
           type: integer
         rank:
           type: integer
-
     GameCompleteRequest:
       type: object
       required: [playlist_id, correct_tracks, total_tracks, completion_time, perfect_score]
@@ -291,7 +295,6 @@ components:
           type: integer
         perfect_score:
           type: boolean
-
     GameCompleteResponse:
       type: object
       properties:
@@ -303,7 +306,6 @@ components:
           type: integer
         leaderboard_position:
           type: integer
-
     NotificationsResponse:
       type: object
       properties:
@@ -313,7 +315,6 @@ components:
             $ref: '#/components/schemas/Notification'
         unread_count:
           type: integer
-
     Notification:
       type: object
       properties:
@@ -332,7 +333,6 @@ components:
           type: boolean
         data:
           type: object
-
     ErrorLogRequest:
       type: object
       required: [error_type, error_message, device_info]
