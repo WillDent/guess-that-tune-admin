@@ -19,6 +19,8 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
+import { ArtworkPreviewUpload } from '@/components/question-sets/artwork-preview-upload'
+import { useQuestionSetArtwork } from '@/hooks/use-question-set-artwork'
 
 interface SelectedSong {
   id: string
@@ -32,6 +34,7 @@ interface SelectedSong {
 export default function NewQuestionSetPage() {
   const router = useRouter()
   const { createQuestionSet } = useQuestionSets()
+  const { uploadArtwork } = useQuestionSetArtwork()
   const { toast } = useToast()
   const [setName, setSetName] = useState('')
   const [description, setDescription] = useState('')
@@ -43,6 +46,8 @@ export default function NewQuestionSetPage() {
   const [isPublic, setIsPublic] = useState(false)
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
+  const [artworkFile, setArtworkFile] = useState<File | null>(null)
+  const [artworkPreview, setArtworkPreview] = useState<string | null>(null)
 
   // Load selected songs from sessionStorage
   useEffect(() => {
@@ -142,7 +147,7 @@ export default function NewQuestionSetPage() {
         tags
       })
 
-      const { error } = await createQuestionSet(
+      const { data: questionSet, error } = await createQuestionSet(
         setName,
         description || null,
         difficulty,
@@ -151,10 +156,21 @@ export default function NewQuestionSetPage() {
         tags
       )
 
-      console.log('[NEW-QUESTION-SET] createQuestionSet returned:', { error })
+      console.log('[NEW-QUESTION-SET] createQuestionSet returned:', { data: questionSet, error })
 
       if (error) {
         throw error
+      }
+
+      // Upload artwork if file was selected
+      if (artworkFile && questionSet) {
+        console.log('[NEW-QUESTION-SET] Uploading artwork...')
+        const { error: artworkError } = await uploadArtwork(artworkFile, questionSet.id)
+        if (artworkError) {
+          console.error('[NEW-QUESTION-SET] Artwork upload error:', artworkError)
+          // Don't fail the whole operation if artwork upload fails
+          toast.error('Question set created but artwork upload failed')
+        }
       }
       
       // Clear the selected songs from session storage
@@ -317,6 +333,15 @@ export default function NewQuestionSetPage() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              <div>
+                <ArtworkPreviewUpload 
+                  onFileSelect={(file, preview) => {
+                    setArtworkFile(file)
+                    setArtworkPreview(preview)
+                  }}
+                />
               </div>
 
               <div className="pt-4">

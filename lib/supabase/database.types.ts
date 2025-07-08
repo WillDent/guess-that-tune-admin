@@ -261,6 +261,7 @@ export type Database = {
       }
       question_sets: {
         Row: {
+          artwork_url: string | null
           created_at: string
           description: string | null
           difficulty: string
@@ -274,6 +275,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          artwork_url?: string | null
           created_at?: string
           description?: string | null
           difficulty: string
@@ -287,6 +289,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          artwork_url?: string | null
           created_at?: string
           description?: string | null
           difficulty?: string
