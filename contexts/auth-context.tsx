@@ -16,6 +16,7 @@ interface AuthContextType {
   loading: boolean
   signOut: () => Promise<void>
   isAdmin: boolean
+  authInitialized: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserWithRole | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [authInitialized, setAuthInitialized] = useState(false)
   const router = useRouter()
   const supabase = getSupabaseBrowserClient()
 
@@ -139,17 +141,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('[AUTH-CONTEXT] Session:', session ? 'exists' : 'none')
         
         if (!session) {
-          console.log('[AUTH-CONTEXT] No session found in getInitialSession, waiting for onAuthStateChange...')
-          // Don't set loading to false here - let onAuthStateChange handle it
-          // This is because in Next.js 15, getSession() might not immediately have the session
-          // but onAuthStateChange will fire with the correct session
-          setTimeout(() => {
-            // Only set loading to false if we still don't have a user after 1 second
-            if (mounted && !user) {
-              console.log('[AUTH-CONTEXT] No session after timeout, setting loading to false')
-              setLoading(false)
-            }
-          }, 1000)
+          console.log('[AUTH-CONTEXT] No session found in getInitialSession')
+          if (mounted) {
+            setUser(null)
+            setIsAdmin(false)
+            setLoading(false)
+            setAuthInitialized(true)
+          }
           return
         }
         
@@ -163,6 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log('[AUTH-CONTEXT] Setting initial user state immediately')
             setUser(authUser)
             setLoading(false)
+            setAuthInitialized(true)
           }
           
           // Then try to enhance with database operations in the background
@@ -200,6 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null)
             setIsAdmin(false)
             setLoading(false)
+            setAuthInitialized(true)
           }
         }
       } catch (error) {
@@ -208,6 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null)
           setIsAdmin(false)
           setLoading(false)
+          setAuthInitialized(true)
         }
       }
     }
@@ -225,6 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('[AUTH-CONTEXT] onAuthStateChange - Immediately setting user')
           setUser(authUser)
           setLoading(false)
+          setAuthInitialized(true)
           
           try {
             // Ensure user exists on sign in
@@ -250,6 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUser(userWithRole)
               setIsAdmin(role === 'admin')
               setLoading(false) // Ensure loading is set to false
+              setAuthInitialized(true)
             }
             
             // Handle auth events
@@ -263,7 +266,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (mounted) {
               setUser(authUser)
               setIsAdmin(false)
-              setLoading(false) // Ensure loading is set to false even on error
+              setLoading(false) // Ensure loading is set to false
+              setAuthInitialized(true) // even on error
             }
           }
         } else {
@@ -271,6 +275,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null)
           setIsAdmin(false)
           setLoading(false) // Ensure loading is set to false when no user
+          setAuthInitialized(true)
           
           if (event === 'SIGNED_OUT') {
             console.log('[AUTH-CONTEXT] SIGNED_OUT event - redirecting to login')
@@ -314,7 +319,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   console.log('[AUTH-CONTEXT] Provider rendering. user:', user, 'loading:', loading)
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, signOut, isAdmin, authInitialized }}>
       {children}
     </AuthContext.Provider>
   )
