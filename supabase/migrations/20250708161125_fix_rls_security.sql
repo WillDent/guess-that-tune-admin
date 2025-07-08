@@ -12,7 +12,7 @@ CREATE POLICY "Users can view games they host or participate in"
 ON games FOR SELECT
 TO authenticated
 USING (
-  host_id = auth.uid() OR 
+  host_user_id = auth.uid() OR 
   id IN (
     SELECT game_id 
     FROM game_participants 
@@ -24,20 +24,20 @@ USING (
 CREATE POLICY "Users can create games"
 ON games FOR INSERT
 TO authenticated
-WITH CHECK (host_id = auth.uid());
+WITH CHECK (host_user_id = auth.uid());
 
 -- Users can update only their own games
 CREATE POLICY "Users can update their own games"
 ON games FOR UPDATE
 TO authenticated
-USING (host_id = auth.uid())
-WITH CHECK (host_id = auth.uid());
+USING (host_user_id = auth.uid())
+WITH CHECK (host_user_id = auth.uid());
 
 -- Users can delete only their own games
 CREATE POLICY "Users can delete their own games"
 ON games FOR DELETE
 TO authenticated
-USING (host_id = auth.uid());
+USING (host_user_id = auth.uid());
 
 -- Game participants table policies
 -- Users can view participants in games they're in or games they host
@@ -49,7 +49,7 @@ USING (
   game_id IN (
     SELECT id 
     FROM games 
-    WHERE host_id = auth.uid()
+    WHERE host_user_id = auth.uid()
   )
 );
 
@@ -84,7 +84,7 @@ USING (
   game_id IN (
     SELECT id 
     FROM games 
-    WHERE host_id = auth.uid()
+    WHERE host_user_id = auth.uid()
   )
 );
 
