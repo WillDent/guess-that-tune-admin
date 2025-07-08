@@ -1,5 +1,6 @@
 import { SupabaseClient, Session } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { handleSupabaseError, isRLSError } from './error-handler'
 
 /**
  * Server-side version of withSession for API routes
@@ -35,22 +36,19 @@ export async function withSessionRoute<T>(
     const result = await callback(session)
     return NextResponse.json(result)
   } catch (err) {
-    console.error('[withSessionRoute] Operation error:', err)
+    const handledError = handleSupabaseError(err)
+    console.error('[withSessionRoute] Operation error:', handledError)
     
-    // Check if it's an RLS error
-    if (err && typeof err === 'object' && 'code' in err) {
-      const error = err as any
-      if (error.code === 'PGRST116' || error.code === '42501') {
-        return NextResponse.json(
-          { error: 'Access denied', details: 'Insufficient permissions' },
-          { status: 403 }
-        )
-      }
-    }
+    // Return appropriate status code based on error type
+    const statusCode = isRLSError(handledError) ? 403 : 500
     
     return NextResponse.json(
-      { error: 'Internal server error', details: err instanceof Error ? err.message : 'Unknown error' },
-      { status: 500 }
+      { 
+        error: handledError.message,
+        type: handledError.type,
+        details: process.env.NODE_ENV === 'development' ? handledError.originalError : undefined
+      },
+      { status: statusCode }
     )
   }
 }

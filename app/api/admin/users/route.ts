@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
+import { handleSupabaseError, logAndHandleError } from '@/utils/supabase/error-handler'
 
 // Only allow admins
 async function requireAdmin(supabase: any) {
@@ -24,10 +25,30 @@ export async function GET(req: NextRequest) {
       .from('users')
       .select('id, email, role, status, suspended_at, suspended_by, created_at')
       .order('created_at', { ascending: false })
-    if (error) throw error
+    
+    if (error) {
+      const handledError = logAndHandleError('admin-users:get', error)
+      return NextResponse.json(
+        { error: handledError.message, type: handledError.type },
+        { status: handledError.type === 'rls_violation' ? 403 : 500 }
+      )
+    }
+    
     return NextResponse.json({ users: data })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 401 })
+    // Handle auth errors from requireAdmin
+    if (err.message === 'Not authenticated') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    if (err.message === 'Not authorized') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+    
+    const handledError = handleSupabaseError(err)
+    return NextResponse.json(
+      { error: handledError.message, type: handledError.type },
+      { status: 500 }
+    )
   }
 }
 

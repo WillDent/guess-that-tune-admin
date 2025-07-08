@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/lib/supabase/database.types'
 import { useDebounce } from '@/hooks/use-debounce'
 import { withSession } from '@/utils/supabase/with-session'
+import { handleSupabaseError, logAndHandleError } from '@/utils/supabase/error-handler'
 
 type QuestionSet = Database['public']['Tables']['question_sets']['Row']
 type User = Database['public']['Tables']['users']['Row']
@@ -102,10 +103,10 @@ export function usePublicQuestionSets(options: UsePublicQuestionSetsOptions = {}
 
       const { data, error: fetchError } = await query
 
-      // Debug: Log raw response
-      console.log('[usePublicQuestionSets] Supabase response:', { data, fetchError })
-
-      if (fetchError) throw fetchError
+      if (fetchError) {
+        const handledError = logAndHandleError('use-public-question-sets:fetch', fetchError)
+        throw new Error(handledError.message)
+      }
 
       // Transform the data to include question count
       const transformedData = (data || []).map(set => ({
@@ -125,7 +126,8 @@ export function usePublicQuestionSets(options: UsePublicQuestionSetsOptions = {}
             .eq('user_id', session.user.id)
           
           if (error) {
-            console.error('[usePublicQuestionSets] Error fetching favorites:', error)
+            logAndHandleError('use-public-question-sets:favorites', error)
+            // Don't throw - just return empty favorites
             return []
           }
           
@@ -155,8 +157,10 @@ export function usePublicQuestionSets(options: UsePublicQuestionSetsOptions = {}
 
       setHasMore(filteredSets.length === pageSize)
     } catch (err) {
-      setError(err as Error)
-      console.error('[usePublicQuestionSets] Error fetching public question sets:', err)
+      const handledError = handleSupabaseError(err)
+      const error = new Error(handledError.message)
+      setError(error)
+      console.error('[usePublicQuestionSets] Error:', handledError)
     } finally {
       setLoading(false)
     }

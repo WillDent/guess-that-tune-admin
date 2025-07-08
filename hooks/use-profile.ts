@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
 import type { Database } from '@/lib/supabase/database.types'
 import { withSession } from '@/utils/supabase/with-session'
+import { handleSupabaseError, logAndHandleError } from '@/utils/supabase/error-handler'
 
 type UserProfile = Database['public']['Tables']['users']['Row'] & {
   stats?: UserStats
@@ -100,7 +101,8 @@ export function useProfile(userId?: string) {
             .eq('user_id', targetUserId)
 
           if (error) {
-            console.error('Error fetching game stats:', error.message || error)
+            const handledError = logAndHandleError('use-profile:game-stats', error)
+            // Don't throw for RLS errors on stats - just return null
             return null
           }
 
@@ -148,7 +150,7 @@ export function useProfile(userId?: string) {
                 .eq('user_id', targetUserId)
 
               if (error) {
-                console.error('Error fetching question sets:', error)
+                logAndHandleError('use-profile:question-sets', error)
                 return null
               }
 
@@ -184,9 +186,10 @@ export function useProfile(userId?: string) {
 
     } catch (err) {
       console.error('[USE-PROFILE] Error in fetchProfile:', err)
-      const appError = errorHandler.handle(err)
+      const handledError = handleSupabaseError(err)
+      const appError = new Error(handledError.message)
       setError(appError)
-      toast.error(errorHandler.getErrorMessage(appError))
+      toast.error(handledError.message)
     } finally {
       setLoading(false)
     }
