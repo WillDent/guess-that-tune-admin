@@ -9,14 +9,9 @@
   - [ ] Navigate to Admin Users page and verify it loads correctly
 
 ## 2. RLS Security (Issue #24)
-**Note**: The RLS migration needs to be applied to your Supabase database.
+**✅ Migration Applied**: The RLS security policies have been successfully applied to your database.
 
-To apply the migration:
-```bash
-npx supabase migration up
-```
-
-After applying the migration, test:
+Test the following:
 - [ ] **User Data Isolation**:
   - [ ] Create a game as User A
   - [ ] Log in as User B

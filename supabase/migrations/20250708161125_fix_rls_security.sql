@@ -2,9 +2,21 @@
 -- This migration implements proper row-level security policies to ensure users can only
 -- access and modify their own data
 
--- First, drop the overly permissive policies
-DROP POLICY IF EXISTS "Allow all for authenticated users on games" ON games;
-DROP POLICY IF EXISTS "Allow all for authenticated users on game_participants" ON game_participants;
+-- First, drop ALL existing policies on games and game_participants tables
+DO $$
+BEGIN
+  -- Drop all policies on games table
+  FOR pol IN SELECT policyname FROM pg_policies WHERE tablename = 'games' AND schemaname = 'public'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON games', pol.policyname);
+  END LOOP;
+  
+  -- Drop all policies on game_participants table
+  FOR pol IN SELECT policyname FROM pg_policies WHERE tablename = 'game_participants' AND schemaname = 'public'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON game_participants', pol.policyname);
+  END LOOP;
+END $$;
 
 -- Games table policies
 -- Users can view games they host or participate in
