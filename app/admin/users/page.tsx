@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AdminRoute } from "@/components/auth/admin-route";
-import { useUser } from '@/hooks/use-user';
+import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -22,7 +22,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<{ [id: string]: boolean }>({});
   const [actionError, setActionError] = useState<{ [id: string]: string | null }>({});
-  const { user: currentUser } = useUser();
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
     async function fetchUsers() {
