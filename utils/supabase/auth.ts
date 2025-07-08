@@ -14,7 +14,7 @@ import type { Database } from '@/lib/supabase/database.types'
 // Re-export existing utilities
 export { withSession, hasValidSession, requireSession } from './with-session'
 export { withSessionRoute, requireSessionRoute } from './with-session-server'
-export { handleSupabaseError, isRLSError, isDuplicateError, isAuthError } from './error-handler'
+export { handleSupabaseError, isRLSError, isDuplicateError } from './error-handler'
 
 // Types
 export interface UserWithRole extends User {
@@ -74,9 +74,15 @@ export async function getCurrentUser(supabase: SupabaseClient<Database>): Promis
     .eq('id', user.id)
     .single()
   
+  // Ensure role is one of the expected values
+  let role: 'user' | 'admin' = 'user'
+  if (profile?.role === 'admin') {
+    role = 'admin'
+  }
+  
   return {
     ...user,
-    role: profile?.role || 'user'
+    role
   }
 }
 

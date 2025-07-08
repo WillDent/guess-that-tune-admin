@@ -27,9 +27,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
     if (showToast) {
       // Show appropriate toast based on error type
       if (isRLSError(handledError)) {
-        toast.error('Permission denied', {
-          description: 'You do not have access to this resource.'
-        })
+        toast.error('You do not have access to this resource.', 'Permission denied')
       } else {
         toast.error(handledError.message || fallbackMessage || 'An error occurred')
       }

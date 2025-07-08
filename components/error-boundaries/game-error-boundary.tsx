@@ -134,7 +134,7 @@ export function GameErrorBoundary({
           onReset={onReset}
         />
       )}
-      resetKeys={[gameId]}
+      resetKeys={gameId ? [gameId] : []}
       isolate
     >
       {children}

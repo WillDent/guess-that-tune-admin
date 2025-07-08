@@ -21,7 +21,7 @@ import {
 import { useState } from 'react'
 
 export function AuthStateDebugger() {
-  const { state, user, error, isAdmin, loading } = useAuth()
+  const { user, isAdmin, loading } = useAuth()
   const [showStateMachine, setShowStateMachine] = useState(false)
   
   // Only show in development
@@ -29,36 +29,25 @@ export function AuthStateDebugger() {
     return null
   }
 
+  // TODO: Integrate with auth state machine when it's connected to auth context
+  const state = user ? AUTH_STATES.AUTHENTICATED : AUTH_STATES.UNAUTHENTICATED
+  const error = null
+
   const getStateIcon = () => {
-    switch (state) {
-      case AUTH_STATES.INITIAL:
-        return <Loader2 className="h-4 w-4 animate-spin" />
-      case AUTH_STATES.AUTHENTICATING:
-        return <Loader2 className="h-4 w-4 animate-spin" />
-      case AUTH_STATES.AUTHENTICATED:
-        return <CheckCircle className="h-4 w-4 text-green-500" />
-      case AUTH_STATES.UNAUTHENTICATED:
-        return <XCircle className="h-4 w-4 text-gray-400" />
-      case AUTH_STATES.REFRESHING:
-        return <RefreshCw className="h-4 w-4 animate-spin" />
-      case AUTH_STATES.ERROR:
-        return <AlertCircle className="h-4 w-4 text-red-500" />
-      default:
-        return <Info className="h-4 w-4" />
+    if (loading) {
+      return <Loader2 className="h-4 w-4 animate-spin" />
     }
+    if (user) {
+      return <CheckCircle className="h-4 w-4 text-green-500" />
+    }
+    return <XCircle className="h-4 w-4 text-gray-400" />
   }
 
   const getStateBadgeVariant = () => {
-    switch (state) {
-      case AUTH_STATES.AUTHENTICATED:
-        return 'default'
-      case AUTH_STATES.ERROR:
-        return 'destructive'
-      case AUTH_STATES.UNAUTHENTICATED:
-        return 'secondary'
-      default:
-        return 'outline'
+    if (user) {
+      return 'default'
     }
+    return 'secondary'
   }
 
   return (
@@ -91,11 +80,6 @@ export function AuthStateDebugger() {
               </Badge>
             </div>
 
-            {error && (
-              <div className="p-2 bg-red-50 border border-red-200 rounded text-red-600">
-                <span className="font-medium">Error:</span> {error.message}
-              </div>
-            )}
 
             <div className="pt-2 border-t">
               <Button

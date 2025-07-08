@@ -114,6 +114,52 @@ export function isNotFoundError(error: HandledError): boolean {
 }
 
 /**
+ * Type guard to check if an error is an authentication error
+ */
+export function isAuthError(error: HandledError | Error | unknown): boolean {
+  // Check if it's a HandledError with RLS violation
+  if (error && typeof error === 'object' && 'type' in error) {
+    const handledError = error as HandledError
+    return handledError.type === 'rls_violation'
+  }
+  
+  // Check if it's a raw error with auth-related messages
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase()
+    return message.includes('authentication') || 
+           message.includes('unauthorized') ||
+           message.includes('not authenticated') ||
+           message.includes('jwt') ||
+           message.includes('token')
+  }
+  
+  return false
+}
+
+/**
+ * Type guard to check if an error is a connection/network error
+ */
+export function isConnectionError(error: HandledError | Error | unknown): boolean {
+  // Check if it's a HandledError with network type
+  if (error && typeof error === 'object' && 'type' in error) {
+    const handledError = error as HandledError
+    return handledError.type === 'network'
+  }
+  
+  // Check if it's a raw error with network-related messages
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase()
+    return message.includes('network') || 
+           message.includes('fetch') ||
+           message.includes('connection') ||
+           message.includes('timeout') ||
+           message.includes('offline')
+  }
+  
+  return false
+}
+
+/**
  * Logs error details for debugging while returning user-friendly message
  */
 export function logAndHandleError(

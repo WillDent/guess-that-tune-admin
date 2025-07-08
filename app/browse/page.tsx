@@ -8,15 +8,15 @@ import type { Database } from '@/lib/supabase/database.types'
 import type { PublicQuestionSet, SortOption, DifficultyFilter } from './types'
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     search?: string
     difficulty?: DifficultyFilter
     sort?: SortOption
     favorites?: string
-  }
+  }>
 }
 
-async function getQuestionSets(searchParams: PageProps['searchParams']) {
+async function getQuestionSets(searchParams: Awaited<PageProps['searchParams']>) {
   const supabase = await createServerClient()
   
   let query = supabase
@@ -92,9 +92,12 @@ async function getUserFavorites() {
 }
 
 export default async function BrowsePage({ searchParams }: PageProps) {
+  // Await searchParams as required by Next.js 15
+  const params = await searchParams
+
   // Fetch data in parallel
   const [questionSets, favorites] = await Promise.all([
-    getQuestionSets(searchParams),
+    getQuestionSets(params),
     getUserFavorites()
   ])
 
@@ -117,7 +120,7 @@ export default async function BrowsePage({ searchParams }: PageProps) {
         <BrowseContent 
           initialQuestionSets={setsWithFavorites}
           initialFavorites={favorites}
-          searchParams={searchParams}
+          searchParams={params}
         />
       </Suspense>
     </div>
