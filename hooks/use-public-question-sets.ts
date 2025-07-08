@@ -46,6 +46,18 @@ export function usePublicQuestionSets(options: UsePublicQuestionSetsOptions = {}
       const currentPage = reset ? 0 : page
       if (reset) setPage(0)
 
+      // Debug: Log parameters
+      console.log('[usePublicQuestionSets] Fetching question sets with params:', {
+        currentPage,
+        pageSize,
+        searchTerm: options.searchTerm,
+        debouncedSearchTerm,
+        difficulty: options.difficulty,
+        sortBy: options.sortBy,
+        onlyFavorites: options.onlyFavorites,
+        user: user ? user.id : null
+      })
+
       let query = supabase
         .from('question_sets')
         .select(`
@@ -84,7 +96,13 @@ export function usePublicQuestionSets(options: UsePublicQuestionSetsOptions = {}
           break
       }
 
+      // Debug: Log the query object (as much as possible)
+      console.log('[usePublicQuestionSets] About to execute Supabase query')
+
       const { data, error: fetchError } = await query
+
+      // Debug: Log raw response
+      console.log('[usePublicQuestionSets] Supabase response:', { data, fetchError })
 
       if (fetchError) throw fetchError
 
@@ -98,11 +116,12 @@ export function usePublicQuestionSets(options: UsePublicQuestionSetsOptions = {}
       // Fetch favorites if user is logged in
       let favoritedSets: string[] = []
       if (user) {
-        const { data: favorites } = await supabase
+        const { data: favorites, error: favError } = await supabase
           .from('favorites')
           .select('question_set_id')
           .eq('user_id', user.id)
-
+        // Debug: Log favorites fetch
+        console.log('[usePublicQuestionSets] Favorites response:', { favorites, favError })
         favoritedSets = favorites?.map(f => f.question_set_id) || []
       }
 
@@ -126,7 +145,7 @@ export function usePublicQuestionSets(options: UsePublicQuestionSetsOptions = {}
       setHasMore(filteredSets.length === pageSize)
     } catch (err) {
       setError(err as Error)
-      console.error('Error fetching public question sets:', err)
+      console.error('[usePublicQuestionSets] Error fetching public question sets:', err)
     } finally {
       setLoading(false)
     }

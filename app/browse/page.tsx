@@ -56,6 +56,18 @@ export default function BrowsePage() {
     onlyFavorites
   })
 
+  // Debug: Log when the page renders and what data is received
+  console.log('[BrowsePage] Rendered. usePublicQuestionSets:', {
+    questionSets,
+    loading,
+    error,
+    hasMore,
+    searchTerm,
+    difficulty,
+    sortBy,
+    onlyFavorites
+  })
+
   const handleToggleFavorite = async (e: React.MouseEvent, questionSetId: string) => {
     e.stopPropagation()
     
@@ -192,20 +204,17 @@ export default function BrowsePage() {
           <div className="text-center">
             <p className="text-red-600 mb-4">Failed to load question sets</p>
             <Button onClick={refetch}>Try Again</Button>
+            {/* Debug: Show error details */}
+            <pre className="mt-4 text-xs text-red-400 bg-red-50 p-2 rounded">{error?.message || String(error)}</pre>
           </div>
         </Card>
       ) : questionSets.length === 0 ? (
         <Card className="p-12">
           <div className="text-center">
             <Music className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-            <h2 className="text-xl font-semibold mb-2">No Question Sets Found</h2>
-            <p className="text-gray-600">
-              {searchTerm 
-                ? `No results for "${searchTerm}"`
-                : onlyFavorites
-                ? "You haven't favorited any question sets yet"
-                : "No public question sets available"}
-            </p>
+            <p className="mb-2">No public question sets found.</p>
+            {/* Debug: Show current filters and state */}
+            <pre className="mt-4 text-xs text-gray-400 bg-gray-50 p-2 rounded">{JSON.stringify({ searchTerm, difficulty, sortBy, onlyFavorites }, null, 2)}</pre>
           </div>
         </Card>
       ) : (
