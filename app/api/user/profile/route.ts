@@ -1,31 +1,27 @@
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuthRoute, handleSupabaseError } from '@/utils/supabase';
 
-export async function GET() {
-  const supabase = await createServerClient();
-  const cookieStore = cookies();
+export async function GET(req: NextRequest) {
+  return requireAuthRoute(req, async (user, supabase) => {
+    // Fetch user profile fields
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('id, username, avatar_url, level, experience, total_score')
+      .eq('id', user.id)
+      .single();
 
-  // Get user session from Supabase
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    if (profileError) {
+      const handledError = handleSupabaseError(profileError);
+      return NextResponse.json(
+        { error: handledError.message },
+        { status: handledError.type === 'not_found' ? 404 : 500 }
+      );
+    }
 
-  if (userError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+    if (!profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
 
-  // Fetch user profile fields
-  const { data: profile, error: profileError } = await supabase
-    .from('users')
-    .select('id, username, avatar_url, level, experience, total_score')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError || !profile) {
-    return NextResponse.json({ error: profileError?.message || 'Profile not found' }, { status: 404 });
-  }
-
-  return NextResponse.json(profile);
+    return NextResponse.json(profile);
+  });
 } 

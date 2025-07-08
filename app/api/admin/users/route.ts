@@ -1,26 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
-import { handleSupabaseError, logAndHandleError } from '@/utils/supabase/error-handler'
-
-// Only allow admins
-async function requireAdmin(supabase: any) {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) throw new Error('Not authenticated')
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-  if (!profile || profile.role !== 'admin') throw new Error('Not authorized')
-}
+import { requireAdminRoute, createServerClient, logAndHandleError } from '@/utils/supabase'
 
 export async function GET(req: NextRequest) {
-  try {
-    const supabase = await createServerClient()
-    await requireAdmin(supabase)
+  return requireAdminRoute(req, async (user, supabase) => {
     const { data, error } = await supabase
       .from('users')
       .select('id, email, role, status, suspended_at, suspended_by, created_at')
@@ -35,27 +17,11 @@ export async function GET(req: NextRequest) {
     }
     
     return NextResponse.json({ users: data })
-  } catch (err: any) {
-    // Handle auth errors from requireAdmin
-    if (err.message === 'Not authenticated') {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    }
-    if (err.message === 'Not authorized') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-    }
-    
-    const handledError = handleSupabaseError(err)
-    return NextResponse.json(
-      { error: handledError.message, type: handledError.type },
-      { status: 500 }
-    )
-  }
+  })
 }
 
 export async function PATCH(req: NextRequest) {
-  try {
-    const supabase = await createServerClient()
-    await requireAdmin(supabase)
+  return requireAdminRoute(req, async (adminUser, supabase) => {
     const { id, action } = await req.json()
     if (!id || !action) throw new Error('Missing id or action')
 
@@ -70,11 +36,8 @@ export async function PATCH(req: NextRequest) {
     } else if (action === 'suspend') {
       update.status = 'suspended'
       update.suspended_at = new Date().toISOString()
-      // Optionally: set suspended_by to current admin
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      update.suspended_by = user.id
+      // Set suspended_by to current admin
+      update.suspended_by = adminUser.id
       message = 'User suspended.'
     } else if (action === 'activate') {
       update.status = 'active'
@@ -91,11 +54,17 @@ export async function PATCH(req: NextRequest) {
       .eq('id', id)
       .select('id, email, role, status, suspended_at, suspended_by, created_at')
       .single()
-    if (error) throw error
+    
+    if (error) {
+      const handledError = logAndHandleError('admin-users:patch', error)
+      return NextResponse.json(
+        { error: handledError.message, type: handledError.type },
+        { status: 400 }
+      )
+    }
+    
     return NextResponse.json({ user: data, message })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 })
-  }
+  })
 }
 
 // POST/PATCH for user updates will be added next 
