@@ -5,26 +5,27 @@ import { NextResponse } from 'next/server'
 import { appleMusicClient } from '@/lib/apple-music'
 import { generateQuestionSet } from '@/lib/question-generator'
 import { APPLE_MUSIC_CONFIG } from '@/lib/apple-music/config'
+import { createServerClient } from '@/lib/supabase/server'
+import { withSessionRoute } from '@/utils/supabase/with-session-server'
 
 export async function POST(request: Request) {
-  try {
-    // Check if credentials are configured
-    if (!APPLE_MUSIC_CONFIG.teamId || !APPLE_MUSIC_CONFIG.keyId || !APPLE_MUSIC_CONFIG.privateKey) {
-      return NextResponse.json(
-        { error: 'Apple Music API credentials not configured' },
-        { status: 503 }
-      )
-    }
+  // Create Supabase client
+  const supabase = await createServerClient()
+  
+  // Wrap the entire operation in session check
+  return await withSessionRoute(supabase, async (session) => {
+    try {
+      // Check if credentials are configured
+      if (!APPLE_MUSIC_CONFIG.teamId || !APPLE_MUSIC_CONFIG.keyId || !APPLE_MUSIC_CONFIG.privateKey) {
+        throw new Error('Apple Music API credentials not configured')
+      }
 
     const body = await request.json()
     const { selectedSongIds, difficulty = 'medium' } = body
 
-    if (!selectedSongIds || selectedSongIds.length === 0) {
-      return NextResponse.json(
-        { error: 'No songs selected' },
-        { status: 400 }
-      )
-    }
+      if (!selectedSongIds || selectedSongIds.length === 0) {
+        throw new Error('No songs selected')
+      }
 
     // Fetch the selected songs
     const selectedSongs = await appleMusicClient.getSongs(selectedSongIds)
@@ -130,17 +131,15 @@ export async function POST(request: Request) {
         })),
         difficulty
       }
-    })
-    
-    return NextResponse.json({ 
-      questions: formattedQuestions,
-      totalQuestions: formattedQuestions.length
-    })
-  } catch (error) {
-    console.error('Failed to generate questions:', error)
-    return NextResponse.json(
-      { error: 'Failed to generate question set' },
-      { status: 500 }
-    )
-  }
+      })
+      
+      return { 
+        questions: formattedQuestions,
+        totalQuestions: formattedQuestions.length
+      }
+    } catch (error) {
+      console.error('Failed to generate questions:', error)
+      throw error
+    }
+  })
 }

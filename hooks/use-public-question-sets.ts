@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/client'
 import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/lib/supabase/database.types'
 import { useDebounce } from '@/hooks/use-debounce'
+import { withSession } from '@/utils/supabase/with-session'
 
 type QuestionSet = Database['public']['Tables']['question_sets']['Row']
 type User = Database['public']['Tables']['users']['Row']
@@ -116,13 +117,23 @@ export function usePublicQuestionSets(options: UsePublicQuestionSetsOptions = {}
       // Fetch favorites if user is logged in
       let favoritedSets: string[] = []
       if (user) {
-        const { data: favorites, error: favError } = await supabase
-          .from('favorites')
-          .select('question_set_id')
-          .eq('user_id', user.id)
-        // Debug: Log favorites fetch
-        console.log('[usePublicQuestionSets] Favorites response:', { favorites, favError })
+        // Use withSession to ensure valid session before querying favorites
+        const favorites = await withSession(supabase, async (session) => {
+          const { data, error } = await supabase
+            .from('favorites')
+            .select('question_set_id')
+            .eq('user_id', session.user.id)
+          
+          if (error) {
+            console.error('[usePublicQuestionSets] Error fetching favorites:', error)
+            return []
+          }
+          
+          return data || []
+        })
+        
         favoritedSets = favorites?.map(f => f.question_set_id) || []
+        console.log('[usePublicQuestionSets] Favorites fetched:', favoritedSets.length)
       }
 
       // Add favorited status

@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
 import type { Database } from '@/lib/supabase/database.types'
+import { withSession } from '@/utils/supabase/with-session'
 
 type UserProfile = Database['public']['Tables']['users']['Row'] & {
   stats?: UserStats
@@ -68,30 +69,46 @@ export function useProfile(userId?: string) {
       setLoading(true)
       setError(null)
 
-      // Fetch user profile
-      const { data: userData, error: userError } = await supabaseClient
-        .from('users')
-        .select('*')
-        .eq('id', targetUserId)
-        .single()
+      // Use withSession to ensure valid session before fetching profile
+      const profileData = await withSession(supabaseClient, async (session) => {
+        const { data: userData, error: userError } = await supabaseClient
+          .from('users')
+          .select('*')
+          .eq('id', targetUserId)
+          .single()
 
-      if (userError) {
-        throw userError
+        if (userError) {
+          throw userError
+        }
+
+        return userData
+      })
+
+      if (!profileData) {
+        throw new Error('Unable to fetch profile. Please ensure you are logged in.')
       }
 
-      setProfile(userData)
+      setProfile(profileData)
 
       // Fetch user statistics - wrapped in try-catch to handle RLS errors gracefully
       try {
-        // Fetch games data
-        const { data: games, error: gamesError } = await supabaseClient
-          .from('game_participants')
-          .select('*')
-          .eq('user_id', targetUserId)
+        // Use withSession for game stats to handle session properly
+        const games = await withSession(supabaseClient, async (session) => {
+          const { data, error } = await supabaseClient
+            .from('game_participants')
+            .select('*')
+            .eq('user_id', targetUserId)
 
-        if (gamesError) {
-          console.error('Error fetching game stats:', gamesError.message || gamesError)
-          // Don't throw - just set empty stats
+          if (error) {
+            console.error('Error fetching game stats:', error.message || error)
+            return null
+          }
+
+          return data
+        })
+
+        if (!games) {
+          // No session or error - set empty stats
           setStats({
             totalGamesPlayed: 0,
             totalGamesWon: 0,
@@ -122,12 +139,21 @@ export function useProfile(userId?: string) {
             publicQuestionSets: 0
           }
 
-          // Try to fetch question sets
+          // Try to fetch question sets with session check
           try {
-            const { data: questionSets } = await supabaseClient
-              .from('question_sets')
-              .select('id, is_public')
-              .eq('user_id', targetUserId)
+            const questionSets = await withSession(supabaseClient, async (session) => {
+              const { data, error } = await supabaseClient
+                .from('question_sets')
+                .select('id, is_public')
+                .eq('user_id', targetUserId)
+
+              if (error) {
+                console.error('Error fetching question sets:', error)
+                return null
+              }
+
+              return data
+            })
 
             if (questionSets) {
               statsData.totalQuestionSets = questionSets.length
