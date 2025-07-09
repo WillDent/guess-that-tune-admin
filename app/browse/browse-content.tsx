@@ -142,6 +142,7 @@ export function BrowseContent({
       questionCount: set.question_count,
       playCount: set.play_count || 0,
       createdAt: set.created_at,
+      artwork_url: set.artwork_url,
       questions: [] // Will be loaded in preview modal
     }
     setPreviewSet(transformedSet)

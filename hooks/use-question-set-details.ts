@@ -11,7 +11,6 @@ export function useQuestionSetDetails(questionSetId: string | null) {
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  const supabase = createClient()
 
   useEffect(() => {
     if (!questionSetId) {
@@ -20,29 +19,46 @@ export function useQuestionSetDetails(questionSetId: string | null) {
     }
 
     const fetchQuestions = async () => {
+      console.log('[useQuestionSetDetails] Fetching questions for:', questionSetId)
+      const supabase = createClient()
+      
       try {
         setLoading(true)
         setError(null)
 
-        const { data, error } = await supabase
+        // Add timeout to detect hanging requests
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout')), 10000)
+        )
+
+        const queryPromise = supabase
           .from('questions')
           .select('*')
           .eq('question_set_id', questionSetId)
           .order('order_index', { ascending: true })
+
+        console.log('[useQuestionSetDetails] Query started...')
+
+        const { data, error } = await Promise.race([
+          queryPromise,
+          timeoutPromise
+        ]) as any
+
+        console.log('[useQuestionSetDetails] Response:', { data, error })
 
         if (error) throw error
 
         setQuestions(data || [])
       } catch (err) {
         setError(err as Error)
-        console.error('Error fetching questions:', err)
+        console.error('[useQuestionSetDetails] Error fetching questions:', err)
       } finally {
         setLoading(false)
       }
     }
 
     fetchQuestions()
-  }, [questionSetId, supabase])
+  }, [questionSetId])
 
   return { questions, loading, error }
 }

@@ -18,6 +18,8 @@ export function PublicPreviewModal({ isOpen, onClose, questionSet }: PublicPrevi
   const { questions, loading, error } = useQuestionSetDetails(isOpen ? questionSet?.id || null : null)
   const [transformedQuestions, setTransformedQuestions] = useState<QuestionType[]>([])
 
+  console.log('[PublicPreviewModal] Props:', { isOpen, questionSet, loading, error, questionsLength: questions.length })
+
   useEffect(() => {
     if (questions.length > 0) {
       // Transform database questions to match QuestionSet type
@@ -33,6 +35,7 @@ export function PublicPreviewModal({ isOpen, onClose, questionSet }: PublicPrevi
         detractors: (q.detractors as any[]) || []
       }))
       setTransformedQuestions(transformed)
+      console.log('[PublicPreviewModal] Transformed questions:', transformed)
     }
   }, [questions])
 
