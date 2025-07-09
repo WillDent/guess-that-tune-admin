@@ -23,6 +23,7 @@ import { createClient } from '@/utils/supabase/client'
 import { QuestionSetGridSkeleton } from '@/components/questions/question-set-grid-skeleton'
 import { debounce } from 'lodash'
 import { TagInput } from 'emblor'
+import { ArtworkUpload } from '@/components/question-sets/artwork-upload'
 
 export default function EditQuestionSetPage() {
   const router = useRouter()
@@ -47,6 +48,7 @@ export default function EditQuestionSetPage() {
   const [tagInput, setTagInput] = useState('')
   const [questions, setQuestions] = useState<any[]>([])
   const [originalSongIds, setOriginalSongIds] = useState<string[]>([])
+  const [artworkUrl, setArtworkUrl] = useState<string | null>(null)
   
   // Track unsaved changes
   const [hasChanges, setHasChanges] = useState(false)
@@ -105,6 +107,7 @@ export default function EditQuestionSetPage() {
         setIsPublic(questionSet.is_public || false)
         setTags(questionSet.tags || [])
         setQuestions(questionSet.questions || [])
+        setArtworkUrl(questionSet.artwork_url || null)
         
         // Extract original song IDs
         const songIds = questionSet.questions.map((q: any) => q.correct_song_id)
@@ -260,7 +263,8 @@ export default function EditQuestionSetPage() {
           description: description || null,
           difficulty,
           is_public: isPublic,
-          tags: tags.length > 0 ? tags : null
+          tags: tags.length > 0 ? tags : null,
+          artwork_url: artworkUrl
         },
         transformedQuestions
       )
@@ -510,6 +514,22 @@ export default function EditQuestionSetPage() {
                       ))}
                     </div>
                   )}
+                </div>
+
+                <div className="mt-6">
+                  <label className="block font-medium mb-2">Artwork</label>
+                  <ArtworkUpload
+                    currentArtworkUrl={artworkUrl}
+                    onUpload={(url) => {
+                      setArtworkUrl(url)
+                      setHasChanges(true)
+                    }}
+                    onRemove={() => {
+                      setArtworkUrl(null)
+                      setHasChanges(true)
+                    }}
+                    questionSetId={questionSetId}
+                  />
                 </div>
 
                 <div className="mt-6">

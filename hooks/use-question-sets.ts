@@ -154,6 +154,7 @@ export function useQuestionSets() {
       difficulty?: 'easy' | 'medium' | 'hard'
       is_public?: boolean
       tags?: string[] | null
+      artwork_url?: string | null
     },
     questions?: Omit<Question, 'id' | 'question_set_id' | 'created_at' | 'updated_at'>[]
   ) => {

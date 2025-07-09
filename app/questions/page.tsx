@@ -131,13 +131,29 @@ export default function QuestionsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {questionSets.map((set) => (
-              <Card key={set.id} className="p-6 hover:shadow-lg transition-shadow">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold">{set.name}</h3>
-                  <Badge variant="outline" className={getDifficultyColor(set.difficulty)}>
-                    {set.difficulty}
-                  </Badge>
+              <Card key={set.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                {/* Artwork */}
+                <div className="relative aspect-square w-full bg-gradient-to-br from-purple-500 to-pink-500">
+                  {set.artwork_url ? (
+                    <img 
+                      src={set.artwork_url} 
+                      alt={set.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Music className="h-16 w-16 text-white/80" />
+                    </div>
+                  )}
                 </div>
+                
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold">{set.name}</h3>
+                    <Badge variant="outline" className={getDifficultyColor(set.difficulty)}>
+                      {set.difficulty}
+                    </Badge>
+                  </div>
                 
                 <div className="space-y-2 mb-4">
                   <p className="text-sm text-gray-600">
@@ -180,6 +196,7 @@ export default function QuestionsPage() {
                       <Trash2 className="h-4 w-4" />
                     )}
                   </Button>
+                </div>
                 </div>
               </Card>
             ))}

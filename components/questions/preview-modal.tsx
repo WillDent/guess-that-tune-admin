@@ -30,16 +30,35 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-2xl">{questionSet.name}</DialogTitle>
-              <DialogDescription className="mt-2">
-                Preview of {questionSet.questions.length} questions
-              </DialogDescription>
+          <div className="flex items-start gap-4">
+            {/* Artwork */}
+            <div className="w-24 h-24 rounded-lg overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500 flex-shrink-0">
+              {questionSet.artwork_url ? (
+                <img 
+                  src={questionSet.artwork_url} 
+                  alt={questionSet.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Music className="h-10 w-10 text-white/80" />
+                </div>
+              )}
             </div>
-            <Badge variant="outline" className={getDifficultyColor(questionSet.difficulty)}>
-              {questionSet.difficulty}
-            </Badge>
+            
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <DialogTitle className="text-2xl">{questionSet.name}</DialogTitle>
+                  <DialogDescription className="mt-2">
+                    Preview of {questionSet.questions.length} questions
+                  </DialogDescription>
+                </div>
+                <Badge variant="outline" className={getDifficultyColor(questionSet.difficulty)}>
+                  {questionSet.difficulty}
+                </Badge>
+              </div>
+            </div>
           </div>
         </DialogHeader>
 
