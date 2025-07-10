@@ -1,7 +1,7 @@
 import { GET } from '@/app/api/playlist/[playlistId]/route';
 import { NextResponse } from 'next/server';
 
-jest.mock('@/lib/supabase/server', () => ({
+jest.mock('@/utils/supabase/server', () => ({
   createServerClient: jest.fn(),
 }));
 
@@ -19,7 +19,7 @@ describe('/api/playlist/[playlistId] (direct handler)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    require('@/lib/supabase/server').createServerClient.mockResolvedValue(mockSupabase);
+    require('@/utils/supabase/server').createServerClient.mockResolvedValue(mockSupabase);
   });
 
   it('should return 401 if not authenticated', async () => {

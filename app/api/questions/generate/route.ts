@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 import { appleMusicClient } from '@/lib/apple-music'
 import { generateQuestionSet } from '@/lib/question-generator'
 import { APPLE_MUSIC_CONFIG } from '@/lib/apple-music/config'
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient as createServerClient } from '@/utils/supabase/server'
 import { withSessionRoute } from '@/utils/supabase/with-session-server'
 
 export async function POST(request: Request) {
