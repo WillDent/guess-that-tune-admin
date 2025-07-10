@@ -574,6 +574,14 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      increment_playlist_stats: {
+        Args: {
+          playlist_id: string
+          total_plays_inc: number
+          unique_players_inc: number
+        }
+        Returns: unknown
+      }
       search_question_sets: {
         Args: { search_term: string }
         Returns: {
