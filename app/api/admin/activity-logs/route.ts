@@ -1,19 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createServerClient } from '@/utils/supabase/server'
-
-async function requireAdmin(supabase: any) {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) throw new Error('Not authenticated')
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-  if (!profile || profile.role !== 'admin') throw new Error('Not authorized')
-}
+import { createServerClient, requireAdmin } from '@/utils/supabase'
 
 export async function GET(req: NextRequest) {
   try {

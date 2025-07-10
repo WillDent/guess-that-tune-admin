@@ -1,19 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createServerClient } from '@/utils/supabase/server'
-
-async function requireAdmin(supabase: any) {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) throw new Error('Not authenticated')
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-  if (!profile || profile.role !== 'admin') throw new Error('Not authorized')
-}
+import { createServerClient, requireAdmin } from '@/utils/supabase'
 
 export async function GET(req: NextRequest) {
   try {
@@ -35,8 +21,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createServerClient()
-    await requireAdmin(supabase)
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await requireAdmin(supabase)
     const body = await req.json()
     const { name, description } = body
     if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
