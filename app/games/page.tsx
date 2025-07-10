@@ -34,7 +34,7 @@ async function getUserGames(userId: string) {
   }
 
   // Transform and categorize games
-  const games = (data || []).map(game => ({
+  const games = (data || []).map((game: any) => ({
     ...game,
     participant_count: game.participants?.length || 0
   })) as GameWithDetails[]

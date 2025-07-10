@@ -20,6 +20,7 @@ export interface QuestionSet {
   questionCount: number
   playCount: number
   createdAt: string
+  artwork_url?: string
   questions: Question[]
 }
 
