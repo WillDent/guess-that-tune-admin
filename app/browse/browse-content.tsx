@@ -25,7 +25,7 @@ import { errorHandler } from '@/lib/errors/handler'
 import { useAuth } from '@/contexts/auth-context'
 import { PublicPreviewModal } from '@/components/questions/public-preview-modal'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import type { PublicQuestionSet, SortOption, DifficultyFilter } from './types'
 
 interface BrowseContentProps {

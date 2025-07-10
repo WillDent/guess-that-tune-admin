@@ -5,8 +5,8 @@
  */
 
 // Client creation
-export { createClient } from './client'
-export { createClient as createServerClient } from './server'
+export { createClient } from '@/lib/supabase/client'
+export { createServerClient } from '@/lib/supabase/server'
 
 // Authentication utilities
 export {

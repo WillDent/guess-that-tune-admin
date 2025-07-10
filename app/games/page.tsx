@@ -2,7 +2,8 @@
 // ABOUTME: Server component that fetches user's games
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { createServerClient, requireAuth } from '@/utils/supabase'
+import { createServerClient } from '@/lib/supabase/server'
+import { requireAuth } from '@/utils/supabase/auth'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { GamesContent } from './games-content'
@@ -33,7 +34,7 @@ async function getUserGames(userId: string) {
   }
 
   // Transform and categorize games
-  const games = (data || []).map(game => ({
+  const games = (data || []).map((game: any) => ({
     ...game,
     participant_count: game.participants?.length || 0
   })) as GameWithDetails[]

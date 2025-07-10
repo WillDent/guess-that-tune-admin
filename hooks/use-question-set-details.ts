@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/lib/supabase/database.types'
 
 type QuestionSet = Database['public']['Tables']['question_sets']['Row']

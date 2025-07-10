@@ -1,7 +1,8 @@
 // ABOUTME: Browse page for discovering public question sets
 // ABOUTME: Server component that fetches initial data
 import { Suspense } from 'react'
-import { createServerClient, getCurrentUser } from '@/utils/supabase'
+import { createServerClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/utils/supabase/auth'
 import { BrowseContent } from './browse-content'
 import { QuestionSetGridSkeleton } from '@/components/loading/question-set-skeleton'
 import type { Database } from '@/lib/supabase/database.types'
@@ -65,7 +66,7 @@ async function getQuestionSets(searchParams: Awaited<PageProps['searchParams']>)
   }
 
   // Transform the data to include question count
-  return (data || []).map(set => ({
+  return (data || []).map((set: any) => ({
     ...set,
     user: set.user as Pick<Database['public']['Tables']['users']['Row'], 'id' | 'display_name' | 'email'>,
     question_count: Array.isArray(set.questions) ? set.questions.length : (set.questions as any)?.count || 0
@@ -88,7 +89,7 @@ async function getUserFavorites() {
     return []
   }
   
-  return (data || []).map(f => f.question_set_id)
+  return (data || []).map((f: { question_set_id: string }) => f.question_set_id)
 }
 
 export default async function BrowsePage({ searchParams }: PageProps) {

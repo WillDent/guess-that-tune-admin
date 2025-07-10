@@ -4,7 +4,7 @@ This guide documents the consolidated authentication utilities and how to migrat
 
 ## Overview
 
-All authentication utilities have been consolidated into `/utils/supabase/` to ensure consistency across the codebase.
+All authentication utilities have been consolidated into `/lib/supabase/` to ensure consistency across the codebase.
 
 ## Import Changes
 
@@ -23,7 +23,7 @@ import {
   requireAuthRoute,
   requireAdminRoute,
   handleSupabaseError 
-} from '@/utils/supabase'
+} from '@/lib/supabase'
 ```
 
 ## API Route Migration
@@ -125,7 +125,7 @@ try {
 ## Migration Checklist
 
 1. **Update imports** - Replace old imports with consolidated ones
-2. **Remove duplicate requireAdmin** - Use the one from utils/supabase
+2. **Remove duplicate requireAdmin** - Use the one from lib/supabase
 3. **Use route helpers** - Replace manual auth checks with requireAuthRoute/requireAdminRoute
 4. **Standardize error handling** - Use handleSupabaseError for all Supabase errors
 5. **Client validation** - Use withSession for client-side operations requiring auth
@@ -156,16 +156,16 @@ try {
 Always use the consolidated client creation:
 ```typescript
 // Server-side
-import { createServerClient } from '@/utils/supabase'
+import { createServerClient } from '@/lib/supabase/server'
 const supabase = await createServerClient()
 
 // Client-side
-import { createClient } from '@/utils/supabase'
+import { createClient } from '@/lib/supabase/client'
 const supabase = createClient()
 ```
 
 ## Notes
 
-- The `/lib/supabase/` and `/lib/auth/` directories should be considered deprecated
-- All new code should use `/utils/supabase/`
+- The `/utils/supabase/` directory previously contained alternate implementations
+- All new code should use `/lib/supabase/`
 - Existing code should be migrated when touched

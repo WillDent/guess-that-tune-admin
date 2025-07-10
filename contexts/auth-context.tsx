@@ -288,7 +288,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Always fetch the latest role
             const role = await fetchUserRole(authUser.id)
             const userWithRole: UserWithRole = {
-              ...sessionUser,
+              ...authUser,
               role: role || undefined
             }
             

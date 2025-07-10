@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/lib/supabase/database.types'
 import { GAME_STATUS, type GameStatus } from '@/lib/constants/game-status'
 

@@ -5,7 +5,7 @@
  * to ensure consistency across the codebase.
  */
 
-import { createClient } from './server'
+import { createServerClient as createClient } from '@/lib/supabase/server'
 import { handleSupabaseError } from './error-handler'
 import { NextResponse } from 'next/server'
 import type { SupabaseClient, Session, User } from '@supabase/supabase-js'

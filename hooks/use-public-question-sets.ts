@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/lib/supabase/database.types'
 import { useDebounce } from '@/hooks/use-debounce'

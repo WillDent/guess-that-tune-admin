@@ -26,7 +26,7 @@ import { CreateGameModal } from '@/components/games/create-game-modal'
 import { useRouter } from 'next/navigation'
 import { GAME_STATUS } from '@/lib/constants/game-status'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import type { GameWithDetails } from './types'
 
 interface GamesContentProps {
