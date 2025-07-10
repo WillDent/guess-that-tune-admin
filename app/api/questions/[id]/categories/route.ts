@@ -9,6 +9,9 @@ export async function GET(req: NextRequest) {
   // /api/questions/{id}/categories
   const match = pathname.match(/\/api\/questions\/([^/]+)\/categories/);
   const questionSetId = match ? match[1] : undefined;
+  if (!questionSetId) {
+    return NextResponse.json({ error: 'Invalid question set id' }, { status: 400 })
+  }
   console.log('[API] GET /api/questions/[id]/categories', questionSetId)
   try {
     const supabase = await createServerClient()
@@ -38,6 +41,9 @@ export async function POST(req: NextRequest) {
   // /api/questions/{id}/categories
   const match = pathname.match(/\/api\/questions\/([^/]+)\/categories/);
   const questionSetId = match ? match[1] : undefined;
+  if (!questionSetId) {
+    return NextResponse.json({ error: 'Invalid question set id' }, { status: 400 })
+  }
   console.log('[API] POST /api/questions/[id]/categories', questionSetId)
   try {
     const supabase = await createServerClient()
