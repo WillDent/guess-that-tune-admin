@@ -89,7 +89,7 @@ async function getUserFavorites() {
     return []
   }
   
-  return (data || []).map(f => f.question_set_id)
+  return (data || []).map((f: { question_set_id: string }) => f.question_set_id)
 }
 
 export default async function BrowsePage({ searchParams }: PageProps) {
