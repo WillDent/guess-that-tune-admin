@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { getSupabaseBrowserClient } from '@/lib/supabase/client-with-singleton'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/lib/supabase/database.types'
 
@@ -15,7 +15,13 @@ export interface QuestionSetWithQuestions extends QuestionSet {
 export function useQuestionSets() {
   const { user } = useAuth()
   console.log('[USE-QUESTION-SETS] Hook run. user:', user)
-  const supabaseClient = getSupabaseBrowserClient()
+  console.log('[USE-QUESTION-SETS] User details:', {
+    id: user?.id,
+    email: user?.email,
+    role: user?.role,
+    hasUser: !!user
+  })
+  const [supabaseClient] = useState(() => createSupabaseBrowserClient())
   const [questionSets, setQuestionSets] = useState<QuestionSetWithQuestions[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
