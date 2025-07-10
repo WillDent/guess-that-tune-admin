@@ -79,6 +79,51 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          id: string
+          user_id: string | null
+          error_type: string
+          playlist_id: string | null
+          error_message: string
+          timestamp: string | null
+          device_info: Json | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          error_type: string
+          playlist_id?: string | null
+          error_message: string
+          timestamp?: string | null
+          device_info?: Json | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          error_type?: string
+          playlist_id?: string | null
+          error_message?: string
+          timestamp?: string | null
+          device_info?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "error_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "error_logs_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "question_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string
@@ -221,7 +266,102 @@ export type Database = {
             foreignKeyName: "games_question_set_id_fkey"
             columns: ["question_set_id"]
             isOneToOne: false
-            referencedRelation: "question_sets"
+          referencedRelation: "question_sets"
+          referencedColumns: ["id"]
+        },
+      ]
+      }
+      game_results: {
+        Row: {
+          id: string
+          user_id: string
+          playlist_id: string
+          correct_tracks: number
+          total_tracks: number
+          completion_time: number
+          perfect_score: boolean
+          score_awarded: number
+          xp_awarded: number
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          playlist_id: string
+          correct_tracks: number
+          total_tracks: number
+          completion_time: number
+          perfect_score: boolean
+          score_awarded: number
+          xp_awarded: number
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          playlist_id?: string
+          correct_tracks?: number
+          total_tracks?: number
+          completion_time?: number
+          perfect_score?: boolean
+          score_awarded?: number
+          xp_awarded?: number
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_results_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_results_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+          referencedRelation: "question_sets"
+          referencedColumns: ["id"]
+        },
+        ]
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          created_at: string | null
+          is_read: boolean | null
+          data: Json | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          created_at?: string | null
+          is_read?: boolean | null
+          data?: Json | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          title?: string
+          message?: string
+          created_at?: string | null
+          is_read?: boolean | null
+          data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
