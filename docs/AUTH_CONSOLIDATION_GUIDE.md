@@ -10,7 +10,7 @@ All authentication utilities have been consolidated into `/utils/supabase/` to e
 
 ### Before:
 ```typescript
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient as createServerClient } from '@/utils/supabase/server'
 import { requireAuth, requireAdmin } from '@/lib/auth/require-auth'
 ```
 

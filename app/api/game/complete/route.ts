@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { createClient as createServerClient } from '@/utils/supabase/server';
 import { z, validate } from '@/lib/validation';
 import { calculateXPLevel } from '@/lib/xp';
 import { updateTotalPlays, updateUniquePlayers } from '@/lib/stats';

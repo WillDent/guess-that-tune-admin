@@ -23,6 +23,10 @@ export const createClient = (request: NextRequest) => {
           response.cookies.set({
             name,
             value,
+            httpOnly: false,
+            secure: true,
+            sameSite: 'lax',
+            path: '/',
             ...options,
           })
         },
@@ -31,6 +35,10 @@ export const createClient = (request: NextRequest) => {
           response.cookies.set({
             name,
             value: '',
+            httpOnly: false,
+            secure: true,
+            sameSite: 'lax',
+            path: '/',
             ...options,
           })
         },

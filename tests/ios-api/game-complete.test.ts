@@ -1,7 +1,7 @@
 import { POST } from '@/app/api/game/complete/route';
 import { NextResponse } from 'next/server';
 
-jest.mock('@/lib/supabase/server', () => ({
+jest.mock('@/utils/supabase/server', () => ({
   createServerClient: jest.fn(),
 }));
 
@@ -20,7 +20,7 @@ describe('/api/game/complete (direct handler)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    require('@/lib/supabase/server').createServerClient.mockResolvedValue(mockSupabase);
+    require('@/utils/supabase/server').createServerClient.mockResolvedValue(mockSupabase);
   });
 
   it('should return 401 if not authenticated', async () => {
