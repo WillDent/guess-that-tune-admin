@@ -49,7 +49,12 @@ export async function GET(request: Request) {
   }
 
   // Fetch usernames for leaderboard
-  let leaderboard = [];
+  let leaderboard: {
+    user_id: string
+    username: string
+    score: number
+    rank: number
+  }[] = [];
   if (leaderboardData && leaderboardData.length > 0) {
     const userIds = leaderboardData.map((entry: any) => entry.user_id);
     const { data: users, error: usersError } = await supabase
