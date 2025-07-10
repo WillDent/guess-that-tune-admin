@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import { withSession } from '@/utils/supabase/with-session'
 import { handleSupabaseError, isRLSError, isDuplicateError } from '@/utils/supabase/error-handler'
 import { Button } from '@/components/ui/button'

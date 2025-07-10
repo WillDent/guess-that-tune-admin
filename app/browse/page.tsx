@@ -1,7 +1,8 @@
 // ABOUTME: Browse page for discovering public question sets
 // ABOUTME: Server component that fetches initial data
 import { Suspense } from 'react'
-import { createServerClient, getCurrentUser } from '@/utils/supabase'
+import { createServerClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/utils/supabase/auth'
 import { BrowseContent } from './browse-content'
 import { QuestionSetGridSkeleton } from '@/components/loading/question-set-skeleton'
 import type { Database } from '@/lib/supabase/database.types'

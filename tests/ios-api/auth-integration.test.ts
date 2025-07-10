@@ -2,11 +2,11 @@ import { GET as userProfileHandler } from '../../app/api/user/profile/route'
 import { GET as adminUsersHandler } from '../../app/api/admin/users/route'
 
 // Mock Supabase client creation and auth
-jest.mock('../../utils/supabase/server', () => ({
+jest.mock('../../lib/supabase/server', () => ({
   createServerClient: jest.fn(),
 }))
 
-const { createServerClient } = require('../../utils/supabase/server')
+const { createServerClient } = require('../../lib/supabase/server')
 
 function mockNextRequest(url: string) {
   return {

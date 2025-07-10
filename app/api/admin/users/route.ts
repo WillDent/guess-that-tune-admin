@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdminRoute, createServerClient, logAndHandleError } from '@/utils/supabase'
+import { requireAdminRoute, logAndHandleError } from '@/utils/supabase'
+import { createServerClient } from '@/lib/supabase/server'
 
 export async function GET(req: NextRequest) {
   return requireAdminRoute(req, async (user, supabase) => {
