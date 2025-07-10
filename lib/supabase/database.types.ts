@@ -508,9 +508,12 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string
+          experience: number | null
           id: string
+          level: number | null
           role: string | null
           status: string | null
+          total_score: number | null
           suspended_at: string | null
           suspended_by: string | null
           updated_at: string
@@ -521,9 +524,12 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email: string
+          experience?: number | null
           id: string
+          level?: number | null
           role?: string | null
           status?: string | null
+          total_score?: number | null
           suspended_at?: string | null
           suspended_by?: string | null
           updated_at?: string
@@ -534,9 +540,12 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string
+          experience?: number | null
           id?: string
+          level?: number | null
           role?: string | null
           status?: string | null
+          total_score?: number | null
           suspended_at?: string | null
           suspended_by?: string | null
           updated_at?: string
