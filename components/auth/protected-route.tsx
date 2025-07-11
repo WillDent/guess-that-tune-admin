@@ -16,15 +16,9 @@ export function ProtectedRoute({
   const { user, loading, authInitialized } = useAuth()
   const pathname = usePathname()
 
-  console.log('[PROTECTED-ROUTE]', pathname, 'Auth state:', { 
-    user: user?.email, 
-    loading,
-    authInitialized
-  })
 
   // Show loading state while auth is initializing
   if (loading || !authInitialized) {
-    console.log('[PROTECTED-ROUTE] Showing loading state')
     return (
       fallback || (
         <div className="min-h-screen flex items-center justify-center">
@@ -39,11 +33,9 @@ export function ProtectedRoute({
 
   // Redirect to login if not authenticated after auth has initialized
   if (!user && authInitialized) {
-    console.log('[PROTECTED-ROUTE] Redirecting to login - no user after auth initialized')
     redirect(`/login?next=${encodeURIComponent(pathname)}`)
   }
 
   // Render children if authenticated
-  console.log('[PROTECTED-ROUTE] Rendering children - user authenticated:', user?.email)
   return <>{children}</>
 }

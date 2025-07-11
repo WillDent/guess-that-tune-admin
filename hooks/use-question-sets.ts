@@ -14,29 +14,19 @@ export interface QuestionSetWithQuestions extends QuestionSet {
 
 export function useQuestionSets() {
   const { user } = useAuth()
-  console.log('[USE-QUESTION-SETS] Hook run. user:', user)
-  console.log('[USE-QUESTION-SETS] User details:', {
-    id: user?.id,
-    email: user?.email,
-    role: user?.role,
-    hasUser: !!user
-  })
   const [supabaseClient] = useState(() => createSupabaseBrowserClient())
   const [questionSets, setQuestionSets] = useState<QuestionSetWithQuestions[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
   const fetchQuestionSets = useCallback(async () => {
-    console.log('[USE-QUESTION-SETS] useEffect. user:', user)
     if (!user) {
-      console.log('[USE-QUESTION-SETS] No user, clearing question sets')
       setQuestionSets([])
       setLoading(false)
       return
     }
 
     try {
-      console.log('[USE-QUESTION-SETS] Starting fetch for user:', user.id)
       setLoading(true)
       setError(null)
 
@@ -54,19 +44,16 @@ export function useQuestionSets() {
         throw error
       }
 
-      console.log('[USE-QUESTION-SETS] Fetched question sets:', data?.length || 0)
       setQuestionSets(data || [])
     } catch (err) {
       setError(err as Error)
       console.error('[USE-QUESTION-SETS] Error fetching question sets:', err)
     } finally {
-      console.log('[USE-QUESTION-SETS] Setting loading false')
       setLoading(false)
     }
   }, [user?.id, supabaseClient])
 
   useEffect(() => {
-    console.log('[USE-QUESTION-SETS] useEffect triggered')
     fetchQuestionSets()
   }, [fetchQuestionSets])
 
@@ -78,15 +65,6 @@ export function useQuestionSets() {
     isPublic: boolean = false,
     tags: string[] = []
   ) => {
-    console.log('[USE-QUESTION-SETS] createQuestionSet called with:', {
-      name,
-      description,
-      difficulty,
-      questionsCount: questions.length,
-      isPublic,
-      tags,
-      userId: user?.id
-    })
     
     try {
       setError(null)
@@ -96,7 +74,6 @@ export function useQuestionSets() {
         throw new Error('User not authenticated')
       }
 
-      console.log('[USE-QUESTION-SETS] Creating question set...')
       
       // Create question set
       const { data: questionSet, error: createError } = await supabaseClient
@@ -112,37 +89,28 @@ export function useQuestionSets() {
         .select()
         .single()
 
-      console.log('[USE-QUESTION-SETS] Question set creation result:', { 
-        questionSet, 
-        createError 
-      })
 
       if (createError) throw createError
 
       // Create questions
       if (questions.length > 0) {
-        console.log('[USE-QUESTION-SETS] Creating questions...')
         const questionsToInsert = questions.map(q => ({
           ...q,
           question_set_id: questionSet.id
         }))
 
-        console.log('[USE-QUESTION-SETS] Questions to insert:', questionsToInsert)
 
         const { error: questionsError } = await supabaseClient
           .from('questions')
           .insert(questionsToInsert)
 
-        console.log('[USE-QUESTION-SETS] Questions creation result:', { questionsError })
 
         if (questionsError) throw questionsError
       }
 
       // Refresh the list
-      console.log('[USE-QUESTION-SETS] Refreshing question sets...')
       await fetchQuestionSets()
 
-      console.log('[USE-QUESTION-SETS] createQuestionSet completed successfully')
       return { data: questionSet, error: null }
     } catch (err) {
       const error = err as Error

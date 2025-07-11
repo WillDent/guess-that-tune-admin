@@ -76,8 +76,6 @@ export default function QuestionsPage() {
     }
   }
 
-  console.log('[QUESTIONS-PAGE] Render. props:', { questionSets, loading, error, deleteQuestionSet, refetch })
-
   return (
     <ProtectedRoute>
       <div>
