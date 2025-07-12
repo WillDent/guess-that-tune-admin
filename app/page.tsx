@@ -37,7 +37,7 @@ async function getDashboardStats(userId: string) {
   // Calculate total songs (questions across all sets)
   let totalSongs = 0
   if (questionSetsResult.data) {
-    totalSongs = questionSetsResult.data.reduce((sum, set) => {
+    totalSongs = questionSetsResult.data.reduce((sum: number, set: any) => {
       const count = Array.isArray(set.questions) 
         ? set.questions.length 
         : (set.questions as any)?.count || 0
@@ -48,7 +48,7 @@ async function getDashboardStats(userId: string) {
   // Get unique player count
   const uniquePlayers = new Set()
   if (playersResult.data) {
-    playersResult.data.forEach(game => {
+    playersResult.data.forEach((game: any) => {
       if (Array.isArray(game.game_participants)) {
         game.game_participants.forEach((participant: any) => {
           uniquePlayers.add(participant.user_id)
