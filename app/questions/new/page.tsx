@@ -200,11 +200,11 @@ export default function NewQuestionSetPage() {
             </Button>
           </Link>
 
-          <Card className="p-12">
+          <Card className="p-8 sm:p-12">
             <div className="text-center">
-              <AlertCircle className="h-16 w-16 mx-auto mb-4 text-yellow-500" />
-              <h2 className="text-xl font-semibold mb-2">No Songs Selected</h2>
-              <p className="text-gray-600 mb-6">
+              <AlertCircle className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4 text-yellow-500" />
+              <h2 className="text-lg sm:text-xl font-semibold mb-2">No Songs Selected</h2>
+              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
                 Please select songs from the music browser first
               </p>
               <Link href="/music">
@@ -230,16 +230,16 @@ export default function NewQuestionSetPage() {
             Back to Music Browser
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Create Question Set</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create Question Set</h1>
+        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
           Configure your question set with {selectedSongs.length} selected songs
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         {/* Configuration */}
         <div className="lg:col-span-1">
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             <h2 className="text-lg font-semibold mb-4">Configuration</h2>
             
             <div className="space-y-4">

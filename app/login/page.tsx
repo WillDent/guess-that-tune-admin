@@ -83,11 +83,11 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
-        <div className="flex items-center justify-center mb-8">
-          <Music className="h-12 w-12 text-purple-600 mr-2" />
-          <h1 className="text-3xl font-bold text-gray-900">Guess That Tune</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+      <div className="w-full max-w-md p-6 sm:p-8 bg-white rounded-lg shadow-lg">
+        <div className="flex items-center justify-center mb-6 sm:mb-8">
+          <Music className="h-10 w-10 sm:h-12 sm:w-12 text-purple-600 mr-2" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Guess That Tune</h1>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -160,11 +160,11 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
-        <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
-          <div className="flex items-center justify-center mb-8">
-            <Music className="h-12 w-12 text-purple-600 mr-2" />
-            <h1 className="text-3xl font-bold text-gray-900">Guess That Tune</h1>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+        <div className="w-full max-w-md p-6 sm:p-8 bg-white rounded-lg shadow-lg">
+          <div className="flex items-center justify-center mb-6 sm:mb-8">
+            <Music className="h-10 w-10 sm:h-12 sm:w-12 text-purple-600 mr-2" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Guess That Tune</h1>
           </div>
           <div className="text-center">Loading...</div>
         </div>

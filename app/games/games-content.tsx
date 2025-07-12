@@ -134,37 +134,37 @@ export function GamesContent({ activeGames, completedGames, userId }: GamesConte
   }
 
   const renderGameCard = (game: GameWithDetails) => (
-    <Card key={game.id} className="p-6 hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-lg font-semibold">{game.name}</h3>
-          <p className="text-sm text-gray-600 mt-1">
+    <Card key={game.id} className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
+      <div className="flex justify-between items-start mb-3 sm:mb-4">
+        <div className="flex-1 mr-2">
+          <h3 className="text-base sm:text-lg font-semibold">{game.name}</h3>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
             {game.question_set.name}
           </p>
         </div>
         {getStatusBadge(game.status)}
       </div>
 
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center text-sm text-gray-600">
-          <Calendar className="h-4 w-4 mr-2" />
+      <div className="space-y-2 mb-3 sm:mb-4">
+        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+          <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
           {formatDate(game.created_at)}
         </div>
-        <div className="flex items-center text-sm text-gray-600">
-          <Users className="h-4 w-4 mr-2" />
+        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+          <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
           {game.participant_count || 0} participants
         </div>
         {game.code && game.status === GAME_STATUS.PENDING && (
-          <div className="flex items-center text-sm">
-            <Hash className="h-4 w-4 mr-2" />
-            <code className="font-mono bg-gray-100 px-2 py-1 rounded">
+          <div className="flex items-center text-xs sm:text-sm">
+            <Hash className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+            <code className="font-mono bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm">
               {game.code}
             </code>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => handleCopyJoinCode(game.code!)}
-              className="ml-2"
+              className="ml-1 sm:ml-2 p-1 sm:p-2"
             >
               <Copy className="h-3 w-3" />
             </Button>
@@ -172,7 +172,7 @@ export function GamesContent({ activeGames, completedGames, userId }: GamesConte
         )}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-1 sm:gap-2">
         {game.status === GAME_STATUS.PENDING && game.host_user_id === userId ? (
           <Button 
             size="sm" 
@@ -218,15 +218,15 @@ export function GamesContent({ activeGames, completedGames, userId }: GamesConte
     <>
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="active">Active Games</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-          <TabsTrigger value="join">Join Game</TabsTrigger>
+          <TabsTrigger value="active" className="text-xs sm:text-sm">Active</TabsTrigger>
+          <TabsTrigger value="completed" className="text-xs sm:text-sm">Completed</TabsTrigger>
+          <TabsTrigger value="join" className="text-xs sm:text-sm">Join</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="active" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Your Active Games</h2>
-            <Button onClick={() => setIsCreateModalOpen(true)}>
+        <TabsContent value="active" className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <h2 className="text-lg sm:text-xl font-semibold">Your Active Games</h2>
+            <Button onClick={() => setIsCreateModalOpen(true)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Create Game
             </Button>
@@ -243,14 +243,14 @@ export function GamesContent({ activeGames, completedGames, userId }: GamesConte
               </div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {activeGames.map(renderGameCard)}
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="completed" className="space-y-6">
-          <h2 className="text-xl font-semibold">Completed Games</h2>
+        <TabsContent value="completed" className="space-y-4 sm:space-y-6">
+          <h2 className="text-lg sm:text-xl font-semibold">Completed Games</h2>
 
           {completedGames.length === 0 ? (
             <Card className="p-12">
@@ -260,17 +260,17 @@ export function GamesContent({ activeGames, completedGames, userId }: GamesConte
               </div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {completedGames.map(renderGameCard)}
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="join" className="space-y-6">
+        <TabsContent value="join" className="space-y-4 sm:space-y-6">
           <div className="max-w-md mx-auto">
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Join a Game</h2>
-              <p className="text-gray-600 mb-6">
+            <Card className="p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Join a Game</h2>
+              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
                 Enter the 6-character join code shared by the game host
               </p>
 

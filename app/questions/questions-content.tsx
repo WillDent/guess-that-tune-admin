@@ -107,30 +107,31 @@ export function QuestionsContent({ initialQuestionSets, userId }: QuestionsConte
         </div>
       ) : (
         <>
-          <div className="flex justify-between items-center mb-6">
-            <p className="text-gray-600">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <p className="text-sm sm:text-base text-gray-600">
               {questionSets.length} question set{questionSets.length !== 1 ? 's' : ''}
             </p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleRefresh}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" size="sm" onClick={handleRefresh} className="flex-1 sm:flex-initial">
+                <RefreshCw className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Refresh</span>
               </Button>
-              <Link href="/questions/new">
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create New Set
+              <Link href="/questions/new" className="flex-1 sm:flex-initial">
+                <Button size="sm" className="w-full">
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Create New Set</span>
+                  <span className="sm:hidden">Create</span>
                 </Button>
               </Link>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {questionSets.map((set) => (
-              <Card key={set.id} className="p-6 hover:shadow-lg transition-shadow">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+              <Card key={set.id} className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
+                <div className="flex justify-between items-start mb-3 sm:mb-4">
+                  <div className="flex-1 mr-2">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">
                       {set.name}
                     </h3>
                     {set.description && (
@@ -141,23 +142,23 @@ export function QuestionsContent({ initialQuestionSets, userId }: QuestionsConte
                   </div>
                   <Badge 
                     variant="outline" 
-                    className={`ml-2 ${getDifficultyColor(set.difficulty)}`}
+                    className={`ml-2 text-xs sm:text-sm ${getDifficultyColor(set.difficulty)}`}
                   >
                     {set.difficulty}
                   </Badge>
                 </div>
 
                 {set.artwork_url && (
-                  <div className="mb-4 -mx-6 -mt-2">
+                  <div className="mb-3 sm:mb-4 -mx-4 sm:-mx-6 -mt-2">
                     <img 
                       src={set.artwork_url} 
                       alt={set.name}
-                      className="w-full h-32 object-cover"
+                      className="w-full h-24 sm:h-32 object-cover"
                     />
                   </div>
                 )}
 
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
                   <span>{set.questions.length} questions</span>
                   {set.is_public && (
                     <Badge variant="secondary" className="text-xs">
@@ -166,20 +167,20 @@ export function QuestionsContent({ initialQuestionSets, userId }: QuestionsConte
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-1 sm:gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     className="flex-1"
                     onClick={() => handlePreview(set)}
                   >
-                    <Play className="h-4 w-4 mr-1" />
-                    Preview
+                    <Play className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Preview</span>
                   </Button>
                   <Link href={`/questions/${set.id}/edit`} className="flex-1">
                     <Button variant="outline" size="sm" className="w-full">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
+                      <Edit className="h-4 w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Edit</span>
                     </Button>
                   </Link>
                   <Button
@@ -187,6 +188,7 @@ export function QuestionsContent({ initialQuestionSets, userId }: QuestionsConte
                     size="sm"
                     onClick={() => handleDelete(set.id)}
                     disabled={isDeleting === set.id}
+                    className="px-2 sm:px-3"
                   >
                     {isDeleting === set.id ? (
                       <LoadingSpinner size="sm" />

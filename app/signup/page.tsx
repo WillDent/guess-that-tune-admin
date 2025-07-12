@@ -44,14 +44,14 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
-        <div className="flex items-center justify-center mb-8">
-          <Music className="h-12 w-12 text-purple-600 mr-2" />
-          <h1 className="text-3xl font-bold text-gray-900">Guess That Tune</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+      <div className="w-full max-w-md p-6 sm:p-8 bg-white rounded-lg shadow-lg">
+        <div className="flex items-center justify-center mb-6 sm:mb-8">
+          <Music className="h-10 w-10 sm:h-12 sm:w-12 text-purple-600 mr-2" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Guess That Tune</h1>
         </div>
 
-        <h2 className="text-2xl font-semibold text-center mb-6">Create Account</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold text-center mb-4 sm:mb-6">Create Account</h2>
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>

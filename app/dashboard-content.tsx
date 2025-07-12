@@ -84,17 +84,17 @@ export function DashboardContent({ stats }: DashboardContentProps) {
   return (
     <>
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
         {statCards.map((stat) => (
           <Link key={stat.name} href={stat.href}>
-            <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
+            <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow cursor-pointer">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <stat.icon className={`h-12 w-12 ${stat.color}`} />
+                  <stat.icon className={`h-10 w-10 sm:h-12 sm:w-12 ${stat.color}`} />
                 </div>
-                <div className="ml-4">
+                <div className="ml-3 sm:ml-4">
                   <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+                  <p className="text-xl sm:text-2xl font-semibold text-gray-900">{stat.value}</p>
                 </div>
               </div>
             </Card>
@@ -103,24 +103,24 @@ export function DashboardContent({ stats }: DashboardContentProps) {
       </div>
 
       {/* Quick Actions */}
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="mt-8 sm:mt-12">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Quick Actions</h2>
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
           {quickActions.map((action) => (
-            <Card key={action.title} className="p-6 hover:shadow-lg transition-shadow">
+            <Card key={action.title} className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <action.icon className={`h-8 w-8 ${action.color}`} />
+                  <action.icon className={`h-6 w-6 sm:h-8 sm:w-8 ${action.color}`} />
                 </div>
-                <div className="ml-4 flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                <div className="ml-3 sm:ml-4 flex-1">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">
                     {action.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-sm text-gray-600 mb-3 sm:mb-4">
                     {action.description}
                   </p>
                   <Link href={action.href}>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
                       Get Started
                     </Button>
                   </Link>
@@ -132,10 +132,10 @@ export function DashboardContent({ stats }: DashboardContentProps) {
       </div>
 
       {/* Recent Activity (placeholder for future enhancement) */}
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Activity</h2>
-        <Card className="p-6">
-          <p className="text-gray-600">
+      <div className="mt-8 sm:mt-12">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Recent Activity</h2>
+        <Card className="p-4 sm:p-6">
+          <p className="text-gray-600 text-sm sm:text-base">
             Activity feed coming soon...
           </p>
         </Card>

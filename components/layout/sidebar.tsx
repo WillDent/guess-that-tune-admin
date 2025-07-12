@@ -39,7 +39,7 @@ export function Sidebar() {
   const { user, loading, signOut, isAdmin } = useAuth()
 
   return (
-    <div className="flex h-full w-64 flex-col bg-gray-900">
+    <div className="flex h-full w-64 flex-col bg-gray-900 fixed inset-y-0 left-0">
       <div className="flex h-16 items-center px-6">
         <Music className="h-8 w-8 text-pink-500" />
         <span className="ml-2 text-xl font-bold text-white">

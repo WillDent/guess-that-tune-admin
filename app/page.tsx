@@ -96,9 +96,9 @@ export default async function Home() {
   return (
     <ProtectedRoute>
       <div>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-2 text-gray-600">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
             Welcome back, {displayName}! Here's your game overview.
           </p>
         </div>
@@ -113,16 +113,16 @@ export default async function Home() {
 
 function DashboardSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {[...Array(4)].map((_, i) => (
-        <Card key={i} className="p-6">
+        <Card key={i} className="p-4 sm:p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="h-12 w-12 bg-gray-200 rounded animate-pulse" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-gray-200 rounded animate-pulse" />
             </div>
-            <div className="ml-4 flex-1">
+            <div className="ml-3 sm:ml-4 flex-1">
               <div className="h-4 bg-gray-200 rounded w-20 mb-2 animate-pulse" />
-              <div className="h-8 bg-gray-200 rounded w-16 animate-pulse" />
+              <div className="h-6 sm:h-8 bg-gray-200 rounded w-16 animate-pulse" />
             </div>
           </div>
         </Card>

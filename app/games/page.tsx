@@ -66,9 +66,9 @@ export default async function GamesPage() {
   return (
     <ProtectedRoute>
       <div>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Games</h1>
-          <p className="mt-2 text-gray-600">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Games</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
             Manage your games and join new ones
           </p>
         </div>

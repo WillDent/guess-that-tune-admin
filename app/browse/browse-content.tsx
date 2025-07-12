@@ -193,8 +193,8 @@ export function BrowseContent({
   return (
     <>
       {/* Filters and Search */}
-      <Card className="p-6 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <Card className="p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="flex flex-col gap-3 sm:gap-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -215,12 +215,13 @@ export function BrowseContent({
             </div>
           </div>
           
-          <Select 
-            value={difficulty} 
-            onValueChange={(v) => handleFilterChange({ difficulty: v as DifficultyFilter })}
-            disabled={isPending}
-          >
-            <SelectTrigger className="w-40">
+          <div className="flex gap-2">
+            <Select 
+              value={difficulty} 
+              onValueChange={(v) => handleFilterChange({ difficulty: v as DifficultyFilter })}
+              disabled={isPending}
+            >
+              <SelectTrigger className="flex-1 sm:w-40">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
@@ -230,14 +231,14 @@ export function BrowseContent({
               <SelectItem value="medium">Medium</SelectItem>
               <SelectItem value="hard">Hard</SelectItem>
             </SelectContent>
-          </Select>
+            </Select>
 
-          <Select 
-            value={sortBy} 
-            onValueChange={(v) => handleFilterChange({ sort: v as SortOption })}
-            disabled={isPending}
-          >
-            <SelectTrigger className="w-40">
+            <Select 
+              value={sortBy} 
+              onValueChange={(v) => handleFilterChange({ sort: v as SortOption })}
+              disabled={isPending}
+            >
+              <SelectTrigger className="flex-1 sm:w-40">
               {getSortIcon(sortBy)}
               <SelectValue />
             </SelectTrigger>
@@ -246,24 +247,26 @@ export function BrowseContent({
               <SelectItem value="popular">Most Popular</SelectItem>
               <SelectItem value="alphabetical">A-Z</SelectItem>
             </SelectContent>
-          </Select>
+            </Select>
 
-          {user && (
-            <Button
-              variant={onlyFavorites ? "default" : "outline"}
-              onClick={() => handleFilterChange({ favorites: onlyFavorites ? undefined : 'true' })}
-              disabled={isPending}
-            >
-              <Heart className={`h-4 w-4 mr-2 ${onlyFavorites ? 'fill-current' : ''}`} />
-              Favorites
-            </Button>
-          )}
+            {user && (
+              <Button
+                variant={onlyFavorites ? "default" : "outline"}
+                onClick={() => handleFilterChange({ favorites: onlyFavorites ? undefined : 'true' })}
+                disabled={isPending}
+                className="sm:w-auto"
+              >
+                <Heart className={`h-4 w-4 sm:mr-2 ${onlyFavorites ? 'fill-current' : ''}`} />
+                <span className="hidden sm:inline">Favorites</span>
+              </Button>
+            )}
+          </div>
         </div>
       </Card>
 
       {/* Results */}
       {isPending ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="p-6 animate-pulse">
               <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -283,7 +286,7 @@ export function BrowseContent({
           </div>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {displayedSets.map((set) => (
             <Card 
               key={set.id} 
@@ -305,21 +308,21 @@ export function BrowseContent({
                 )}
               </div>
               
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold line-clamp-2">{set.name}</h3>
+              <div className="p-4 sm:p-6">
+                <div className="flex justify-between items-start mb-3 sm:mb-4">
+                  <h3 className="text-base sm:text-lg font-semibold line-clamp-2">{set.name}</h3>
                   <Badge variant="outline" className={getDifficultyColor(set.difficulty)}>
                     {set.difficulty}
                   </Badge>
                 </div>
               
               {set.description && (
-                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                <p className="text-sm text-gray-600 mb-3 sm:mb-4 line-clamp-2">
                   {set.description}
                 </p>
               )}
               
-              <div className="space-y-2 mb-4">
+              <div className="space-y-2 mb-3 sm:mb-4">
                 <div className="flex items-center text-sm text-gray-600">
                   <User className="h-4 w-4 mr-2" />
                   <span>{set.user?.display_name || set.user?.email || 'Unknown'}</span>
@@ -330,7 +333,7 @@ export function BrowseContent({
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-1 sm:gap-2">
                 <Button 
                   size="sm" 
                   className="flex-1"

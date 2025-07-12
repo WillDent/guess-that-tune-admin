@@ -28,11 +28,11 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto mx-2 sm:mx-auto">
         <DialogHeader>
-          <div className="flex items-start gap-4">
+          <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
             {/* Artwork */}
-            <div className="w-24 h-24 rounded-lg overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500 flex-shrink-0">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500 flex-shrink-0">
               {questionSet.artwork_url ? (
                 <img 
                   src={questionSet.artwork_url} 
@@ -41,7 +41,7 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Music className="h-10 w-10 text-white/80" />
+                  <Music className="h-8 w-8 sm:h-10 sm:w-10 text-white/80" />
                 </div>
               )}
             </div>
@@ -49,7 +49,7 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <div>
-                  <DialogTitle className="text-2xl">{questionSet.name}</DialogTitle>
+                  <DialogTitle className="text-xl sm:text-2xl">{questionSet.name}</DialogTitle>
                   <DialogDescription className="mt-2">
                     Preview of {questionSet.questions.length} questions
                   </DialogDescription>
@@ -62,33 +62,33 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
           </div>
         </DialogHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-6">
           {questionSet.questions.map((question, idx) => (
-            <div key={idx} className="border rounded-lg p-6 bg-gray-50">
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-semibold">Question {idx + 1}</h3>
+            <div key={idx} className="border rounded-lg p-4 sm:p-6 bg-gray-50">
+              <div className="flex items-start justify-between mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-semibold">Question {idx + 1}</h3>
                 <Badge className="bg-green-100 text-green-800 border-green-300">
                   Correct Answer
                 </Badge>
               </div>
 
               {/* Correct Answer */}
-              <div className="mb-6">
-                <div className="flex items-center space-x-4 p-4 bg-white rounded-lg border-2 border-green-500">
+              <div className="mb-4 sm:mb-6">
+                <div className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-white rounded-lg border-2 border-green-500">
                   {question.correctSong.artwork ? (
                     <img 
                       src={question.correctSong.artwork} 
                       alt={question.correctSong.album}
-                      className="w-16 h-16 rounded-lg"
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg"
                     />
                   ) : (
-                    <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <Music className="w-8 h-8 text-gray-400" />
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <Music className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                     </div>
                   )}
                   <div>
-                    <p className="font-semibold text-lg">{question.correctSong.name}</p>
-                    <p className="text-gray-600">{question.correctSong.artist}</p>
+                    <p className="font-semibold text-sm sm:text-lg">{question.correctSong.name}</p>
+                    <p className="text-xs sm:text-base text-gray-600">{question.correctSong.artist}</p>
                     {question.correctSong.album && (
                       <p className="text-sm text-gray-500">{question.correctSong.album}</p>
                     )}
@@ -98,23 +98,23 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
 
               {/* Detractors */}
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Wrong Choices:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <h4 className="text-sm font-medium text-gray-700 mb-2 sm:mb-3">Wrong Choices:</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                   {question.detractors.map((detractor) => (
-                    <div key={detractor.id} className="flex items-center space-x-3 p-3 bg-white rounded-lg border">
+                    <div key={detractor.id} className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-white rounded-lg border">
                       {detractor.artwork ? (
                         <img 
                           src={detractor.artwork} 
                           alt={detractor.album || detractor.name}
-                          className="w-12 h-12 rounded flex-shrink-0"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
-                          <Music className="w-6 h-6 text-gray-400" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
+                          <Music className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{detractor.name}</p>
+                        <p className="text-xs sm:text-sm font-medium truncate">{detractor.name}</p>
                         <p className="text-xs text-gray-600 truncate">{detractor.artist}</p>
                       </div>
                     </div>

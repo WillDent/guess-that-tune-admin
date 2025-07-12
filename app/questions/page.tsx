@@ -49,13 +49,11 @@ export default async function QuestionsPage() {
   return (
     <ProtectedRoute>
       <div>
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Question Sets</h1>
-            <p className="mt-2 text-gray-600">
-              Manage your question collections for games
-            </p>
-          </div>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Question Sets</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
+            Manage your question collections for games
+          </p>
         </div>
 
         <Suspense fallback={<QuestionSetGridSkeleton />}>

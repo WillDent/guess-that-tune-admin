@@ -66,18 +66,18 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl mx-2 sm:mx-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Gamepad2 className="h-6 w-6" />
+          <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
+            <Gamepad2 className="h-5 w-5 sm:h-6 sm:w-6" />
             Create New Game
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm sm:text-base">
             Choose a question set and configure your game settings
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-4 sm:space-y-6 py-3 sm:py-4">
           {/* Question Set Selection */}
           <div className="space-y-3">
             <Label>Question Set</Label>
