@@ -53,8 +53,14 @@ export default function NewQuestionSetPage() {
   useEffect(() => {
     const stored = sessionStorage.getItem('selectedSongs')
     if (stored) {
-      setSelectedSongs(JSON.parse(stored))
+      const parsedSongs = JSON.parse(stored)
+      setSelectedSongs(parsedSongs)
       sessionStorage.removeItem('selectedSongs') // Clear after loading
+      
+      // Show success message
+      if (parsedSongs.length > 0) {
+        toast.success(`${parsedSongs.length} songs loaded from your cart`, "Cart imported successfully")
+      }
     }
   }, [])
 

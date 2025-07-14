@@ -10,12 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Search, Play, Plus, Music, AlertCircle } from 'lucide-react'
+import { Search, Play, Plus, Music, AlertCircle, ShoppingCart } from 'lucide-react'
 import { GENRES } from '@/lib/apple-music'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
 import { SongListSkeleton } from '@/components/loading/song-skeleton'
+import { AddToCartButton } from '@/components/cart/add-to-cart-button'
+import { useCart } from '@/contexts/cart-context'
+import { CartSong } from '@/types/cart'
+import { SongListItem } from '@/components/music/song-list-item'
 
 const genreOptions = [
   { value: GENRES.POP, label: 'Pop' },
@@ -44,9 +48,9 @@ interface Song {
 
 export default function MusicPage() {
   const { toast } = useToast()
+  const { cart, addToCart } = useCart()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedGenre, setSelectedGenre] = useState<string>('')
-  const [selectedSongs, setSelectedSongs] = useState<string[]>([])
   const [songs, setSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -124,21 +128,23 @@ export default function MusicPage() {
     }
   }
 
-  const toggleSongSelection = (songId: string) => {
-    setSelectedSongs(prev => 
-      prev.includes(songId) 
-        ? prev.filter(id => id !== songId)
-        : [...prev, songId]
-    )
-  }
+  const mapSongToCartSong = (song: Song): CartSong => ({
+    id: song.id,
+    name: song.name,
+    artist: song.artist,
+    album: song.album,
+    artwork: song.artwork,
+    genre: song.genre,
+    year: song.year,
+    previewUrl: song.previewUrl || undefined,
+    duration: song.durationMs
+  })
 
-  const handleCreateQuestionSet = () => {
-    // Store selected songs in sessionStorage
-    const selectedSongData = songs.filter(song => selectedSongs.includes(song.id))
-    sessionStorage.setItem('selectedSongs', JSON.stringify(selectedSongData))
-    
-    // Navigate to create question set page
-    window.location.href = '/questions/new'
+  const handleAddAllToCart = () => {
+    songs.forEach(song => {
+      addToCart(mapSongToCartSong(song))
+    })
+    toast.success(`${songs.length} songs added to your cart`, "Added all songs to cart")
   }
 
   return (
@@ -162,15 +168,24 @@ export default function MusicPage() {
 
           <TabsContent value="top100" className="space-y-6">
             <Card className="p-6">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <h2 className="text-lg font-semibold">Top 100 Songs - United States</h2>
-                <Button 
-                  disabled={selectedSongs.length === 0}
-                  onClick={handleCreateQuestionSet}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Question Set ({selectedSongs.length})
-                </Button>
+                <div className="flex items-center gap-3">
+                  {songs.length > 0 && !loading && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleAddAllToCart}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add All ({songs.length})
+                    </Button>
+                  )}
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <ShoppingCart className="h-4 w-4" />
+                    <span>{cart.totalItems} {cart.totalItems === 1 ? 'song' : 'songs'} in cart</span>
+                  </div>
+                </div>
               </div>
               <div className="space-y-2">
                 {loading ? (
@@ -187,39 +202,11 @@ export default function MusicPage() {
                   </div>
                 ) : (
                   songs.map((song) => (
-                    <div 
-                      key={song.id}
-                      className="flex items-center justify-between p-4 rounded-lg border hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedSongs.includes(song.id)}
-                          onChange={() => toggleSongSelection(song.id)}
-                          className="h-4 w-4 text-pink-600 rounded border-gray-300"
-                        />
-                        {song.artwork && (
-                          <img 
-                            src={song.artwork} 
-                            alt={`${song.album} artwork`}
-                            className="w-12 h-12 rounded object-cover"
-                          />
-                        )}
-                        <div className="flex-1">
-                          <p className="font-medium">{song.name}</p>
-                          <p className="text-sm text-gray-600">{song.artist} • {song.album}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Badge variant="secondary">{song.genre}</Badge>
-                        <span className="text-sm text-gray-500">{song.year}</span>
-                        {song.previewUrl && (
-                          <Button size="sm" variant="ghost">
-                            <Play className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                    <SongListItem 
+                      key={song.id} 
+                      song={song} 
+                      mapSongToCartSong={mapSongToCartSong}
+                    />
                   ))
                 )}
               </div>
@@ -255,38 +242,11 @@ export default function MusicPage() {
                 ) : (
                   <div className="space-y-2">
                     {songs.map((song) => (
-                      <div 
-                        key={song.id}
-                        className="flex items-center justify-between p-4 rounded-lg border hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedSongs.includes(song.id)}
-                            onChange={() => toggleSongSelection(song.id)}
-                            className="h-4 w-4 text-pink-600 rounded border-gray-300"
-                          />
-                          {song.artwork && (
-                            <img 
-                              src={song.artwork} 
-                              alt={`${song.album} artwork`}
-                              className="w-12 h-12 rounded object-cover"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <p className="font-medium">{song.name}</p>
-                            <p className="text-sm text-gray-600">{song.artist} • {song.album}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <span className="text-sm text-gray-500">{song.year}</span>
-                          {song.previewUrl && (
-                            <Button size="sm" variant="ghost">
-                              <Play className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
+                      <SongListItem 
+                        key={song.id} 
+                        song={song} 
+                        mapSongToCartSong={mapSongToCartSong}
+                      />
                     ))}
                   </div>
                 )
@@ -330,39 +290,11 @@ export default function MusicPage() {
                 ) : (
                   <div className="space-y-2">
                     {songs.map((song) => (
-                      <div 
-                        key={song.id}
-                        className="flex items-center justify-between p-4 rounded-lg border hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedSongs.includes(song.id)}
-                            onChange={() => toggleSongSelection(song.id)}
-                            className="h-4 w-4 text-pink-600 rounded border-gray-300"
-                          />
-                          {song.artwork && (
-                            <img 
-                              src={song.artwork} 
-                              alt={`${song.album} artwork`}
-                              className="w-12 h-12 rounded object-cover"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <p className="font-medium">{song.name}</p>
-                            <p className="text-sm text-gray-600">{song.artist} • {song.album}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <Badge variant="secondary">{song.genre}</Badge>
-                          <span className="text-sm text-gray-500">{song.year}</span>
-                          {song.previewUrl && (
-                            <Button size="sm" variant="ghost">
-                              <Play className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
+                      <SongListItem 
+                        key={song.id} 
+                        song={song} 
+                        mapSongToCartSong={mapSongToCartSong}
+                      />
                     ))}
                   </div>
                 )

@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { Sidebar } from "@/components/layout/sidebar"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ToastProvider } from "@/hooks/use-toast"
+import { CartProvider } from "@/contexts/cart-context"
 import { LayoutClient } from "@/components/layout/layout-client"
 import "./globals.css"
 
@@ -23,7 +24,9 @@ export default function RootLayout({
       <body className="font-sans">
         <AuthProvider>
           <ToastProvider>
-            <LayoutClient>{children}</LayoutClient>
+            <CartProvider>
+              <LayoutClient>{children}</LayoutClient>
+            </CartProvider>
           </ToastProvider>
         </AuthProvider>
       </body>
