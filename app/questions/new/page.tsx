@@ -51,15 +51,17 @@ export default function NewQuestionSetPage() {
 
   // Load selected songs from sessionStorage
   useEffect(() => {
-    const stored = sessionStorage.getItem('selectedSongs')
-    if (stored) {
-      const parsedSongs = JSON.parse(stored)
-      setSelectedSongs(parsedSongs)
-      sessionStorage.removeItem('selectedSongs') // Clear after loading
-      
-      // Show success message
-      if (parsedSongs.length > 0) {
-        toast.success(`${parsedSongs.length} songs loaded from your cart`, "Cart imported successfully")
+    if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+      const stored = sessionStorage.getItem('selectedSongs')
+      if (stored) {
+        const parsedSongs = JSON.parse(stored)
+        setSelectedSongs(parsedSongs)
+        sessionStorage.removeItem('selectedSongs') // Clear after loading
+        
+        // Show success message
+        if (parsedSongs.length > 0) {
+          toast.success(`${parsedSongs.length} songs loaded from your cart`, "Cart imported successfully")
+        }
       }
     }
   }, [])
@@ -180,7 +182,9 @@ export default function NewQuestionSetPage() {
       }
       
       // Clear the selected songs from session storage
-      sessionStorage.removeItem('selectedSongs')
+      if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem('selectedSongs')
+      }
       
       toast.success('Question set saved successfully!')
       

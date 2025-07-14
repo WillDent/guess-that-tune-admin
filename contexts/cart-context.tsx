@@ -21,26 +21,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem(CART_STORAGE_KEY)
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart)
-        // Convert date strings back to Date objects
-        parsedCart.lastUpdated = new Date(parsedCart.lastUpdated)
-        parsedCart.items = parsedCart.items.map((item: any) => ({
-          ...item,
-          addedAt: new Date(item.addedAt)
-        }))
-        setCart(parsedCart)
-      } catch (error) {
-        console.error('Failed to load cart from storage:', error)
+    // Check if we're in the browser
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      const savedCart = localStorage.getItem(CART_STORAGE_KEY)
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart)
+          // Convert date strings back to Date objects
+          parsedCart.lastUpdated = new Date(parsedCart.lastUpdated)
+          parsedCart.items = parsedCart.items.map((item: any) => ({
+            ...item,
+            addedAt: new Date(item.addedAt)
+          }))
+          setCart(parsedCart)
+        } catch (error) {
+          console.error('Failed to load cart from storage:', error)
+        }
       }
     }
   }, [])
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart))
+    // Check if we're in the browser
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart))
+    }
   }, [cart])
 
   const addToCart = useCallback((song: CartSong) => {
@@ -140,6 +146,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cart.items])
 
   const saveCartToDraft = useCallback((name: string) => {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return
+    }
+    
     const drafts = getDraftCarts()
     const newDraft: SavedCart = {
       id: `draft-${Date.now()}`,
@@ -170,6 +180,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [toast])
 
   const getDraftCarts = useCallback((): SavedCart[] => {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return []
+    }
+    
     const draftsJson = localStorage.getItem(DRAFT_CARTS_STORAGE_KEY)
     if (!draftsJson) return []
     

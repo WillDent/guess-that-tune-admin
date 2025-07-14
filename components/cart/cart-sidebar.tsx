@@ -57,7 +57,9 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       artwork: item.song.artwork
     }))
     
-    sessionStorage.setItem('selectedSongs', JSON.stringify(cartSongs))
+    if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('selectedSongs', JSON.stringify(cartSongs))
+    }
     
     // Clear the cart after checkout
     clearCart()
