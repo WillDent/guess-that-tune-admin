@@ -13,18 +13,10 @@ export async function createServerSupabaseClient(): Promise<ReturnType<typeof cr
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
+        setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
-              // Ensure secure cookie options
-              const cookieOptions = {
-                ...options,
-                sameSite: 'lax' as const,
-                secure: process.env.NODE_ENV === 'production',
-                httpOnly: true,
-                path: '/'
-              }
-              cookieStore.set(name, value, cookieOptions)
+              cookieStore.set(name, value, options)
             })
           } catch (error) {
             // The `setAll` method was called from a Server Component.
@@ -32,19 +24,6 @@ export async function createServerSupabaseClient(): Promise<ReturnType<typeof cr
             // user sessions.
           }
         },
-      },
-      auth: {
-        persistSession: true,
-        detectSessionInUrl: false,
-        autoRefreshToken: true,
-      },
-      global: {
-        headers: {
-          'x-application-name': 'guess-that-tune-admin'
-        }
-      },
-      db: {
-        schema: 'public'
       }
     }
   )

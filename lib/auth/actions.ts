@@ -6,7 +6,6 @@ import { createServerClient as createClient } from '@/lib/supabase/server'
 import { AuthError } from '@/lib/errors/types'
 
 export async function signIn(email: string, password: string, redirectTo?: string) {
-  console.log('[AUTH-ACTION] Sign in attempt for:', email)
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -15,16 +14,8 @@ export async function signIn(email: string, password: string, redirectTo?: strin
   })
 
   if (error) {
-    console.error('[AUTH-ACTION] Sign in error:', error.message)
     return { error: error.message }
   }
-
-  console.log('[AUTH-ACTION] Sign in successful')
-  console.log('[AUTH-ACTION] Session:', data.session ? 'Present' : 'Missing')
-  
-  // Verify the session was properly set
-  const { data: { session } } = await supabase.auth.getSession()
-  console.log('[AUTH-ACTION] Session check after login:', session ? 'Present' : 'Missing')
 
   // Force a revalidation of all data
   revalidatePath('/', 'layout')

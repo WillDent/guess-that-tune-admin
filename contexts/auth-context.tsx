@@ -122,12 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        // Try getUser like the middleware does
-        const { data: { user: authUser }, error: userError } = await supabase.auth.getUser()
-        
-        // If we have a user, create a session-like object
-        const session = authUser ? { user: authUser } : null
-        const sessionError = userError
+        // First try to get session (lighter weight)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (!mounted) return;
         
