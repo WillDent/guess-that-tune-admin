@@ -65,6 +65,7 @@ export function useQuestionSets() {
     isPublic: boolean = false,
     tags: string[] = []
   ) => {
+    console.log('[USE-QUESTION-SETS] createQuestionSet called with:', { name, difficulty, questionsCount: questions.length, isPublic, tags })
     
     try {
       setError(null)
@@ -74,9 +75,17 @@ export function useQuestionSets() {
         throw new Error('User not authenticated')
       }
 
+      console.log('[USE-QUESTION-SETS] User authenticated:', user.id)
       
       // Create question set
-      const { data: questionSet, error: createError } = await supabaseClient
+      console.log('[USE-QUESTION-SETS] Creating question set in database...')
+      
+      // Add timeout wrapper to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Question set creation timed out after 10 seconds')), 10000)
+      )
+      
+      const insertPromise = supabaseClient
         .from('question_sets')
         .insert({
           user_id: user!.id,
@@ -88,22 +97,30 @@ export function useQuestionSets() {
         })
         .select()
         .single()
-
-
+      
+      // Race between the insert and timeout
+      const result = await Promise.race([insertPromise, timeoutPromise]) as any
+      const { data: questionSet, error: createError } = result
+      
+      console.log('[USE-QUESTION-SETS] Question set insert result:', { data: questionSet, error: createError })
+      
       if (createError) throw createError
 
       // Create questions
       if (questions.length > 0) {
+        console.log('[USE-QUESTION-SETS] Preparing to insert', questions.length, 'questions')
         const questionsToInsert = questions.map(q => ({
           ...q,
           question_set_id: questionSet.id
         }))
 
+        console.log('[USE-QUESTION-SETS] Inserting questions into database...')
 
         const { error: questionsError } = await supabaseClient
           .from('questions')
           .insert(questionsToInsert)
 
+        console.log('[USE-QUESTION-SETS] Questions insert result:', { error: questionsError })
 
         if (questionsError) throw questionsError
       }
