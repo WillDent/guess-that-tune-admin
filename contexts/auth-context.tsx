@@ -122,18 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        // Add timeout to prevent hanging
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session fetch timeout')), 5000)
-        )
-        
         // First try to get session (lighter weight)
-        const sessionPromise = supabase.auth.getSession()
-        
-        const { data: { session }, error: sessionError } = await Promise.race([
-          sessionPromise,
-          timeoutPromise
-        ]) as Awaited<typeof sessionPromise>
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (!mounted) return;
         
@@ -217,7 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
         setAuthInitialized(true)
       }
-    }, 10000) // 10 second fallback
+    }, 30000) // 30 second fallback - increased to prevent premature logout
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -284,11 +274,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Set up periodic session refresh to prevent logout
     const refreshInterval = setInterval(async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      if (error) {
-        console.error('[AUTH-CONTEXT] Error refreshing session:', error)
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) {
+          console.error('[AUTH-CONTEXT] Error refreshing session:', error)
+        } else if (session) {
+          // Session is still valid, refresh the auth token if needed
+          const { error: refreshError } = await supabase.auth.refreshSession()
+          if (refreshError) {
+            console.error('[AUTH-CONTEXT] Error refreshing auth token:', refreshError)
+          }
+        }
+      } catch (err) {
+        console.error('[AUTH-CONTEXT] Unexpected error during session refresh:', err)
       }
-    }, 10 * 60 * 1000) // Refresh every 10 minutes
+    }, 5 * 60 * 1000) // Refresh every 5 minutes
 
     return () => {
       mounted = false

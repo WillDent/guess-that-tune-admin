@@ -51,7 +51,7 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
                 <div>
                   <DialogTitle className="text-xl sm:text-2xl">{questionSet.name}</DialogTitle>
                   <DialogDescription className="mt-2">
-                    Preview of {questionSet.questions.length} questions
+                    Preview of {questionSet.questions?.length || 0} questions
                   </DialogDescription>
                 </div>
                 <Badge variant="outline" className={getDifficultyColor(questionSet.difficulty)}>
@@ -63,7 +63,8 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
         </DialogHeader>
 
         <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-6">
-          {questionSet.questions.map((question, idx) => (
+          {questionSet.questions && questionSet.questions.length > 0 ? (
+            questionSet.questions.map((question, idx) => (
             <div key={idx} className="border rounded-lg p-4 sm:p-6 bg-gray-50">
               <div className="flex items-start justify-between mb-3 sm:mb-4">
                 <h3 className="text-base sm:text-lg font-semibold">Question {idx + 1}</h3>
@@ -100,7 +101,7 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
               <div>
                 <h4 className="text-sm font-medium text-gray-700 mb-2 sm:mb-3">Wrong Choices:</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
-                  {question.detractors.map((detractor) => (
+                  {question.detractors && question.detractors.map((detractor) => (
                     <div key={detractor.id} className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 bg-white rounded-lg border">
                       {detractor.artwork ? (
                         <img 
@@ -122,7 +123,12 @@ export function PreviewModal({ isOpen, onClose, questionSet }: PreviewModalProps
                 </div>
               </div>
             </div>
-          ))}
+          ))
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No questions in this set
+            </div>
+          )}
         </div>
 
         <div className="mt-6 flex justify-end">

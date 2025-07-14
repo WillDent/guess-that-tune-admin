@@ -18,6 +18,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast()
   const [cart, setCart] = useState<CartState>(initialState)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -38,16 +39,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           console.error('Failed to load cart from storage:', error)
         }
       }
+      setIsInitialized(true)
     }
   }, [])
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to localStorage whenever it changes (but only after initialization)
   useEffect(() => {
-    // Check if we're in the browser
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    // Check if we're in the browser and cart is initialized
+    if (isInitialized && typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart))
     }
-  }, [cart])
+  }, [cart, isInitialized])
 
   const addToCart = useCallback((song: CartSong) => {
     setCart(prevCart => {
