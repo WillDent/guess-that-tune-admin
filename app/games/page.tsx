@@ -25,7 +25,7 @@ async function getUserGames(userId: string) {
       ),
       participants:game_participants (*)
     `)
-    .or(`host_user_id.eq.${userId},participants.user_id.eq.${userId}`)
+    .or(`host_user_id.eq.${userId}`)
     .order('created_at', { ascending: false })
 
   if (error) {

@@ -122,14 +122,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const getInitialSession = async () => {
       try {
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session fetch timeout')), 5000)
+        )
+        
         // First try to get session (lighter weight)
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        const sessionPromise = supabase.auth.getSession()
+        
+        const { data: { session }, error: sessionError } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as Awaited<typeof sessionPromise>
         
         if (!mounted) return;
         
         if (sessionError) {
           console.error('[AUTH-CONTEXT] Session error:', sessionError)
           setLoading(false)
+          setAuthInitialized(true)
           return
         }
         
@@ -187,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
       } catch (error) {
-        console.error('Error getting user:', error)
+        console.error('[AUTH-CONTEXT] Error getting initial session:', error)
         if (mounted) {
           setUser(null)
           setIsAdmin(false)
@@ -198,6 +209,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     getInitialSession()
+    
+    // Fallback timeout to ensure we always set initialized
+    const initTimeout = setTimeout(() => {
+      if (!authInitialized && mounted) {
+        console.warn('[AUTH-CONTEXT] Fallback: Setting initialized after timeout')
+        setLoading(false)
+        setAuthInitialized(true)
+      }
+    }, 10000) // 10 second fallback
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -274,6 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false
       subscription.unsubscribe()
       clearInterval(refreshInterval)
+      clearTimeout(initTimeout)
     }
   }, [supabase, router])
 
