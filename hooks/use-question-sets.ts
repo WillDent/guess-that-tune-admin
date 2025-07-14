@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 import { useAuth } from '@/contexts/auth-context'
+import { withRetry, withSupabaseRetry } from '@/lib/supabase/retry-wrapper'
+import { checkSupabaseHealth, quickHealthCheck } from '@/lib/supabase/health-check'
 import type { Database } from '@/lib/supabase/database.types'
 
 type QuestionSet = Database['public']['Tables']['question_sets']['Row']
@@ -39,15 +41,11 @@ export function useQuestionSets() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error('[USE-QUESTION-SETS] Fetch error:', error)
-        throw error
-      }
+      if (error) throw error
 
       setQuestionSets(data || [])
     } catch (err) {
       setError(err as Error)
-      console.error('[USE-QUESTION-SETS] Error fetching question sets:', err)
     } finally {
       setLoading(false)
     }
@@ -65,62 +63,62 @@ export function useQuestionSets() {
     isPublic: boolean = false,
     tags: string[] = []
   ) => {
-    console.log('[USE-QUESTION-SETS] createQuestionSet called with:', { name, difficulty, questionsCount: questions.length, isPublic, tags })
-    
     try {
       setError(null)
 
       if (!user) {
-        console.error('[USE-QUESTION-SETS] No user found!')
         throw new Error('User not authenticated')
       }
-
-      console.log('[USE-QUESTION-SETS] User authenticated:', user.id)
       
-      // Create question set
-      console.log('[USE-QUESTION-SETS] Creating question set in database...')
+      // Health check before operations
+      const isHealthy = await quickHealthCheck(supabaseClient)
+      if (!isHealthy) {
+        console.warn('[USE-QUESTION-SETS] Connection health check failed, but proceeding...')
+      }
       
-      // Add timeout wrapper to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Question set creation timed out after 10 seconds')), 10000)
+      // Create question set with retry
+      
+      const { data: questionSet, error: createError } = await withSupabaseRetry(
+        () => supabaseClient
+          .from('question_sets')
+          .insert({
+            user_id: user!.id,
+            name,
+            description,
+            difficulty,
+            is_public: isPublic,
+            tags: tags.length > 0 ? tags : null
+          })
+          .select()
+          .single(),
+        {
+          maxRetries: 3,
+          onRetry: (attempt, error) => {
+            console.warn(`[USE-QUESTION-SETS] Retry attempt ${attempt} after error:`, error.message)
+          }
+        }
       )
-      
-      const insertPromise = supabaseClient
-        .from('question_sets')
-        .insert({
-          user_id: user!.id,
-          name,
-          description,
-          difficulty,
-          is_public: isPublic,
-          tags: tags.length > 0 ? tags : null
-        })
-        .select()
-        .single()
-      
-      // Race between the insert and timeout
-      const result = await Promise.race([insertPromise, timeoutPromise]) as any
-      const { data: questionSet, error: createError } = result
-      
-      console.log('[USE-QUESTION-SETS] Question set insert result:', { data: questionSet, error: createError })
       
       if (createError) throw createError
 
-      // Create questions
-      if (questions.length > 0) {
-        console.log('[USE-QUESTION-SETS] Preparing to insert', questions.length, 'questions')
+      // Create questions with retry
+      if (questions.length > 0 && questionSet) {
         const questionsToInsert = questions.map(q => ({
           ...q,
           question_set_id: questionSet.id
         }))
 
-        console.log('[USE-QUESTION-SETS] Inserting questions into database...')
-
-        const { error: questionsError } = await supabaseClient
-          .from('questions')
-          .insert(questionsToInsert)
-
-        console.log('[USE-QUESTION-SETS] Questions insert result:', { error: questionsError })
+        const { error: questionsError } = await withSupabaseRetry(
+          () => supabaseClient
+            .from('questions')
+            .insert(questionsToInsert),
+          {
+            maxRetries: 3,
+            onRetry: (attempt, error) => {
+              console.warn(`[USE-QUESTION-SETS] Questions retry attempt ${attempt} after error:`, error.message)
+            }
+          }
+        )
 
         if (questionsError) throw questionsError
       }
@@ -131,7 +129,6 @@ export function useQuestionSets() {
       return { data: questionSet, error: null }
     } catch (err) {
       const error = err as Error
-      console.error('[USE-QUESTION-SETS] createQuestionSet error:', error)
       setError(error)
       return { data: null, error }
     }
