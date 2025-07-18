@@ -52,6 +52,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cart, isInitialized])
 
   const addToCart = useCallback((song: CartSong) => {
+    let toastMessage = ''
+    let toastType: 'info' | 'success' = 'success'
+    
     setCart(prevCart => {
       const existingItem = prevCart.items.find(item => item.song.id === song.id)
       
@@ -63,7 +66,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             : item
         )
         
-        toast.info(`${song.name} quantity increased to ${existingItem.quantity + 1}`, "Updated quantity")
+        toastMessage = `${song.name} quantity increased to ${existingItem.quantity + 1}`
+        toastType = 'info'
         
         return {
           items: updatedItems,
@@ -79,7 +83,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           quantity: 1
         }
         
-        toast.success(`${song.name} by ${song.artist}`, "Added to cart")
+        toastMessage = `${song.name} by ${song.artist} added to cart`
+        toastType = 'success'
         
         return {
           items: [...prevCart.items, newItem],
@@ -88,16 +93,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
       }
     })
+    
+    // Show toast after state update
+    setTimeout(() => {
+      if (toastType === 'info') {
+        toast.info(toastMessage, "Updated quantity")
+      } else {
+        toast.success(toastMessage, "Added to cart")
+      }
+    }, 0)
   }, [toast])
 
   const removeFromCart = useCallback((itemId: string) => {
+    let removedSongName = ''
+    
     setCart(prevCart => {
       const itemToRemove = prevCart.items.find(item => item.id === itemId)
       if (!itemToRemove) return prevCart
       
       const updatedItems = prevCart.items.filter(item => item.id !== itemId)
-      
-      toast.info(`${itemToRemove.song.name} removed`, "Removed from cart")
+      removedSongName = itemToRemove.song.name
       
       return {
         items: updatedItems,
@@ -105,7 +120,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         lastUpdated: new Date()
       }
     })
-  }, [toast, addToCart])
+    
+    // Show toast after state update
+    if (removedSongName) {
+      setTimeout(() => {
+        toast.info(`${removedSongName} removed`, "Removed from cart")
+      }, 0)
+    }
+  }, [toast])
 
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
     if (quantity < 1) {
@@ -132,12 +154,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = useCallback(() => {
     const itemCount = cart.totalItems
-    const prevCart = { ...cart }
     
     setCart(initialState)
     
-    toast.info(`${itemCount} items removed`, "Cart cleared")
-  }, [cart, toast])
+    // Show toast after state update
+    setTimeout(() => {
+      toast.info(`${itemCount} items removed`, "Cart cleared")
+    }, 0)
+  }, [cart.totalItems, toast])
 
   const isInCart = useCallback((songId: string) => {
     return cart.items.some(item => item.song.id === songId)
@@ -146,40 +170,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const getCartItem = useCallback((songId: string) => {
     return cart.items.find(item => item.song.id === songId)
   }, [cart.items])
-
-  const saveCartToDraft = useCallback((name: string) => {
-    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
-      return
-    }
-    
-    const drafts = getDraftCarts()
-    const newDraft: SavedCart = {
-      id: `draft-${Date.now()}`,
-      name,
-      items: cart.items,
-      savedAt: new Date()
-    }
-    
-    const updatedDrafts = [...drafts, newDraft]
-    localStorage.setItem(DRAFT_CARTS_STORAGE_KEY, JSON.stringify(updatedDrafts))
-    
-    toast.success(`Saved as "${name}"`, "Cart saved")
-  }, [cart.items, toast])
-
-  const loadDraftCart = useCallback((draftId: string) => {
-    const drafts = getDraftCarts()
-    const draft = drafts.find(d => d.id === draftId)
-    
-    if (draft) {
-      setCart({
-        items: draft.items,
-        totalItems: draft.items.reduce((sum, item) => sum + item.quantity, 0),
-        lastUpdated: new Date()
-      })
-      
-      toast.success(`Loaded "${draft.name}"`, "Cart loaded")
-    }
-  }, [toast])
 
   const getDraftCarts = useCallback((): SavedCart[] => {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
@@ -205,6 +195,46 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return []
     }
   }, [])
+
+  const saveCartToDraft = useCallback((name: string) => {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return
+    }
+    
+    const drafts = getDraftCarts()
+    const newDraft: SavedCart = {
+      id: `draft-${Date.now()}`,
+      name,
+      items: cart.items,
+      savedAt: new Date()
+    }
+    
+    const updatedDrafts = [...drafts, newDraft]
+    localStorage.setItem(DRAFT_CARTS_STORAGE_KEY, JSON.stringify(updatedDrafts))
+    
+    // Show toast after save
+    setTimeout(() => {
+      toast.success(`Saved as "${name}"`, "Cart saved")
+    }, 0)
+  }, [cart.items, toast, getDraftCarts])
+
+  const loadDraftCart = useCallback((draftId: string) => {
+    const drafts = getDraftCarts()
+    const draft = drafts.find(d => d.id === draftId)
+    
+    if (draft) {
+      setCart({
+        items: draft.items,
+        totalItems: draft.items.reduce((sum, item) => sum + item.quantity, 0),
+        lastUpdated: new Date()
+      })
+      
+      // Show toast after state update
+      setTimeout(() => {
+        toast.success(`Loaded "${draft.name}"`, "Cart loaded")
+      }, 0)
+    }
+  }, [toast, getDraftCarts])
 
   const value: CartContextType = {
     cart,
