@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { getSupabaseBrowserClient } from '@/lib/supabase/client-with-singleton'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
 import type { Database } from '@/lib/supabase/database.types'
 import { withSession } from '@/utils/supabase/with-session'
 import { handleSupabaseError, logAndHandleError } from '@/utils/supabase/error-handler'
+import { withSupabaseRetry } from '@/lib/supabase/retry-wrapper'
 
 type UserProfile = Database['public']['Tables']['users']['Row'] & {
   stats?: UserStats
@@ -49,7 +50,7 @@ export interface ProfileUpdateData {
 export function useProfile(userId?: string) {
   const { user: currentUser } = useAuth()
   const { toast } = useToast()
-  const supabaseClient = getSupabaseBrowserClient()
+  const [supabaseClient] = useState(() => createSupabaseBrowserClient())
   
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [stats, setStats] = useState<UserStats | null>(null)
@@ -61,7 +62,9 @@ export function useProfile(userId?: string) {
 
   // Fetch user profile
   const fetchProfile = useCallback(async () => {
+    console.log('[USE-PROFILE] fetchProfile called, targetUserId:', targetUserId)
     if (!targetUserId) {
+      console.log('[USE-PROFILE] No targetUserId, setting loading to false')
       setLoading(false)
       return
     }
@@ -69,45 +72,32 @@ export function useProfile(userId?: string) {
     try {
       setLoading(true)
       setError(null)
+      console.log('[USE-PROFILE] Starting profile fetch for:', targetUserId)
 
-      // Use withSession to ensure valid session before fetching profile
-      const profileData = await withSession(supabaseClient, async (session) => {
-        const { data: userData, error: userError } = await supabaseClient
-          .from('users')
-          .select('*')
-          .eq('id', targetUserId)
-          .single()
+      // Use direct client as a workaround for hanging Supabase SDK
+      const directClient = await import('@/lib/supabase/direct-client').then(m => m.createDirectClient())
+      const { data: profileData, error: userError } = await directClient
+        .from('users')
+        .select('*')
+        .eq('id', targetUserId)
+        .single()
 
-        if (userError) {
-          throw userError
-        }
-
-        return userData
-      })
-
-      if (!profileData) {
-        throw new Error('Unable to fetch profile. Please ensure you are logged in.')
+      if (userError) {
+        throw userError
       }
 
+      if (!profileData) {
+        throw new Error('Unable to fetch profile')
+      }
+
+      console.log('[USE-PROFILE] Profile data fetched:', profileData)
       setProfile(profileData)
 
       // Fetch user statistics - wrapped in try-catch to handle RLS errors gracefully
       try {
-        // Use withSession for game stats to handle session properly
-        const games = await withSession(supabaseClient, async (session) => {
-          const { data, error } = await supabaseClient
-            .from('game_participants')
-            .select('*')
-            .eq('user_id', targetUserId)
-
-          if (error) {
-            const handledError = logAndHandleError('use-profile:game-stats', error)
-            // Don't throw for RLS errors on stats - just return null
-            return null
-          }
-
-          return data
-        })
+        // Skip game stats due to RLS recursion issue
+        // TODO: Fix the RLS policy for game_participants table
+        const games = null
 
         if (!games) {
           // No session or error - set empty stats
@@ -141,23 +131,13 @@ export function useProfile(userId?: string) {
             publicQuestionSets: 0
           }
 
-          // Try to fetch question sets with session check
+          // Skip question sets for now due to SDK issues
           try {
-            const questionSets = await withSession(supabaseClient, async (session) => {
-              const { data, error } = await supabaseClient
-                .from('question_sets')
-                .select('id, is_public')
-                .eq('user_id', targetUserId)
+            const questionSets = null // Temporarily disabled
 
-              if (error) {
-                logAndHandleError('use-profile:question-sets', error)
-                return null
-              }
-
-              return data
-            })
-
-            if (questionSets) {
+            if (false) {
+              console.error('Error fetching question sets:', 'disabled')
+            } else if (questionSets) {
               statsData.totalQuestionSets = questionSets.length
               statsData.publicQuestionSets = questionSets.filter(s => s.is_public).length
             }
@@ -191,6 +171,7 @@ export function useProfile(userId?: string) {
       setError(appError)
       toast.error(handledError.message)
     } finally {
+      console.log('[USE-PROFILE] Setting loading to false')
       setLoading(false)
     }
   }, [userId, currentUser?.id])

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client'
+import { withSupabaseRetry } from '@/lib/supabase/retry-wrapper'
 import type { Database } from '@/lib/supabase/database.types'
 
 type QuestionSet = Database['public']['Tables']['question_sets']['Row']
@@ -19,32 +20,25 @@ export function useQuestionSetDetails(questionSetId: string | null) {
     }
 
     const fetchQuestions = async () => {
-      console.log('[useQuestionSetDetails] Fetching questions for:', questionSetId)
-      const supabase = createClient()
+      const supabase = createSupabaseBrowserClient()
       
       try {
         setLoading(true)
         setError(null)
 
-        // Add timeout to detect hanging requests
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 10000)
+        const { data, error } = await withSupabaseRetry(
+          () => supabase
+            .from('questions')
+            .select('*')
+            .eq('question_set_id', questionSetId)
+            .order('order_index', { ascending: true }),
+          {
+            maxRetries: 3,
+            onRetry: (attempt, error) => {
+              console.warn(`[useQuestionSetDetails] Retry attempt ${attempt} after error:`, error.message)
+            }
+          }
         )
-
-        const queryPromise = supabase
-          .from('questions')
-          .select('*')
-          .eq('question_set_id', questionSetId)
-          .order('order_index', { ascending: true })
-
-        console.log('[useQuestionSetDetails] Query started...')
-
-        const { data, error } = await Promise.race([
-          queryPromise,
-          timeoutPromise
-        ]) as any
-
-        console.log('[useQuestionSetDetails] Response:', { data, error })
 
         if (error) throw error
 

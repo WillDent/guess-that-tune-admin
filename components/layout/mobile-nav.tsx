@@ -21,7 +21,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
@@ -51,6 +52,9 @@ export function MobileNav() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
+          <VisuallyHidden>
+            <SheetTitle>Navigation Menu</SheetTitle>
+          </VisuallyHidden>
           <div className="flex h-full flex-col bg-gray-900">
             <div className="flex h-16 items-center justify-between px-6 border-b border-gray-800">
               <div className="flex items-center">

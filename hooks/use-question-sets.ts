@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 import { useAuth } from '@/contexts/auth-context'
+import { withRetry, withSupabaseRetry } from '@/lib/supabase/retry-wrapper'
+import { checkSupabaseHealth, quickHealthCheck } from '@/lib/supabase/health-check'
 import type { Database } from '@/lib/supabase/database.types'
 
 type QuestionSet = Database['public']['Tables']['question_sets']['Row']
@@ -39,15 +41,11 @@ export function useQuestionSets() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error('[USE-QUESTION-SETS] Fetch error:', error)
-        throw error
-      }
+      if (error) throw error
 
       setQuestionSets(data || [])
     } catch (err) {
       setError(err as Error)
-      console.error('[USE-QUESTION-SETS] Error fetching question sets:', err)
     } finally {
       setLoading(false)
     }
@@ -65,47 +63,141 @@ export function useQuestionSets() {
     isPublic: boolean = false,
     tags: string[] = []
   ) => {
-    
+    console.log('[USE-QUESTION-SETS] createQuestionSet called with:', { name, difficulty, questionsCount: questions.length })
     try {
       setError(null)
 
       if (!user) {
-        console.error('[USE-QUESTION-SETS] No user found!')
+        console.error('[USE-QUESTION-SETS] No user found')
         throw new Error('User not authenticated')
       }
-
       
-      // Create question set
-      const { data: questionSet, error: createError } = await supabaseClient
-        .from('question_sets')
-        .insert({
-          user_id: user!.id,
-          name,
-          description,
-          difficulty,
-          is_public: isPublic,
-          tags: tags.length > 0 ? tags : null
+      console.log('[USE-QUESTION-SETS] User authenticated:', user.id)
+      
+      // Skip health check since SDK is hanging - we'll use direct REST calls
+      console.log('[USE-QUESTION-SETS] Skipping health check due to SDK issues')
+      
+      // Create question set using direct REST client with proper authentication
+      console.log('[USE-QUESTION-SETS] Getting user session for authenticated request')
+      
+      // Get session token using API endpoint to bypass SDK hanging
+      let accessToken = null
+      
+      try {
+        console.log('[USE-QUESTION-SETS] Getting session token via API')
+        const response = await fetch('/api/auth/session')
+        
+        if (!response.ok) {
+          const error = await response.json()
+          console.error('[USE-QUESTION-SETS] API failed:', error)
+          throw new Error(error.error || 'Failed to get session')
+        }
+        
+        const { token } = await response.json()
+        if (!token) {
+          throw new Error('No session token received')
+        }
+        
+        accessToken = token
+        console.log('[USE-QUESTION-SETS] Got session token from API')
+      } catch (err) {
+        console.error('[USE-QUESTION-SETS] Failed to get session:', err)
+        throw new Error('Unable to authenticate. Please try logging in again.')
+      }
+      
+      const questionSetData = {
+        user_id: user!.id,
+        name,
+        description,
+        difficulty,
+        is_public: isPublic,
+        tags: tags.length > 0 ? tags : null
+      }
+      
+      console.log('[USE-QUESTION-SETS] Making authenticated request to create question set')
+      
+      // Create abort controller for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
+      let questionSet = null
+      
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/question_sets`, {
+          method: 'POST',
+          headers: {
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify(questionSetData),
+          signal: controller.signal
         })
-        .select()
-        .single()
+        
+        clearTimeout(timeoutId)
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`Failed to create question set: ${response.status} ${errorText}`)
+        }
+        
+        const questionSetArray = await response.json()
+        questionSet = questionSetArray[0]
+        
+        if (!questionSet) {
+          throw new Error('Question set creation returned no data')
+        }
+        
+        console.log('[USE-QUESTION-SETS] Question set created successfully:', questionSet.id)
+      } catch (err) {
+        clearTimeout(timeoutId)
+        if (err.name === 'AbortError') {
+          throw new Error('Question set creation timed out after 10 seconds')
+        }
+        throw err
+      }
 
-
-      if (createError) throw createError
-
-      // Create questions
-      if (questions.length > 0) {
+      // Create questions using authenticated direct REST client
+      if (questions.length > 0 && questionSet) {
+        console.log('[USE-QUESTION-SETS] Creating questions with authenticated direct REST client')
         const questionsToInsert = questions.map(q => ({
           ...q,
           question_set_id: questionSet.id
         }))
 
+        // Create abort controller for questions request
+        const questionsController = new AbortController()
+        const questionsTimeoutId = setTimeout(() => questionsController.abort(), 10000)
 
-        const { error: questionsError } = await supabaseClient
-          .from('questions')
-          .insert(questionsToInsert)
+        try {
+          const questionsResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/questions`, {
+            method: 'POST',
+            headers: {
+              'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(questionsToInsert),
+            signal: questionsController.signal
+          })
 
+          clearTimeout(questionsTimeoutId)
 
-        if (questionsError) throw questionsError
+          if (!questionsResponse.ok) {
+            const errorText = await questionsResponse.text()
+            throw new Error(`Failed to create questions: ${questionsResponse.status} ${errorText}`)
+          }
+          
+          console.log('[USE-QUESTION-SETS] Questions created successfully')
+        } catch (err) {
+          clearTimeout(questionsTimeoutId)
+          if (err.name === 'AbortError') {
+            throw new Error('Questions creation timed out after 10 seconds')
+          }
+          throw err
+        }
       }
 
       // Refresh the list
@@ -114,7 +206,6 @@ export function useQuestionSets() {
       return { data: questionSet, error: null }
     } catch (err) {
       const error = err as Error
-      console.error('[USE-QUESTION-SETS] createQuestionSet error:', error)
       setError(error)
       return { data: null, error }
     }

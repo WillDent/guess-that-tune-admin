@@ -5,18 +5,27 @@ export async function middleware(request: NextRequest) {
   try {
     const { supabase, response } = createMiddlewareClient(request)
 
-    // Refresh session if expired - required for Server Components
-    const { data: { user }, error } = await supabase.auth.getUser()
+    // Get session (lighter than getUser for middleware)
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
-    console.log('[MIDDLEWARE]', request.nextUrl.pathname, '- User:', user?.email || 'none', '- Error:', error?.message || 'none')
+    // Only refresh session if we have one but it might be expired
+    let user = session?.user
+    let error = sessionError
+    
+    if (session && !sessionError) {
+      // Verify the session is still valid
+      const { data: { user: verifiedUser }, error: userError } = await supabase.auth.getUser()
+      user = verifiedUser
+      error = userError
+    }
+    
 
     // Define public routes that don't require authentication
-    const publicRoutes = ['/login', '/signup', '/browse', '/auth', '/test-new-auth']
+    const publicRoutes = ['/login', '/signup', '/browse', '/auth', '/test-new-auth', '/api/health-check']
     const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))
 
     // If user is not signed in and trying to access a protected route, redirect to login
     if (!user && !isPublicRoute) {
-      console.log('[MIDDLEWARE] Redirecting to login from:', request.nextUrl.pathname)
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('next', request.nextUrl.pathname)

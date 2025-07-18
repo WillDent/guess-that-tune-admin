@@ -122,18 +122,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        // Try getUser like the middleware does
-        const { data: { user: authUser }, error: userError } = await supabase.auth.getUser()
-        
-        // If we have a user, create a session-like object
-        const session = authUser ? { user: authUser } : null
-        const sessionError = userError
+        // First try to get session (lighter weight)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (!mounted) return;
         
         if (sessionError) {
           console.error('[AUTH-CONTEXT] Session error:', sessionError)
           setLoading(false)
+          setAuthInitialized(true)
           return
         }
         
@@ -191,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
       } catch (error) {
-        console.error('Error getting user:', error)
+        console.error('[AUTH-CONTEXT] Error getting initial session:', error)
         if (mounted) {
           setUser(null)
           setIsAdmin(false)
@@ -202,6 +199,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     getInitialSession()
+    
+    // Fallback timeout to ensure we always set initialized
+    const initTimeout = setTimeout(() => {
+      if (!authInitialized && mounted) {
+        console.warn('[AUTH-CONTEXT] Fallback: Setting initialized after timeout')
+        setLoading(false)
+        setAuthInitialized(true)
+      }
+    }, 30000) // 30 second fallback - increased to prevent premature logout
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -268,16 +274,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Set up periodic session refresh to prevent logout
     const refreshInterval = setInterval(async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      if (error) {
-        console.error('[AUTH-CONTEXT] Error refreshing session:', error)
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) {
+          console.error('[AUTH-CONTEXT] Error refreshing session:', error)
+        } else if (session) {
+          // Session is still valid, refresh the auth token if needed
+          const { error: refreshError } = await supabase.auth.refreshSession()
+          if (refreshError) {
+            console.error('[AUTH-CONTEXT] Error refreshing auth token:', refreshError)
+          }
+        }
+      } catch (err) {
+        console.error('[AUTH-CONTEXT] Unexpected error during session refresh:', err)
       }
-    }, 10 * 60 * 1000) // Refresh every 10 minutes
+    }, 5 * 60 * 1000) // Refresh every 5 minutes
 
     return () => {
       mounted = false
       subscription.unsubscribe()
       clearInterval(refreshInterval)
+      clearTimeout(initTimeout)
     }
   }, [supabase, router])
 
