@@ -47,6 +47,9 @@ export function useQuestionSetArtwork(): UseQuestionSetArtworkReturn {
     file: File, 
     questionSetId: string
   ): Promise<{ url: string | null; error: Error | null }> => {
+    console.log('[ARTWORK-UPLOAD] Starting upload for question set:', questionSetId)
+    console.log('[ARTWORK-UPLOAD] File:', { name: file.name, size: file.size, type: file.type })
+    
     try {
       setIsUploading(true)
       setUploadError(null)
@@ -54,21 +57,44 @@ export function useQuestionSetArtwork(): UseQuestionSetArtworkReturn {
       // Validate the image
       const validation = validateImage(file)
       if (!validation.valid) {
+        console.error('[ARTWORK-UPLOAD] Validation failed:', validation.error)
         throw new Error(validation.error)
       }
 
-      // Get authenticated user
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
+      // Get authenticated user via API to bypass SDK hanging
+      console.log('[ARTWORK-UPLOAD] Getting authenticated user via API...')
+      let userId: string
+      let accessToken: string
+      
+      try {
+        const response = await fetch('/api/auth/session')
+        if (!response.ok) {
+          const error = await response.json()
+          console.error('[ARTWORK-UPLOAD] Session API error:', error)
+          throw new Error(error.error || 'Failed to get session')
+        }
+        
+        const { token, userId: id } = await response.json()
+        if (!token || !id) {
+          throw new Error('No session data received')
+        }
+        
+        accessToken = token
+        userId = id
+        console.log('[ARTWORK-UPLOAD] Authenticated as user:', userId)
+      } catch (err) {
+        console.error('[ARTWORK-UPLOAD] Failed to get session:', err)
         throw new Error('You must be logged in to upload artwork')
       }
 
       // Generate unique filename
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg'
       const fileName = `${questionSetId}-${Date.now()}.${fileExt}`
-      const filePath = `${user.id}/${fileName}`
+      const filePath = `${userId}/${fileName}`
+      console.log('[ARTWORK-UPLOAD] File path:', filePath)
 
       // Check if user owns the question set
+      console.log('[ARTWORK-UPLOAD] Checking question set ownership...')
       const { data: questionSet, error: fetchError } = await supabase
         .from('question_sets')
         .select('user_id, artwork_url')
@@ -76,15 +102,18 @@ export function useQuestionSetArtwork(): UseQuestionSetArtworkReturn {
         .single()
 
       if (fetchError || !questionSet) {
+        console.error('[ARTWORK-UPLOAD] Question set fetch error:', fetchError)
         throw new Error('Question set not found')
       }
 
-      if (questionSet.user_id !== user.id) {
+      if (questionSet.user_id !== userId) {
+        console.error('[ARTWORK-UPLOAD] Ownership mismatch:', { questionSetUserId: questionSet.user_id, currentUserId: userId })
         throw new Error('You can only upload artwork for your own question sets')
       }
 
       // Delete old artwork if it exists
       if (questionSet.artwork_url) {
+        console.log('[ARTWORK-UPLOAD] Deleting old artwork:', questionSet.artwork_url)
         try {
           const oldUrl = new URL(questionSet.artwork_url)
           const oldPath = oldUrl.pathname.split('/').slice(-2).join('/')
@@ -92,30 +121,49 @@ export function useQuestionSetArtwork(): UseQuestionSetArtworkReturn {
           await supabase.storage
             .from('question-set-artwork')
             .remove([oldPath])
+          console.log('[ARTWORK-UPLOAD] Old artwork deleted')
         } catch (err) {
-          console.error('Error deleting old artwork:', err)
+          console.error('[ARTWORK-UPLOAD] Error deleting old artwork:', err)
           // Continue with upload even if delete fails
         }
       }
 
-      // Upload new artwork
-      const { error: uploadError } = await supabase.storage
+      // Upload new artwork with timeout
+      console.log('[ARTWORK-UPLOAD] Starting file upload...')
+      const uploadStart = Date.now()
+      
+      // Create timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Upload timed out after 30 seconds')), 30000)
+      })
+      
+      // Create upload promise
+      const uploadPromise = supabase.storage
         .from('question-set-artwork')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
         })
-
-      if (uploadError) {
-        throw uploadError
+      
+      // Race between upload and timeout
+      const result = await Promise.race([uploadPromise, timeoutPromise]) as any
+      const uploadDuration = Date.now() - uploadStart
+      console.log('[ARTWORK-UPLOAD] Upload completed in', uploadDuration, 'ms')
+      
+      if (result.error) {
+        console.error('[ARTWORK-UPLOAD] Upload error:', result.error)
+        throw result.error
       }
 
       // Get public URL
+      console.log('[ARTWORK-UPLOAD] Getting public URL...')
       const { data: { publicUrl } } = supabase.storage
         .from('question-set-artwork')
         .getPublicUrl(filePath)
+      console.log('[ARTWORK-UPLOAD] Public URL:', publicUrl)
 
       // Update question set with new artwork URL
+      console.log('[ARTWORK-UPLOAD] Updating question set with artwork URL...')
       const { error: updateError } = await supabase
         .from('question_sets')
         .update({ 
@@ -125,6 +173,7 @@ export function useQuestionSetArtwork(): UseQuestionSetArtworkReturn {
         .eq('id', questionSetId)
 
       if (updateError) {
+        console.error('[ARTWORK-UPLOAD] Update error:', updateError)
         // Try to clean up uploaded file
         await supabase.storage
           .from('question-set-artwork')
@@ -132,10 +181,12 @@ export function useQuestionSetArtwork(): UseQuestionSetArtworkReturn {
         throw updateError
       }
 
+      console.log('[ARTWORK-UPLOAD] Upload successful!')
       toast.success('Artwork uploaded successfully')
       return { url: publicUrl, error: null }
 
     } catch (err) {
+      console.error('[ARTWORK-UPLOAD] Error:', err)
       const handledError = handleSupabaseError(err)
       const error = new Error(handledError.message)
       setUploadError(error)
@@ -155,9 +206,22 @@ export function useQuestionSetArtwork(): UseQuestionSetArtworkReturn {
       setIsUploading(true)
       setUploadError(null)
 
-      // Get authenticated user
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
+      // Get authenticated user via API to bypass SDK hanging
+      let userId: string
+      
+      try {
+        const response = await fetch('/api/auth/session')
+        if (!response.ok) {
+          throw new Error('Failed to get session')
+        }
+        
+        const { userId: id } = await response.json()
+        if (!id) {
+          throw new Error('No session data received')
+        }
+        
+        userId = id
+      } catch (err) {
         throw new Error('You must be logged in to delete artwork')
       }
 
@@ -172,7 +236,7 @@ export function useQuestionSetArtwork(): UseQuestionSetArtworkReturn {
         throw new Error('Question set not found')
       }
 
-      if (questionSet.user_id !== user.id) {
+      if (questionSet.user_id !== userId) {
         throw new Error('You can only delete artwork for your own question sets')
       }
 
