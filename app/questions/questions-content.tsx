@@ -34,23 +34,54 @@ export function QuestionsContent({ initialQuestionSets, userId }: QuestionsConte
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this question set?')) {
+      console.log('[DELETE] Starting delete for question set:', id)
       setIsDeleting(id)
       
-      const { error } = await supabase
-        .from('question_sets')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', userId)
-
-      if (error) {
-        const appError = errorHandler.handle(error)
-        toast.error(errorHandler.getErrorMessage(appError))
-      } else {
+      try {
+        // Skip SDK and use direct API call to avoid hanging
+        console.log('[DELETE] Using direct API to delete...')
+        const response = await fetch('/api/auth/session')
+        
+        if (!response.ok) {
+          throw new Error('Failed to get session')
+        }
+        
+        const { token } = await response.json()
+        
+        const deleteResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/question_sets?id=eq.${id}&user_id=eq.${userId}`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          }
+        })
+        
+        if (!deleteResponse.ok) {
+          const errorText = await deleteResponse.text()
+          console.error('[DELETE] API delete failed:', deleteResponse.status, errorText)
+          throw new Error('Failed to delete question set')
+        }
+        
+        console.log('[DELETE] Delete successful')
         toast.success('Question set deleted successfully')
+        
         // Remove from local state
         setQuestionSets(questionSets.filter(set => set.id !== id))
+        
+        // Force a page refresh after a short delay
+        setTimeout(() => {
+          router.refresh()
+        }, 500)
+        
+      } catch (error) {
+        console.error('[DELETE] Error:', error)
+        const appError = errorHandler.handle(error)
+        toast.error(errorHandler.getErrorMessage(appError))
+      } finally {
+        setIsDeleting(null)
       }
-      setIsDeleting(null)
     }
   }
 
