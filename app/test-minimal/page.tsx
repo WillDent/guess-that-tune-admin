@@ -43,15 +43,15 @@ export default function TestMinimalPage() {
           setResult({ data, error })
         } catch (err) {
           clearTimeout(timeoutId)
-          if (err.name === 'AbortError') {
+          if (err instanceof Error && err.name === 'AbortError') {
             setResult({ error: 'Query aborted after 3 seconds' })
           } else {
-            setResult({ error: err.message })
+            setResult({ error: err instanceof Error ? err.message : 'Unknown error' })
           }
         }
       } catch (err) {
         console.error('[MINIMAL] Error:', err)
-        setResult({ error: err.message })
+        setResult({ error: err instanceof Error ? err.message : 'Unknown error' })
       }
     }
     
