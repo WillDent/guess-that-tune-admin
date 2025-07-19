@@ -37,7 +37,7 @@ async function getUserGames(userId: string) {
   }
 
   // Transform games without participant data to avoid RLS recursion
-  const games = (data || []).map((game) => ({
+  const games = (data as any[] || []).map((game) => ({
     ...game,
     question_set: {
       id: game.question_set_id,
