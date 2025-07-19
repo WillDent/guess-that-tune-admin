@@ -53,6 +53,11 @@ export default function TestHealthPage() {
         const url = process.env.NEXT_PUBLIC_SUPABASE_URL
         const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
         
+        if (!url || !key) {
+          setDirectQuery({ error: 'Missing environment variables' })
+          return
+        }
+        
         const response = await fetch(`${url}/rest/v1/users?select=*&limit=1`, {
           headers: {
             'apikey': key,
