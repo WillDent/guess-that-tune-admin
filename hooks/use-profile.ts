@@ -97,7 +97,7 @@ export function useProfile(userId?: string) {
       try {
         // Skip game stats due to RLS recursion issue
         // TODO: Fix the RLS policy for game_participants table
-        const games = null
+        const games: any[] | null = null
 
         if (!games) {
           // No session or error - set empty stats
@@ -133,7 +133,7 @@ export function useProfile(userId?: string) {
 
           // Skip question sets for now due to SDK issues
           try {
-            const questionSets = null // Temporarily disabled
+            const questionSets: any[] | null = null // Temporarily disabled
 
             if (false) {
               console.error('Error fetching question sets:', 'disabled')
