@@ -65,7 +65,7 @@ export default function TestStoragePage() {
         userId = id
         addLog(`Authenticated as user: ${userId}`)
       } catch (err) {
-        addLog(`Failed to get session: ${err.message}`)
+        addLog(`Failed to get session: ${err instanceof Error ? err.message : 'Unknown error'}`)
         throw new Error('Unable to authenticate. Please try logging in again.')
       }
 
