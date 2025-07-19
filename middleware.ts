@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest) {
     if (session && !sessionError) {
       // Verify the session is still valid
       const { data: { user: verifiedUser }, error: userError } = await supabase.auth.getUser()
-      user = verifiedUser
+      user = verifiedUser || undefined
       error = userError
     }
     

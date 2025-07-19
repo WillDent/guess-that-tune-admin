@@ -97,56 +97,25 @@ export function useProfile(userId?: string) {
       try {
         // Skip game stats due to RLS recursion issue
         // TODO: Fix the RLS policy for game_participants table
-        const games: any[] | null = null
-
-        if (!games) {
-          // No session or error - set empty stats
-          setStats({
-            totalGamesPlayed: 0,
-            totalGamesWon: 0,
-            winRate: 0,
-            totalQuestionsAnswered: 0,
-            correctAnswers: 0,
-            accuracy: 0,
-            currentStreak: 0,
-            longestStreak: 0,
-            totalQuestionSets: 0,
-            publicQuestionSets: 0
-          })
-        } else {
-          // Calculate game statistics
-          const totalGamesPlayed = games?.length || 0
-          
-          // For now, set basic stats
-          const statsData: UserStats = {
-            totalGamesPlayed,
-            totalGamesWon: 0,
-            winRate: 0,
-            totalQuestionsAnswered: 0,
-            correctAnswers: 0,
-            accuracy: 0,
-            currentStreak: 0,
-            longestStreak: 0,
-            totalQuestionSets: 0,
-            publicQuestionSets: 0
-          }
-
-          // Skip question sets for now due to SDK issues
-          try {
-            const questionSets: any[] | null = null // Temporarily disabled
-
-            if (false) {
-              console.error('Error fetching question sets:', 'disabled')
-            } else if (questionSets) {
-              statsData.totalQuestionSets = questionSets.length
-              statsData.publicQuestionSets = questionSets.filter(s => s.is_public).length
-            }
-          } catch (err) {
-            console.error('Error fetching question sets:', err)
-          }
-
-          setStats(statsData)
+        
+        // For now, set basic stats
+        const statsData: UserStats = {
+          totalGamesPlayed: 0,
+          totalGamesWon: 0,
+          winRate: 0,
+          totalQuestionsAnswered: 0,
+          correctAnswers: 0,
+          accuracy: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          totalQuestionSets: 0,
+          publicQuestionSets: 0
         }
+
+        // Skip question sets for now due to SDK issues
+        // TODO: Re-enable when SDK is fixed
+
+        setStats(statsData)
       } catch (err) {
         console.error('Error fetching stats:', err)
         // Set empty stats instead of showing error

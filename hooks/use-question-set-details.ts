@@ -27,7 +27,7 @@ export function useQuestionSetDetails(questionSetId: string | null) {
         setError(null)
 
         const { data, error } = await withSupabaseRetry(
-          () => supabase
+          async () => await supabase
             .from('questions')
             .select('*')
             .eq('question_set_id', questionSetId)

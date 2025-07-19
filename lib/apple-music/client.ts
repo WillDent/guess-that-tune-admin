@@ -221,7 +221,7 @@ export class AppleMusicClient {
           
           searchResults.forEach(result => {
             const found = result.data.results.playlists?.data || []
-            const editorial = found.filter(p => 
+            const editorial = found.filter((p: AppleMusicPlaylist) => 
               p.attributes.playlistType === 'editorial' || 
               p.attributes.curatorName?.toLowerCase().includes('apple')
             )

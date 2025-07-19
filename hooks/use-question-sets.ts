@@ -152,7 +152,7 @@ export function useQuestionSets() {
         console.log('[USE-QUESTION-SETS] Question set created successfully:', questionSet.id)
       } catch (err) {
         clearTimeout(timeoutId)
-        if (err.name === 'AbortError') {
+        if (err instanceof Error && err.name === 'AbortError') {
           throw new Error('Question set creation timed out after 10 seconds')
         }
         throw err
@@ -193,7 +193,7 @@ export function useQuestionSets() {
           console.log('[USE-QUESTION-SETS] Questions created successfully')
         } catch (err) {
           clearTimeout(questionsTimeoutId)
-          if (err.name === 'AbortError') {
+          if (err instanceof Error && err.name === 'AbortError') {
             throw new Error('Questions creation timed out after 10 seconds')
           }
           throw err
