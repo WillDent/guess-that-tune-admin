@@ -8,6 +8,8 @@ import type {
   AppleMusicSearchResponse, 
   AppleMusicChart,
   AppleMusicSong,
+  AppleMusicPlaylist,
+  AppleMusicSearchSuggestion,
   SearchParams,
   ChartParams 
 } from './types'
@@ -159,6 +161,168 @@ export class AppleMusicClient {
     // Filter out the original song
     return (results.results.songs?.data || [])
       .filter(s => s.id !== song.id)
+  }
+
+  /**
+   * Get playlists (for mood/activity browsing)
+   */
+  async getPlaylists(params: {
+    types?: string[]
+    limit?: number
+    offset?: number
+    storefront?: string
+  } = {}): Promise<AppleMusicPlaylist[]> {
+    const { 
+      types = ['mood', 'activity'], 
+      limit = 25, 
+      offset = 0,
+      storefront = 'us' 
+    } = params
+    
+    try {
+      // Search for editorial playlists with specific terms
+      const searchTerms = types.map(type => {
+        switch(type) {
+          case 'mood': return 'mood playlist'
+          case 'activity': return 'workout party study playlist'
+          case 'curator': return 'apple music curator playlist'
+          default: return type
+        }
+      }).join(' ')
+      
+      const response = await this.client.get(`/catalog/${storefront}/search`, {
+        params: {
+          term: searchTerms,
+          types: 'playlists',
+          limit,
+          offset,
+          with: 'artists,tracks'
+        }
+      })
+      
+      // Filter for editorial playlists only
+      const playlists = response.data.results.playlists?.data || []
+      return playlists.filter(p => 
+        p.attributes.playlistType === 'editorial' || 
+        p.attributes.curatorName?.includes('Apple Music')
+      )
+    } catch (error: any) {
+      console.error('[AppleMusicClient.getPlaylists] Error:', error.response?.data)
+      throw error
+    }
+  }
+
+  /**
+   * Get tracks from a playlist
+   */
+  async getPlaylistTracks(
+    playlistId: string, 
+    storefront = 'us',
+    limit = 100,
+    offset = 0
+  ): Promise<AppleMusicSong[]> {
+    try {
+      const response = await this.client.get(
+        `/catalog/${storefront}/playlists/${playlistId}/tracks`,
+        {
+          params: { limit, offset }
+        }
+      )
+      return response.data.data || []
+    } catch (error: any) {
+      console.error('[AppleMusicClient.getPlaylistTracks] Error:', error.response?.data)
+      throw error
+    }
+  }
+
+  /**
+   * Get search suggestions
+   */
+  async getSearchSuggestions(
+    term: string,
+    storefront = 'us'
+  ): Promise<AppleMusicSearchSuggestion[]> {
+    try {
+      const response = await this.client.get(
+        `/catalog/${storefront}/search/suggestions`,
+        {
+          params: { 
+            term,
+            kinds: 'terms,topResults',
+            limit: 10
+          }
+        }
+      )
+      return response.data.results?.suggestions || []
+    } catch (error: any) {
+      console.error('[AppleMusicClient.getSearchSuggestions] Error:', error.response?.data)
+      throw error
+    }
+  }
+
+  /**
+   * Get songs related to a given song
+   */
+  async getRelatedSongs(
+    songId: string,
+    storefront = 'us',
+    limit = 25
+  ): Promise<AppleMusicSong[]> {
+    try {
+      // First get the song details with relationships
+      const songResponse = await this.client.get(
+        `/catalog/${storefront}/songs/${songId}`,
+        {
+          params: {
+            include: 'artists,genres,station'
+          }
+        }
+      )
+      
+      const song = songResponse.data.data[0]
+      
+      // Use the song's attributes to find similar songs
+      const artist = song.attributes.artistName
+      const genre = song.attributes.genreNames[0]
+      
+      // Search for songs by same artist or genre
+      const searchResults = await this.search({
+        term: `${artist} ${genre}`,
+        types: 'songs',
+        limit
+      })
+      
+      // Filter out the original song and return
+      return (searchResults.results.songs?.data || [])
+        .filter(s => s.id !== songId)
+    } catch (error: any) {
+      console.error('[AppleMusicClient.getRelatedSongs] Error:', error.response?.data)
+      throw error
+    }
+  }
+
+  /**
+   * Get charts by country/storefront
+   */
+  async getChartsByCountry(params: {
+    storefront: string
+    types?: 'songs' | 'albums' | 'playlists'
+    genre?: string
+    limit?: number
+  }): Promise<AppleMusicChart> {
+    const { storefront, types = 'songs', genre, limit = 100 } = params
+    
+    try {
+      return await this.getTopCharts({
+        storefront,
+        types,
+        genre,
+        limit
+      })
+    } catch (error: any) {
+      console.error('[AppleMusicClient.getChartsByCountry] Error:', error.response?.data)
+      throw error
+    }
   }
 }
 

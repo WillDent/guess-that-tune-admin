@@ -300,9 +300,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut()
+      console.log('[AUTH-CONTEXT] Starting sign out...')
+      
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Sign out timed out after 5 seconds')), 5000)
+      })
+      
+      // Race between signOut and timeout
+      try {
+        await Promise.race([
+          supabase.auth.signOut(),
+          timeoutPromise
+        ])
+        console.log('[AUTH-CONTEXT] Sign out successful via SDK')
+      } catch (timeoutError) {
+        console.log('[AUTH-CONTEXT] SDK sign out timed out, using fallback...')
+        
+        // If SDK times out, clear local storage and redirect
+        if (typeof window !== 'undefined') {
+          // Clear all auth-related items from localStorage
+          const keysToRemove = []
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i)
+            if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
+              keysToRemove.push(key)
+            }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key))
+          
+          // Clear session storage too
+          const sessionKeysToRemove = []
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i)
+            if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
+              sessionKeysToRemove.push(key)
+            }
+          }
+          sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key))
+        }
+        
+        // Clear user state
+        setUser(null)
+        setIsAdmin(false)
+        
+        console.log('[AUTH-CONTEXT] Local auth cleared')
+      }
+      
+      // Redirect to login page
+      router.push('/login')
+      
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('[AUTH-CONTEXT] Error signing out:', error)
+      // Even if there's an error, try to redirect
+      router.push('/login')
     }
   }
 

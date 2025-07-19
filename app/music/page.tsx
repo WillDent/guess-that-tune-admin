@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Search, Play, Plus, Music, AlertCircle, ShoppingCart } from 'lucide-react'
+import { Search, Play, Plus, Music, AlertCircle, ShoppingCart, Globe, ListMusic } from 'lucide-react'
 import { GENRES } from '@/lib/apple-music'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { useToast } from '@/hooks/use-toast'
@@ -20,6 +20,8 @@ import { AddToCartButton } from '@/components/cart/add-to-cart-button'
 import { useCart } from '@/contexts/cart-context'
 import { CartSong } from '@/types/cart'
 import { SongListItem } from '@/components/music/song-list-item'
+import { PlaylistBrowser } from '@/components/music/playlist-browser'
+import { SearchSuggestions } from '@/components/music/search-suggestions'
 
 const genreOptions = [
   { value: GENRES.POP, label: 'Pop' },
@@ -32,6 +34,24 @@ const genreOptions = [
   { value: GENRES.LATIN, label: 'Latin' },
   { value: GENRES.JAZZ, label: 'Jazz' },
   { value: GENRES.CLASSICAL, label: 'Classical' },
+]
+
+const countryOptions = [
+  { value: 'us', label: 'United States' },
+  { value: 'gb', label: 'United Kingdom' },
+  { value: 'ca', label: 'Canada' },
+  { value: 'au', label: 'Australia' },
+  { value: 'de', label: 'Germany' },
+  { value: 'fr', label: 'France' },
+  { value: 'it', label: 'Italy' },
+  { value: 'es', label: 'Spain' },
+  { value: 'jp', label: 'Japan' },
+  { value: 'kr', label: 'South Korea' },
+  { value: 'br', label: 'Brazil' },
+  { value: 'mx', label: 'Mexico' },
+  { value: 'in', label: 'India' },
+  { value: 'nl', label: 'Netherlands' },
+  { value: 'se', label: 'Sweden' },
 ]
 
 interface Song {
@@ -51,6 +71,7 @@ export default function MusicPage() {
   const { cart, addToCart } = useCart()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedGenre, setSelectedGenre] = useState<string>('')
+  const [selectedCountry, setSelectedCountry] = useState<string>('us')
   const [songs, setSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -86,12 +107,13 @@ export default function MusicPage() {
     }
   }, [searchTerm])
 
-  const fetchTopCharts = async (genre?: string) => {
+  const fetchTopCharts = async (genre?: string, country?: string) => {
     setLoading(true)
     setError(null)
     try {
       const params = new URLSearchParams()
       if (genre) params.set('genre', genre)
+      if (country) params.set('storefront', country)
       
       const response = await fetch(`/api/music/charts?${params}`)
       const data = await response.json()
@@ -160,9 +182,17 @@ export default function MusicPage() {
         </div>
 
         <Tabs defaultValue="top100" className="space-y-6">
-          <TabsList>
+          <TabsList className="grid grid-cols-5 w-fit">
             <TabsTrigger value="top100">Top 100</TabsTrigger>
             <TabsTrigger value="genre">By Genre</TabsTrigger>
+            <TabsTrigger value="playlists">
+              <ListMusic className="h-4 w-4 mr-2" />
+              Playlists
+            </TabsTrigger>
+            <TabsTrigger value="international">
+              <Globe className="h-4 w-4 mr-2" />
+              International
+            </TabsTrigger>
             <TabsTrigger value="search">Search</TabsTrigger>
           </TabsList>
 
@@ -259,6 +289,72 @@ export default function MusicPage() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="playlists" className="space-y-6">
+            <PlaylistBrowser />
+          </TabsContent>
+
+          <TabsContent value="international" className="space-y-6">
+            <Card className="p-6">
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2">Select Country</label>
+                <Select value={selectedCountry} onValueChange={(value) => {
+                  setSelectedCountry(value)
+                  fetchTopCharts(undefined, value)
+                }}>
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder="Choose a country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countryOptions.map(country => (
+                      <SelectItem key={country.value} value={country.value}>
+                        {country.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {loading ? (
+                <SongListSkeleton count={10} />
+              ) : error ? (
+                <div className="text-center py-12">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-3 text-red-500" />
+                  <p className="text-red-600">{error}</p>
+                </div>
+              ) : songs.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <Music className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <p>No songs found</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <h3 className="text-lg font-semibold">
+                      Top 100 - {countryOptions.find(c => c.value === selectedCountry)?.label}
+                    </h3>
+                    {songs.length > 0 && !loading && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleAddAllToCart}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add All ({songs.length})
+                      </Button>
+                    )}
+                  </div>
+                  {songs.map((song) => (
+                    <SongListItem 
+                      key={song.id} 
+                      song={song} 
+                      mapSongToCartSong={mapSongToCartSong}
+                    />
+                  ))}
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+
           <TabsContent value="search" className="space-y-6">
             <Card className="p-6">
               <div className="mb-6">
@@ -270,6 +366,10 @@ export default function MusicPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
+                  />
+                  <SearchSuggestions 
+                    searchTerm={searchTerm}
+                    onSelectSuggestion={setSearchTerm}
                   />
                 </div>
               </div>

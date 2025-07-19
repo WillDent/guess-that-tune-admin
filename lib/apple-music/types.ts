@@ -95,6 +95,11 @@ export interface AppleMusicSearchResponse {
       href: string
       next?: string
     }
+    playlists?: {
+      data: AppleMusicPlaylist[]
+      href: string
+      next?: string
+    }
   }
 }
 
@@ -115,6 +120,67 @@ export interface AppleMusicChart {
       data: AppleMusicAlbum[]
     }>
   }
+}
+
+export interface AppleMusicPlaylist {
+  id: string
+  type: 'playlists'
+  href: string
+  attributes: {
+    artwork?: {
+      width: number
+      height: number
+      url: string
+      bgColor?: string
+      textColor1?: string
+      textColor2?: string
+      textColor3?: string
+      textColor4?: string
+    }
+    curatorName?: string
+    description?: {
+      standard: string
+      short?: string
+    }
+    isChart: boolean
+    lastModifiedDate: string
+    name: string
+    playParams?: {
+      id: string
+      kind: string
+      globalId?: string
+    }
+    playlistType: 'user-shared' | 'editorial' | 'external' | 'personal-mix'
+    url: string
+    trackCount?: number
+  }
+  relationships?: {
+    curator?: {
+      data: Array<{
+        id: string
+        type: string
+        href: string
+      }>
+    }
+    tracks?: {
+      data: AppleMusicSong[]
+      href: string
+      next?: string
+    }
+  }
+}
+
+export interface AppleMusicSearchSuggestion {
+  kind: 'terms' | 'topResults'
+  searchTerm: string
+  displayTerm: string
+}
+
+export interface AppleMusicCountry {
+  code: string
+  name: string
+  defaultLanguageTag: string
+  supportedLanguageTags: string[]
 }
 
 export interface SearchParams {

@@ -9,6 +9,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const genre = searchParams.get('genre') || undefined
+    const storefront = searchParams.get('storefront') || 'us'
     const limit = parseInt(searchParams.get('limit') || '100')
     
     // Check if credentials are configured
@@ -20,6 +21,7 @@ export async function GET(request: Request) {
     }
     
     const chartData = await appleMusicClient.getTopCharts({
+      storefront,
       types: 'songs',
       genre,
       limit,
