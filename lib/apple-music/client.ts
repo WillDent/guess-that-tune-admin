@@ -180,32 +180,69 @@ export class AppleMusicClient {
     } = params
     
     try {
-      // Search for editorial playlists with specific terms
-      const searchTerms = types.map(type => {
-        switch(type) {
-          case 'mood': return 'mood playlist'
-          case 'activity': return 'workout party study playlist'
-          case 'curator': return 'apple music curator playlist'
-          default: return type
-        }
-      }).join(' ')
-      
-      const response = await this.client.get(`/catalog/${storefront}/search`, {
+      // Use charts endpoint to get curated playlists
+      const response = await this.client.get(`/catalog/${storefront}/charts`, {
         params: {
-          term: searchTerms,
           types: 'playlists',
-          limit,
-          offset,
-          with: 'artists,tracks'
+          limit: limit,
+          chart: 'most-played'
         }
       })
       
-      // Filter for editorial playlists only
-      const playlists = response.data.results.playlists?.data || []
-      return playlists.filter(p => 
-        p.attributes.playlistType === 'editorial' || 
-        p.attributes.curatorName?.includes('Apple Music')
-      )
+      const playlists = response.data.results.playlists?.[0]?.data || []
+      
+      // If we got chart playlists, also fetch some editorial playlists
+      if (playlists.length < limit) {
+        try {
+          // Search for specific curated playlist types
+          const searchTerms = [
+            'apple music essentials',
+            'apple music hits', 
+            'mood playlist',
+            'workout playlist',
+            'chill playlist',
+            'party playlist',
+            'focus playlist',
+            'sleep playlist'
+          ]
+          
+          const searchPromises = searchTerms.slice(0, 3).map(term => 
+            this.client.get(`/catalog/${storefront}/search`, {
+              params: {
+                term,
+                types: 'playlists',
+                limit: 5
+              }
+            })
+          )
+          
+          const searchResults = await Promise.all(searchPromises)
+          const additionalPlaylists: AppleMusicPlaylist[] = []
+          
+          searchResults.forEach(result => {
+            const found = result.data.results.playlists?.data || []
+            const editorial = found.filter(p => 
+              p.attributes.playlistType === 'editorial' || 
+              p.attributes.curatorName?.toLowerCase().includes('apple')
+            )
+            additionalPlaylists.push(...editorial)
+          })
+          
+          // Combine and deduplicate
+          const allPlaylists = [...playlists, ...additionalPlaylists]
+          const uniquePlaylists = Array.from(
+            new Map(allPlaylists.map(p => [p.id, p])).values()
+          )
+          
+          return uniquePlaylists.slice(offset, offset + limit)
+        } catch (searchError) {
+          console.error('[AppleMusicClient.getPlaylists] Search error:', searchError)
+          // Fall back to just chart playlists
+          return playlists
+        }
+      }
+      
+      return playlists
     } catch (error: any) {
       console.error('[AppleMusicClient.getPlaylists] Error:', error.response?.data)
       throw error
