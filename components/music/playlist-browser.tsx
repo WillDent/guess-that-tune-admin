@@ -154,7 +154,7 @@ export function PlaylistBrowser() {
         <div className="text-center">
           <AlertCircle className="h-12 w-12 mx-auto mb-3 text-red-500" />
           <p className="text-red-600">{error}</p>
-          <Button variant="outline" onClick={fetchPlaylists} className="mt-4">
+          <Button variant="outline" onClick={() => fetchPlaylists()} className="mt-4">
             Try Again
           </Button>
         </div>
