@@ -15,7 +15,7 @@ export default function TestHealthPage() {
         const data = await response.json()
         setHealthStatus(data)
       } catch (err) {
-        setHealthStatus({ error: err.message })
+        setHealthStatus({ error: err instanceof Error ? err.message : 'Unknown error' })
       }
     }
     
@@ -43,7 +43,7 @@ export default function TestHealthPage() {
           ok: response.ok
         })
       } catch (err) {
-        setDirectFetch({ error: err.message })
+        setDirectFetch({ error: err instanceof Error ? err.message : 'Unknown error' })
       }
     }
     
@@ -70,7 +70,7 @@ export default function TestHealthPage() {
           data: text
         })
       } catch (err) {
-        setDirectQuery({ error: err.message })
+        setDirectQuery({ error: err instanceof Error ? err.message : 'Unknown error' })
       }
     }
     
