@@ -72,30 +72,36 @@ export default function EditQuestionSetPage() {
       try {
         setLoading(true)
         
-        // Fetch question set with questions
-        console.log('[EDIT-PAGE] Fetching from database...')
-        const { data: questionSet, error } = await supabaseClient
-          .from('question_sets')
-          .select(`
-            *,
-            questions (*)
-          `)
-          .eq('id', questionSetId)
-          .single()
-          
-        console.log('[EDIT-PAGE] Fetch result:', { questionSet, error })
-          
-        if (error || !questionSet) {
-          console.error('[EDIT-PAGE] Error or no data:', error)
-          setNotFound(true)
-          return
+        // Fetch question set with questions using API endpoint to avoid SDK hanging
+        console.log('[EDIT-PAGE] Fetching from API endpoint...')
+        
+        // Add timeout to prevent indefinite hanging
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
+        
+        const response = await fetch(`/api/questions/${questionSetId}/details`, {
+          signal: controller.signal
+        })
+        clearTimeout(timeoutId)
+        
+        const responseData = await response.json()
+        console.log('[EDIT-PAGE] API response:', { status: response.status, data: responseData })
+        
+        if (!response.ok) {
+          console.error('[EDIT-PAGE] API error:', responseData.error)
+          if (response.status === 403) {
+            toast.error('You do not have permission to edit this question set')
+            router.push('/questions')
+            return
+          }
+          throw new Error(responseData.error || 'Failed to fetch question set')
         }
         
-        // Check if user owns this question set
-        const { data: { user } } = await supabaseClient.auth.getUser()
-        if (!user || questionSet.user_id !== user.id) {
-          toast.error('You do not have permission to edit this question set')
-          router.push('/questions')
+        const questionSet = responseData
+        
+        if (!questionSet) {
+          console.error('[EDIT-PAGE] No data returned')
+          setNotFound(true)
           return
         }
         
@@ -114,10 +120,16 @@ export default function EditQuestionSetPage() {
         setOriginalSongIds(songIds)
         console.log('[EDIT-PAGE] Form values set successfully')
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('[EDIT-PAGE] Error in loadQuestionSet:', error)
-        const appError = errorHandler.handle(error)
-        toast.error(errorHandler.getErrorMessage(appError))
+        
+        if (error.name === 'AbortError') {
+          toast.error('Request timed out. The server may be experiencing issues. Please try again.')
+        } else {
+          const appError = errorHandler.handle(error)
+          toast.error(errorHandler.getErrorMessage(appError))
+        }
+        
         setNotFound(true)
       } finally {
         console.log('[EDIT-PAGE] Setting loading to false')
