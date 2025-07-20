@@ -38,6 +38,7 @@ export default function EditQuestionSetPage() {
   const [autoSaving, setAutoSaving] = useState(false)
   const [notFound, setNotFound] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false)
   
   // Form state
   const [setName, setSetName] = useState('')
@@ -64,9 +65,16 @@ export default function EditQuestionSetPage() {
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null)
   const prevCategoryIds = useRef<string[]>([])
   const saveTimeout = useRef<NodeJS.Timeout | null>(null)
+  const hasLoadedData = useRef(false)
 
   // Load the question set
   useEffect(() => {
+    // Skip if no questionSetId or already loaded data
+    if (!questionSetId || hasLoadedData.current) return
+    
+    // Mark as loaded immediately to prevent concurrent calls
+    hasLoadedData.current = true
+    
     const loadQuestionSet = async () => {
       console.log('[EDIT-PAGE] Loading question set:', questionSetId)
       try {
@@ -120,6 +128,9 @@ export default function EditQuestionSetPage() {
         setOriginalSongIds(songIds)
         console.log('[EDIT-PAGE] Form values set successfully')
         
+        // Mark data as loaded to prevent re-fetching
+        setDataLoaded(true)
+        
       } catch (error: any) {
         console.error('[EDIT-PAGE] Error in loadQuestionSet:', error)
         
@@ -138,7 +149,8 @@ export default function EditQuestionSetPage() {
     }
     
     loadQuestionSet()
-  }, [questionSetId, router, toast])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionSetId]) // Only depend on questionSetId, router and toast are stable
 
   // Fetch all categories and assigned categories
   useEffect(() => {
