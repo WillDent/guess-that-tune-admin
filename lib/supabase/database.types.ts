@@ -52,6 +52,10 @@ export type Database = {
           id: string
           name: string
           updated_at: string | null
+          display_order: number
+          parent_id: string | null
+          icon: string | null
+          color: string | null
         }
         Insert: {
           created_at?: string | null
@@ -60,6 +64,10 @@ export type Database = {
           id?: string
           name: string
           updated_at?: string | null
+          display_order?: number
+          parent_id?: string | null
+          icon?: string | null
+          color?: string | null
         }
         Update: {
           created_at?: string | null
@@ -68,6 +76,10 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string | null
+          display_order?: number
+          parent_id?: string | null
+          icon?: string | null
+          color?: string | null
         }
         Relationships: [
           {
@@ -75,6 +87,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
@@ -442,6 +461,33 @@ export type Database = {
           tags: string[] | null
           updated_at: string
           user_id: string
+        }[]
+      }
+      get_category_hierarchy: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          description: string | null
+          parent_id: string | null
+          icon: string | null
+          color: string | null
+          display_order: number
+          level: number
+          path: string[]
+        }[]
+      }
+      get_categories_with_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          description: string | null
+          parent_id: string | null
+          icon: string | null
+          color: string | null
+          display_order: number
+          usage_count: number
         }[]
       }
     }

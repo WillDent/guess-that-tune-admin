@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Save, Shuffle, AlertCircle, RefreshCw, Globe, Lock, X, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Shuffle, AlertCircle, RefreshCw, Globe, Lock, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useQuestionSets } from '@/hooks/use-question-sets'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -22,8 +22,9 @@ import { errorHandler } from '@/lib/errors/handler'
 import { createClient } from '@/lib/supabase/client'
 import { QuestionSetGridSkeleton } from '@/components/questions/question-set-grid-skeleton'
 import { debounce } from 'lodash'
-import { TagInput } from 'emblor'
 import { ArtworkUpload } from '@/components/question-sets/artwork-upload'
+import { CategorySelector } from '@/components/categories/category-selector'
+import { TagInput } from '@/components/tags/tag-input'
 
 export default function EditQuestionSetPage() {
   const router = useRouter()
@@ -46,7 +47,6 @@ export default function EditQuestionSetPage() {
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium')
   const [isPublic, setIsPublic] = useState(false)
   const [tags, setTags] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState('')
   const [questions, setQuestions] = useState<any[]>([])
   const [originalSongIds, setOriginalSongIds] = useState<string[]>([])
   const [artworkUrl, setArtworkUrl] = useState<string | null>(null)
@@ -55,17 +55,9 @@ export default function EditQuestionSetPage() {
   // Track unsaved changes
   const [hasChanges, setHasChanges] = useState(false)
 
-  // Fetch all categories and assigned categories
-  const [allCategories, setAllCategories] = useState<{ id: string; text: string }[]>([])
-  const [assignedCategories, setAssignedCategories] = useState<{ id: string; text: string }[]>([])
-  const [catLoading, setCatLoading] = useState(true)
-  const [catError, setCatError] = useState<string | null>(null)
-  const [catSaving, setCatSaving] = useState(false)
-  const [catSaveError, setCatSaveError] = useState<string | null>(null)
-  const [catSaveSuccess, setCatSaveSuccess] = useState(false)
-  const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null)
-  const prevCategoryIds = useRef<string[]>([])
-  const saveTimeout = useRef<NodeJS.Timeout | null>(null)
+  // Categories state
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
   const hasLoadedData = useRef(false)
 
   // Load the question set
@@ -154,25 +146,26 @@ export default function EditQuestionSetPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionSetId]) // Only depend on questionSetId, router and toast are stable
 
-  // Fetch all categories and assigned categories
+  // Load assigned categories for this question set
   useEffect(() => {
-    const fetchCategories = async () => {
-      setCatLoading(true)
-      setCatError(null)
+    const loadAssignedCategories = async () => {
+      if (!questionSetId) return
+      
+      setCategoriesLoading(true)
       try {
-        const res = await fetch('/api/admin/categories')
-        const categories = await res.json()
-        setAllCategories(categories.map((c: any) => ({ id: c.id, text: c.name })))
-        // Fetch assigned categories for this question set
-        const res2 = await fetch(`/api/questions/${questionSetId}/categories`)
-        const assigned = await res2.json()
-        setAssignedCategories(assigned.map((c: any) => ({ id: c.category_id, text: c.category_name })))
+        const response = await fetch(`/api/questions/${questionSetId}/categories`)
+        if (response.ok) {
+          const assigned = await response.json()
+          setSelectedCategoryIds(assigned.map((c: any) => c.category_id))
+        }
       } catch (err) {
-        setCatError('Failed to load categories')
+        console.error('Failed to load categories:', err)
+      } finally {
+        setCategoriesLoading(false)
       }
-      setCatLoading(false)
     }
-    if (questionSetId) fetchCategories()
+    
+    loadAssignedCategories()
   }, [questionSetId])
 
   // Auto-save functionality
@@ -216,22 +209,6 @@ export default function EditQuestionSetPage() {
 
   // Mark form as changed
   const markAsChanged = () => setHasChanges(true)
-
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
-      e.preventDefault()
-      if (!tags.includes(tagInput.trim())) {
-        setTags([...tags, tagInput.trim()])
-        setTagInput('')
-        markAsChanged()
-      }
-    }
-  }
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove))
-    markAsChanged()
-  }
 
   const regenerateQuestions = async () => {
     setRegenerating(true)
@@ -325,40 +302,28 @@ export default function EditQuestionSetPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [hasChanges])
 
-  // Debounced save handler for category assignments
-  useEffect(() => {
-    if (catLoading) return
-    const newCategoryIds = assignedCategories.map((c) => c.id).sort()
-    if (JSON.stringify(newCategoryIds) === JSON.stringify(prevCategoryIds.current)) return
-    // Debounce: clear previous timeout
-    if (saveTimeout.current) clearTimeout(saveTimeout.current)
-    saveTimeout.current = setTimeout(async () => {
-      setCatSaving(true)
-      setCatSaveError(null)
-      setCatSaveSuccess(false)
-      try {
-        const res = await fetch(`/api/questions/${questionSetId}/categories`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ categoryIds: newCategoryIds }),
-        })
-        if (!res.ok) {
-          const data = await res.json()
-          setCatSaveError(data.error || 'Failed to save categories')
-        } else {
-          setCatSaveSuccess(true)
-          prevCategoryIds.current = newCategoryIds
-        }
-      } catch (err) {
-        setCatSaveError('Failed to save categories')
+  // Save categories when they change
+  const handleCategoryChange = useCallback(async (categoryIds: string[]) => {
+    setSelectedCategoryIds(categoryIds)
+    
+    try {
+      const response = await fetch(`/api/questions/${questionSetId}/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryIds }),
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        toast.error('Failed to save categories', data.error || 'Unknown error')
+      } else {
+        toast.success('Categories updated')
       }
-      setCatSaving(false)
-    }, 600) // 600ms debounce
-    // Cleanup
-    return () => {
-      if (saveTimeout.current) clearTimeout(saveTimeout.current)
+    } catch (err) {
+      console.error('Failed to save categories:', err)
+      toast.error('Failed to save categories')
     }
-  }, [assignedCategories, questionSetId, catLoading])
+  }, [questionSetId, toast])
 
   if (loading) {
     return (
@@ -538,31 +503,23 @@ export default function EditQuestionSetPage() {
                   </p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Tags
-                  </label>
-                  <Input
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={handleAddTag}
-                    placeholder="Add tags (press Enter)"
+                <div className="mt-6">
+                  <CategorySelector
+                    selectedCategoryIds={selectedCategoryIds}
+                    onCategoryChange={handleCategoryChange}
                   />
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="outline"
-                          className="cursor-pointer"
-                          onClick={() => removeTag(tag)}
-                        >
-                          {tag}
-                          <X className="h-3 w-3 ml-1" />
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+                </div>
+
+                <div className="mt-6">
+                  <TagInput
+                    tags={tags}
+                    onTagsChange={(newTags) => {
+                      setTags(newTags)
+                      markAsChanged()
+                    }}
+                    placeholder="Add tags (press Enter)"
+                    maxTags={10}
+                  />
                 </div>
 
                 <div className="mt-6">
@@ -581,28 +538,6 @@ export default function EditQuestionSetPage() {
                   />
                 </div>
 
-                <div className="mt-6">
-                  <label className="block font-medium mb-2">Categories</label>
-                  {catLoading ? (
-                    <div>Loading categories...</div>
-                  ) : catError ? (
-                    <div className="text-red-500">{catError}</div>
-                  ) : (
-                    <>
-                      <TagInput
-                        tags={assignedCategories}
-                        setTags={setAssignedCategories}
-                        autocompleteOptions={allCategories}
-                        activeTagIndex={activeTagIndex}
-                        setActiveTagIndex={setActiveTagIndex}
-                        placeholder="Assign categories..."
-                      />
-                      {catSaving && <div className="text-sm text-gray-500 mt-1">Saving...</div>}
-                      {catSaveError && <div className="text-sm text-red-500 mt-1">{catSaveError}</div>}
-                      {catSaveSuccess && <div className="text-sm text-green-600 mt-1">Categories saved!</div>}
-                    </>
-                  )}
-                </div>
 
                 <div className="pt-4 space-y-2">
                   <Button 
