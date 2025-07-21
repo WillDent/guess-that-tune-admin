@@ -45,11 +45,15 @@ export function CategorySelector({
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [hasFetched, setHasFetched] = useState(false)
   const supabase = createSupabaseBrowserClient()
 
   useEffect(() => {
-    fetchCategories()
-  }, [])
+    if (!hasFetched) {
+      fetchCategories()
+      setHasFetched(true)
+    }
+  }, [hasFetched])
 
   const fetchCategories = async () => {
     try {
@@ -62,13 +66,16 @@ export function CategorySelector({
         .order('display_order', { ascending: true })
         .order('name', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
 
       setCategories(data || [])
+      setLoading(false)
     } catch (err) {
       console.error('Error fetching categories:', err)
       setError('Failed to load categories')
-    } finally {
       setLoading(false)
     }
   }
@@ -155,6 +162,7 @@ export function CategorySelector({
             aria-expanded={open}
             className="w-full justify-between"
             disabled={loading}
+            key={`category-button-${loading}`}
           >
             {loading ? (
               <div className="flex items-center gap-2">
