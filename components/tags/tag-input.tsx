@@ -12,6 +12,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { normalizeTag, validateTag } from '@/lib/tag-validation'
 
 interface TagInputProps {
   tags: string[]
@@ -33,24 +34,39 @@ export function TagInput({
   const [input, setInput] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
-  // Filter suggestions based on input
+  // Fetch suggestions based on input
   useEffect(() => {
-    if (input.trim()) {
-      const filtered = suggestions
-        .filter(s => 
-          s.toLowerCase().includes(input.toLowerCase()) && 
-          !tags.includes(s)
-        )
-        .slice(0, 5)
-      setFilteredSuggestions(filtered)
-      setShowSuggestions(filtered.length > 0)
-    } else {
-      setShowSuggestions(false)
+    const fetchSuggestions = async () => {
+      if (!input.trim() || input.length < 2) {
+        setShowSuggestions(false)
+        return
+      }
+
+      setLoadingSuggestions(true)
+      try {
+        const response = await fetch(`/api/tags/suggestions?prefix=${encodeURIComponent(input)}&limit=5`)
+        if (response.ok) {
+          const data = await response.json()
+          const filtered = data.suggestions
+            .map((s: { tag: string }) => s.tag)
+            .filter((tag: string) => !tags.includes(tag))
+          setFilteredSuggestions(filtered)
+          setShowSuggestions(filtered.length > 0)
+        }
+      } catch (err) {
+        console.error('Failed to fetch tag suggestions:', err)
+      } finally {
+        setLoadingSuggestions(false)
+      }
     }
-  }, [input, suggestions, tags])
+
+    const debounceTimer = setTimeout(fetchSuggestions, 300)
+    return () => clearTimeout(debounceTimer)
+  }, [input, tags])
 
   // Handle clicks outside suggestions
   useEffect(() => {
@@ -69,27 +85,34 @@ export function TagInput({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const normalizeTag = (tag: string): string => {
-    return tag
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9-\s]/g, '')
-      .replace(/\s+/g, '-')
-      .slice(0, 30)
-  }
+  const [error, setError] = useState<string | null>(null)
 
   const addTag = (tag: string) => {
     const normalizedTag = normalizeTag(tag)
+    const validation = validateTag(normalizedTag)
     
-    if (
-      normalizedTag.length >= 2 &&
-      !tags.includes(normalizedTag) &&
-      tags.length < maxTags
-    ) {
-      onTagsChange([...tags, normalizedTag])
-      setInput('')
-      setShowSuggestions(false)
+    if (!validation.valid) {
+      setError(validation.error || 'Invalid tag')
+      setTimeout(() => setError(null), 3000)
+      return
     }
+    
+    if (tags.includes(normalizedTag)) {
+      setError('Tag already added')
+      setTimeout(() => setError(null), 3000)
+      return
+    }
+    
+    if (tags.length >= maxTags) {
+      setError(`Maximum ${maxTags} tags allowed`)
+      setTimeout(() => setError(null), 3000)
+      return
+    }
+    
+    onTagsChange([...tags, normalizedTag])
+    setInput('')
+    setShowSuggestions(false)
+    setError(null)
   }
 
   const removeTag = (tagToRemove: string) => {
@@ -155,32 +178,46 @@ export function TagInput({
           )}
         </div>
 
-        {showSuggestions && (
+        {(showSuggestions || loadingSuggestions) && input.length >= 2 && (
           <div
             ref={suggestionsRef}
             className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-md"
           >
-            {filteredSuggestions.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                className="w-full px-3 py-2 text-left hover:bg-accent hover:text-accent-foreground text-sm"
-                onClick={() => addTag(suggestion)}
-              >
-                {suggestion}
-              </button>
-            ))}
+            {loadingSuggestions ? (
+              <div className="px-3 py-2 text-sm text-muted-foreground">
+                Loading suggestions...
+              </div>
+            ) : filteredSuggestions.length > 0 ? (
+              filteredSuggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  className="w-full px-3 py-2 text-left hover:bg-accent hover:text-accent-foreground text-sm"
+                  onClick={() => addTag(suggestion)}
+                >
+                  {suggestion}
+                </button>
+              ))
+            ) : (
+              <div className="px-3 py-2 text-sm text-muted-foreground">
+                No suggestions found
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>
+      <div className="flex justify-between items-center text-xs">
+        <span className="text-muted-foreground">
           {tags.length}/{maxTags} tags
         </span>
-        <span>
-          Tags are normalized: lowercase, alphanumeric + hyphens
-        </span>
+        {error ? (
+          <span className="text-destructive">{error}</span>
+        ) : (
+          <span className="text-muted-foreground">
+            Tags are normalized: lowercase, alphanumeric + hyphens
+          </span>
+        )}
       </div>
     </div>
   )
