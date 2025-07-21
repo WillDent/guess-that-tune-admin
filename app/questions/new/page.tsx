@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Save, Shuffle, Music, AlertCircle, Globe, Lock, X } from 'lucide-react'
+import { ArrowLeft, Save, Shuffle, Music, AlertCircle, Globe, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { useQuestionSets } from '@/hooks/use-question-sets'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -21,6 +21,8 @@ import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
 import { ArtworkPreviewUpload } from '@/components/question-sets/artwork-preview-upload'
 import { useQuestionSetArtwork } from '@/hooks/use-question-set-artwork'
+import { CategorySelector } from '@/components/categories/category-selector'
+import { TagInput } from '@/components/tags/tag-input'
 
 interface SelectedSong {
   id: string
@@ -45,7 +47,7 @@ export default function NewQuestionSetPage() {
   const [preview, setPreview] = useState<any[]>([])
   const [isPublic, setIsPublic] = useState(false)
   const [tags, setTags] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState('')
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
   const [artworkFile, setArtworkFile] = useState<File | null>(null)
   const [artworkPreview, setArtworkPreview] = useState<string | null>(null)
 
@@ -66,19 +68,6 @@ export default function NewQuestionSetPage() {
     }
   }, [])
 
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
-      e.preventDefault()
-      if (!tags.includes(tagInput.trim())) {
-        setTags([...tags, tagInput.trim()])
-        setTagInput('')
-      }
-    }
-  }
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove))
-  }
 
   const generatePreview = async () => {
     setGenerating(true)
@@ -178,6 +167,27 @@ export default function NewQuestionSetPage() {
           console.error('[NEW-QUESTION-SET] Artwork upload error:', artworkError)
           // Don't fail the whole operation if artwork upload fails
           toast.error('Question set created but artwork upload failed')
+        }
+      }
+
+      // Save categories if any were selected
+      if (selectedCategoryIds.length > 0 && questionSet) {
+        console.log('[NEW-QUESTION-SET] Saving categories...')
+        try {
+          const response = await fetch(`/api/questions/${questionSet.id}/categories`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ categoryIds: selectedCategoryIds }),
+          })
+          
+          if (!response.ok) {
+            const data = await response.json()
+            console.error('[NEW-QUESTION-SET] Category save error:', data.error)
+            // Non-fatal error - question set was created
+          }
+        } catch (err) {
+          console.error('[NEW-QUESTION-SET] Category save exception:', err)
+          // Non-fatal error - question set was created
         }
       }
       
@@ -319,30 +329,19 @@ export default function NewQuestionSetPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Tags
-                </label>
-                <Input
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleAddTag}
-                  placeholder="Add tags (press Enter)"
+                <CategorySelector
+                  selectedCategoryIds={selectedCategoryIds}
+                  onCategoryChange={setSelectedCategoryIds}
                 />
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {tags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        className="cursor-pointer"
-                        onClick={() => removeTag(tag)}
-                      >
-                        {tag}
-                        <X className="h-3 w-3 ml-1" />
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+              </div>
+
+              <div>
+                <TagInput
+                  tags={tags}
+                  onTagsChange={setTags}
+                  placeholder="Add tags (press Enter)"
+                  maxTags={10}
+                />
               </div>
 
               <div>
