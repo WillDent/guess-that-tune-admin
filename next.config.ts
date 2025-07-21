@@ -2,10 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  experimental: {
-    // Ensure CSS is handled properly
-    appDir: true,
-  },
   // Suppress specific webpack warnings
   webpack: (config, { isServer }) => {
     // Fixes npm packages that depend on node modules

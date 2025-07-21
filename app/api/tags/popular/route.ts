@@ -22,9 +22,9 @@ export async function GET(req: NextRequest) {
     // Extract and count unique tags
     const tagCounts = new Map<string, number>()
     
-    data?.forEach(row => {
+    data?.forEach((row: { tags: string[] | null }) => {
       if (row.tags && Array.isArray(row.tags)) {
-        row.tags.forEach(tag => {
+        row.tags.forEach((tag: string) => {
           if (typeof tag === 'string') {
             const count = tagCounts.get(tag) || 0
             tagCounts.set(tag, count + 1)
