@@ -191,11 +191,22 @@ export function QuestionsContent({ initialQuestionSets, userId }: QuestionsConte
 
                 <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
                   <span>{set.questions.length} questions</span>
-                  {set.is_public && (
-                    <Badge variant="secondary" className="text-xs">
-                      Public
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {set.state === 'PUBLISHED' ? (
+                      <Badge variant="default" className="text-xs bg-green-100 text-green-800">
+                        Published
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">
+                        Draft
+                      </Badge>
+                    )}
+                    {set.is_public && (
+                      <Badge variant="secondary" className="text-xs">
+                        Public
+                      </Badge>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-1 sm:gap-2">

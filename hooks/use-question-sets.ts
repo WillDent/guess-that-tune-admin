@@ -220,6 +220,7 @@ export function useQuestionSets() {
       is_public?: boolean
       tags?: string[] | null
       artwork_url?: string | null
+      state?: 'NEW' | 'PUBLISHED'
     },
     questions?: Omit<Question, 'id' | 'question_set_id' | 'created_at' | 'updated_at'>[]
   ) => {

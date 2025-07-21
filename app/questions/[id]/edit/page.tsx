@@ -50,6 +50,7 @@ export default function EditQuestionSetPage() {
   const [questions, setQuestions] = useState<any[]>([])
   const [originalSongIds, setOriginalSongIds] = useState<string[]>([])
   const [artworkUrl, setArtworkUrl] = useState<string | null>(null)
+  const [state, setState] = useState<'NEW' | 'PUBLISHED'>('NEW')
   
   // Track unsaved changes
   const [hasChanges, setHasChanges] = useState(false)
@@ -122,6 +123,7 @@ export default function EditQuestionSetPage() {
         setTags(questionSet.tags || [])
         setQuestions(questionSet.questions || [])
         setArtworkUrl(questionSet.artwork_url || null)
+        setState(questionSet.state || 'NEW')
         
         // Extract original song IDs
         const songIds = questionSet.questions.map((q: any) => q.correct_song_id)
@@ -206,10 +208,11 @@ export default function EditQuestionSetPage() {
         description: description || null,
         difficulty,
         is_public: isPublic,
-        tags: tags.length > 0 ? tags : null
+        tags: tags.length > 0 ? tags : null,
+        state
       })
     }
-  }, [setName, description, difficulty, isPublic, tags, hasChanges, loading, debouncedAutoSave])
+  }, [setName, description, difficulty, isPublic, tags, state, hasChanges, loading, debouncedAutoSave])
 
   // Mark form as changed
   const markAsChanged = () => setHasChanges(true)
@@ -288,7 +291,8 @@ export default function EditQuestionSetPage() {
           difficulty,
           is_public: isPublic,
           tags: tags.length > 0 ? tags : null,
-          artwork_url: artworkUrl
+          artwork_url: artworkUrl,
+          state
         },
         transformedQuestions
       )
@@ -480,6 +484,27 @@ export default function EditQuestionSetPage() {
                       <SelectItem value="easy">Easy - Very different songs</SelectItem>
                       <SelectItem value="medium">Medium - Similar genres</SelectItem>
                       <SelectItem value="hard">Hard - Very similar songs</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Status
+                  </label>
+                  <Select 
+                    value={state} 
+                    onValueChange={(v: 'NEW' | 'PUBLISHED') => {
+                      setState(v)
+                      markAsChanged()
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NEW">New - Not yet published</SelectItem>
+                      <SelectItem value="PUBLISHED">Published - Available to play</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
