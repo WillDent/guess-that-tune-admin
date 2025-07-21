@@ -193,30 +193,51 @@ export default function AdminCategoriesPage() {
         {loading ? (
           <div className="flex items-center gap-2 text-gray-400"><span className="animate-spin">⏳</span> Loading...</div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-800">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-900 sticky top-0 z-10">
+          <div className="overflow-x-auto rounded-lg border border-gray-600 bg-gray-800 shadow-lg">
+            <table className="min-w-full">
+              <thead className="bg-gray-900 border-b border-gray-700">
                 <tr>
-                  <th className="px-4 py-2 text-left text-gray-300">Name</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Description</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Created At</th>
-                  <th className="px-4 py-2 text-left text-gray-300">Actions</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Description</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Created At</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-200 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-700">
                 {categories.map((cat) => (
-                  <tr key={cat.id} className="even:bg-gray-900">
-                    <td className="px-4 py-2">{cat.name}</td>
-                    <td className="px-4 py-2">{cat.description}</td>
-                    <td className="px-4 py-2">{new Date(cat.created_at).toLocaleString()}</td>
-                    <td className="px-4 py-2">
-                      <button className="text-blue-500 hover:underline mr-2" onClick={() => setEditCategory(cat)}>Edit</button>
-                      <button className="text-red-500 hover:underline" onClick={() => setDeleteCategory(cat)}>Delete</button>
+                  <tr key={cat.id} className="hover:bg-gray-700 transition-colors duration-150">
+                    <td className="px-6 py-4 text-gray-200 font-medium">{cat.name}</td>
+                    <td className="px-6 py-4 text-gray-300">{cat.description || <span className="text-gray-500 italic">No description</span>}</td>
+                    <td className="px-6 py-4 text-gray-300 text-sm">{new Date(cat.created_at).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'short', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}</td>
+                    <td className="px-6 py-4 space-x-3">
+                      <button 
+                        className="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-150" 
+                        onClick={() => setEditCategory(cat)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="text-red-400 hover:text-red-300 font-medium transition-colors duration-150" 
+                        onClick={() => setDeleteCategory(cat)}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {categories.length === 0 && (
+              <div className="text-center py-8 text-gray-400">
+                No categories found. Create your first category to get started.
+              </div>
+            )}
           </div>
         )}
       </div>
