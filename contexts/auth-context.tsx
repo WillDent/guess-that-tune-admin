@@ -5,6 +5,7 @@ import { User } from '@supabase/supabase-js'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 import { useRouter } from 'next/navigation'
 import type { Database } from '@/lib/supabase/database.types'
+import { SUPER_ADMIN_EMAIL } from '@/lib/constants'
 
 type UserRole = Database['public']['Tables']['users']['Row']['role']
 type UserWithRole = User & {
@@ -67,9 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Function to check and promote super admin
   const checkAndPromoteSuperAdmin = async (email: string) => {
-    const superAdminEmail = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL
-    
-    if (superAdminEmail && email === superAdminEmail) {
+    if (SUPER_ADMIN_EMAIL && email === SUPER_ADMIN_EMAIL) {
       try {
         // Update user role directly to admin
         const { error } = await supabase
@@ -79,6 +78,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (error) {
           console.error('Error promoting super admin:', error)
+        } else {
+          console.log('[AUTH-CONTEXT] Promoted super admin:', email)
+          return true
         }
       } catch (err) {
         console.error('Error promoting super admin:', err)
@@ -174,10 +176,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: role || undefined
           }
           
+          // Check if this is the super admin email
+          const isSuperAdmin = sessionUser.email === SUPER_ADMIN_EMAIL
+          
           if (mounted) {
-            console.log('[AUTH-CONTEXT] Setting user with role:', { email: sessionUser.email, role, isAdmin: role === 'admin' })
+            console.log('[AUTH-CONTEXT] Setting user with role:', { 
+              email: sessionUser.email, 
+              role, 
+              isAdmin: role === 'admin' || isSuperAdmin,
+              isSuperAdmin,
+              superAdminEmail: SUPER_ADMIN_EMAIL,
+              emailMatch: sessionUser.email === SUPER_ADMIN_EMAIL,
+              roleFromDB: role
+            })
             setUser(userWithRole)
-            setIsAdmin(role === 'admin')
+            setIsAdmin(role === 'admin' || isSuperAdmin)
             setLoading(false)
           }
         } catch (dbError) {
@@ -246,9 +259,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               role: role || undefined
             }
             
+            // Check if this is the super admin email
+            const isSuperAdmin = authUser.email === SUPER_ADMIN_EMAIL
+            
             if (mounted) {
+              console.log('[AUTH-CONTEXT] Auth state change - Setting user with role:', { 
+                email: authUser.email, 
+                role, 
+                isAdmin: role === 'admin' || isSuperAdmin,
+                isSuperAdmin,
+                superAdminEmail: SUPER_ADMIN_EMAIL,
+                emailMatch: authUser.email === SUPER_ADMIN_EMAIL,
+                roleFromDB: role
+              })
               setUser(userWithRole)
-              setIsAdmin(role === 'admin')
+              setIsAdmin(role === 'admin' || isSuperAdmin)
               setLoading(false) // Ensure loading is set to false
               setAuthInitialized(true)
             }

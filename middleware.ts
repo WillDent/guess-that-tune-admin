@@ -1,23 +1,15 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { createMiddlewareClient } from '@/lib/supabase/middleware'
+import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+  // Update session to ensure cookies are properly handled
+  const response = await updateSession(request)
+  
   try {
-    const { supabase, response } = createMiddlewareClient(request)
-
-    // Get session (lighter than getUser for middleware)
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
-    // Only refresh session if we have one but it might be expired
-    let user = session?.user
-    let error = sessionError
-    
-    if (session && !sessionError) {
-      // Verify the session is still valid
-      const { data: { user: verifiedUser }, error: userError } = await supabase.auth.getUser()
-      user = verifiedUser || undefined
-      error = userError
-    }
+    // Check if user is authenticated by checking for auth cookies
+    const hasAuthCookie = request.cookies.getAll().some(cookie => 
+      cookie.name.startsWith('sb-') && cookie.name.includes('-auth-token')
+    )
     
 
     // Define public routes that don't require authentication
@@ -25,7 +17,7 @@ export async function middleware(request: NextRequest) {
     const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))
 
     // If user is not signed in and trying to access a protected route, redirect to login
-    if (!user && !isPublicRoute) {
+    if (!hasAuthCookie && !isPublicRoute) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('next', request.nextUrl.pathname)

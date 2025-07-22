@@ -2,11 +2,38 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createServerClient as createClient } from '@/lib/supabase/server'
-import { AuthError } from '@/lib/errors/types'
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
+import type { Database } from '@/lib/supabase/database.types'
 
 export async function signIn(email: string, password: string, redirectTo?: string) {
-  const supabase = await createClient()
+  const cookieStore = await cookies()
+  
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch {
+            // Cookies can only be modified in Server Actions
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch {
+            // Cookies can only be modified in Server Actions
+          }
+        },
+      },
+    }
+  )
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -25,7 +52,33 @@ export async function signIn(email: string, password: string, redirectTo?: strin
 }
 
 export async function signUp(email: string, password: string) {
-  const supabase = await createClient()
+  const cookieStore = await cookies()
+  
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch {
+            // Cookies can only be modified in Server Actions
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch {
+            // Cookies can only be modified in Server Actions
+          }
+        },
+      },
+    }
+  )
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -43,7 +96,33 @@ export async function signUp(email: string, password: string) {
 }
 
 export async function signOut() {
-  const supabase = await createClient()
+  const cookieStore = await cookies()
+  
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch {
+            // Cookies can only be modified in Server Actions
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch {
+            // Cookies can only be modified in Server Actions
+          }
+        },
+      },
+    }
+  )
 
   const { error } = await supabase.auth.signOut()
 
@@ -56,7 +135,33 @@ export async function signOut() {
 }
 
 export async function signInWithMagicLink(email: string) {
-  const supabase = await createClient()
+  const cookieStore = await cookies()
+  
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch {
+            // Cookies can only be modified in Server Actions
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch {
+            // Cookies can only be modified in Server Actions
+          }
+        },
+      },
+    }
+  )
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
