@@ -46,9 +46,19 @@ export function Sidebar() {
       isAdmin, 
       loading,
       hasUser: !!user,
-      userRole: (user as any)?.role
+      userRole: (user as any)?.role,
+      fullUser: user
     })
   }, [user, isAdmin, loading])
+  
+  // Additional debug - check auth context mount
+  useEffect(() => {
+    console.log('[SIDEBAR] Component mounted, initial auth state:', {
+      user: user?.email,
+      isAdmin,
+      loading
+    })
+  }, [])
 
   return (
     <div className="flex h-full w-64 flex-col bg-gray-900 fixed inset-y-0 left-0">

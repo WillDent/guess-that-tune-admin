@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [authInitialized, setAuthInitialized] = useState(false)
   const router = useRouter()
-  const [supabase] = useState(() => createSupabaseBrowserClient())
+  const supabase = createSupabaseBrowserClient()
 
   // Function to ensure user exists in users table
   const ensureUserExists = async (authUser: User) => {
@@ -124,11 +124,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
     
+    console.log('[AUTH-CONTEXT] useEffect started, checking for session...')
+    
     // Get initial session
     const getInitialSession = async () => {
       try {
+        console.log('[AUTH-CONTEXT] Calling supabase.auth.getSession()...')
         // First try to get session (lighter weight)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        console.log('[AUTH-CONTEXT] getSession result:', { 
+          hasSession: !!session, 
+          sessionUser: session?.user?.email,
+          error: sessionError?.message 
+        })
         
         if (!mounted) return;
         

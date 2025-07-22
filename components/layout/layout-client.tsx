@@ -10,6 +10,7 @@ import { OfflineIndicator } from "@/components/ui/offline-indicator"
 import { MigrationPrompt } from "@/components/migration/migration-prompt"
 import { CartIcon } from "@/components/cart/cart-icon"
 import { CartSidebar } from "@/components/cart/cart-sidebar"
+import { AuthDebug } from "@/components/debug/auth-debug"
 
 export function LayoutClient({ children }: { children: React.ReactNode }) {
   const { toasts, dismiss } = useToast()
@@ -67,6 +68,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
       <OfflineIndicator />
       <MigrationPrompt />
       <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <AuthDebug />
     </>
   )
 }
