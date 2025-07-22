@@ -4,6 +4,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { 
   Music, 
@@ -37,6 +38,17 @@ const adminNavigation = [
 export function Sidebar() {
   const pathname = usePathname()
   const { user, loading, signOut, isAdmin } = useAuth()
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('[SIDEBAR] Auth state updated:', { 
+      user: user?.email, 
+      isAdmin, 
+      loading,
+      hasUser: !!user,
+      userRole: (user as any)?.role
+    })
+  }, [user, isAdmin, loading])
 
   return (
     <div className="flex h-full w-64 flex-col bg-gray-900 fixed inset-y-0 left-0">

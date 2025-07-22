@@ -90,11 +90,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Function to fetch user role
   const fetchUserRole = async (userId: string): Promise<UserRole | null> => {
     try {
+      console.log('[AUTH-CONTEXT] Fetching role for user:', userId)
       const { data, error } = await supabase
         .from('users')
-        .select('role')
+        .select('id, role')
         .eq('id', userId)
-        .maybeSingle() // Use maybeSingle instead of single to handle missing rows
+        .single()
       
       if (error) {
         console.error('Error fetching user role:', error.message, error.code, error.details)
@@ -104,6 +105,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         throw error
       }
+      
+      console.log('[AUTH-CONTEXT] User role data:', data)
       return data?.role || null
     } catch (err) {
       console.error('Error fetching user role:', err)
@@ -147,11 +150,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const sessionUser = session.user
       
       if (sessionUser) {
-        // Set basic user state immediately to prevent loading hang
+        // Set basic user state but keep loading true until role is fetched
         if (mounted) {
           setUser(sessionUser)
-          setLoading(false)
           setAuthInitialized(true)
+          // Don't set loading to false yet - wait until role is fetched
         }
         
         // Then try to enhance with database operations in the background
@@ -172,12 +175,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           
           if (mounted) {
+            console.log('[AUTH-CONTEXT] Setting user with role:', { email: sessionUser.email, role, isAdmin: role === 'admin' })
             setUser(userWithRole)
             setIsAdmin(role === 'admin')
+            setLoading(false)
           }
         } catch (dbError) {
           console.error('[AUTH-CONTEXT] Error with database operations:', dbError)
           // User is already set, just log the error
+          if (mounted) {
+            setLoading(false)
+          }
         }
       } else {
         if (mounted) {
