@@ -119,10 +119,18 @@ export function Sidebar() {
               <span className="truncate">{user.email}</span>
             </div>
             <Button
-              onClick={() => signOut()}
+              onClick={async (e) => {
+                e.preventDefault()
+                try {
+                  await signOut()
+                } catch (error) {
+                  console.error('Sign out error:', error)
+                }
+              }}
               variant="ghost"
               size="sm"
               className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
+              disabled={loading}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out

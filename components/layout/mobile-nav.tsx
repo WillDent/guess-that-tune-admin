@@ -144,9 +144,14 @@ export function MobileNav() {
                     <span className="truncate">{user.email}</span>
                   </div>
                   <Button
-                    onClick={() => {
-                      signOut()
-                      setIsOpen(false)
+                    onClick={async (e) => {
+                      e.preventDefault()
+                      try {
+                        await signOut()
+                        setIsOpen(false)
+                      } catch (error) {
+                        console.error('Sign out error:', error)
+                      }
                     }}
                     variant="ghost"
                     size="sm"

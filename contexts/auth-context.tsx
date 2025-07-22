@@ -302,6 +302,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('[AUTH-CONTEXT] Starting sign out...')
       
+      // Set loading state to prevent re-renders during sign out
+      setLoading(true)
+      
       // Create a timeout promise
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Sign out timed out after 5 seconds')), 5000)
@@ -339,21 +342,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key))
         }
-        
-        // Clear user state
-        setUser(null)
-        setIsAdmin(false)
-        
-        console.log('[AUTH-CONTEXT] Local auth cleared')
       }
       
-      // Redirect to login page
-      router.push('/login')
+      // Clear user state before navigation
+      setUser(null)
+      setIsAdmin(false)
+      
+      console.log('[AUTH-CONTEXT] Local auth cleared')
+      
+      // Use window.location for a clean redirect to avoid React state issues
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
       
     } catch (error) {
       console.error('[AUTH-CONTEXT] Error signing out:', error)
-      // Even if there's an error, try to redirect
-      router.push('/login')
+      // Even if there's an error, try to redirect using window.location
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
     }
   }
 
