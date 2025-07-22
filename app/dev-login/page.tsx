@@ -11,8 +11,8 @@ export default function DevLoginPage() {
   useEffect(() => {
     async function signInDev() {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'will.dent@gmail.com',
-        password: 'odessa99'
+        email: 'will@dent.ly',
+        password: 'Odessa99!'
       })
       
       if (error) {
