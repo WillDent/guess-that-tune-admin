@@ -57,7 +57,6 @@ export default function EditQuestionSetPage() {
 
   // Categories state
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
-  const [categoriesLoading, setCategoriesLoading] = useState(true)
   const hasLoadedData = useRef(false)
 
   // Load the question set
@@ -153,7 +152,6 @@ export default function EditQuestionSetPage() {
       if (!questionSetId || !dataLoaded) return
       
       console.log('[EDIT-PAGE] Loading assigned categories for:', questionSetId, 'dataLoaded:', dataLoaded)
-      setCategoriesLoading(true)
       try {
         const response = await fetch(`/api/questions/${questionSetId}/categories`)
         console.log('[EDIT-PAGE] Categories API response status:', response.status)
@@ -164,8 +162,6 @@ export default function EditQuestionSetPage() {
         }
       } catch (err) {
         console.error('[EDIT-PAGE] Failed to load categories:', err)
-      } finally {
-        setCategoriesLoading(false)
       }
     }
     

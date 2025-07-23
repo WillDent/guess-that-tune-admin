@@ -34,18 +34,29 @@ class CategoriesCache {
     // Start loading
     console.log('[CategoriesCache] Starting fresh fetch')
     this.loading = true
-    this.promise = fetcher()
-      .then(data => {
-        this.categories = data
-        this.loading = false
-        console.log('[CategoriesCache] Categories cached:', data.length)
-        return data
-      })
-      .catch(err => {
-        this.loading = false
-        this.promise = null
-        throw err
-      })
+    try {
+      console.log('[CategoriesCache] Calling fetcher function...')
+      this.promise = fetcher()
+        .then(data => {
+          console.log('[CategoriesCache] Fetcher resolved with data:', data)
+          this.categories = data
+          this.loading = false
+          this.promise = null // Clear promise after completion
+          console.log('[CategoriesCache] Categories cached:', data.length)
+          return data
+        })
+        .catch(err => {
+          console.error('[CategoriesCache] Fetcher error:', err)
+          this.loading = false
+          this.promise = null
+          throw err
+        })
+    } catch (err) {
+      console.error('[CategoriesCache] Error creating promise:', err)
+      this.loading = false
+      this.promise = null
+      throw err
+    }
     
     return this.promise
   }

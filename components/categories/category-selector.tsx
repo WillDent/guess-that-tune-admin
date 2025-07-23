@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Check, ChevronsUpDown, Loader2, HelpCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -44,53 +44,30 @@ export function CategorySelector({
 }: CategorySelectorProps) {
   const [open, setOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Start with false, will be set to true only when actually loading
   const [showLoadingSpinner, setShowLoadingSpinner] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasInitialized, setHasInitialized] = useState(false)
   const supabase = createSupabaseBrowserClient()
 
-  useEffect(() => {
-    // Skip if already initialized
-    if (hasInitialized) return
-    
-    // Check if we already have cached categories to avoid showing loading state
-    const cachedCategories = categoriesCache.getCachedCategories()
-    if (cachedCategories && cachedCategories.length > 0) {
-      console.log('[CategorySelector] Using cached categories:', cachedCategories.length)
-      setCategories(cachedCategories)
-      setLoading(false)
-      setShowLoadingSpinner(false)
-      setHasInitialized(true)
-    } else {
-      console.log('[CategorySelector] No cached categories, fetching...')
-      // Delay showing spinner to prevent flashing for quick loads
-      const spinnerTimeout = setTimeout(() => {
-        if (loading) {
-          setShowLoadingSpinner(true)
-        }
-      }, 300)
-      
-      fetchCategories().finally(() => {
-        clearTimeout(spinnerTimeout)
-      })
-    }
-  }, [hasInitialized, loading])
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       console.log('[CategorySelector] fetchCategories called')
       setLoading(true)
       setError(null)
       
       // Use the cache to fetch categories
+      console.log('[CategorySelector] Calling categoriesCache.getCategories...')
       const data = await categoriesCache.getCategories(async () => {
+        console.log('[CategorySelector] Executing Supabase query...')
         const { data, error } = await supabase
           .from('categories')
           .select('*')
           .order('display_order', { ascending: true })
           .order('name', { ascending: true })
 
+        console.log('[CategorySelector] Supabase response:', { data, error })
+        
         if (error) {
           console.error('[CategorySelector] Supabase error:', error)
           throw error
@@ -111,7 +88,54 @@ export function CategorySelector({
       setShowLoadingSpinner(false)
       setHasInitialized(true)
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    // Skip if already initialized
+    if (hasInitialized) return
+    
+    const initializeCategories = async () => {
+      // Check if we already have cached categories to avoid showing loading state
+      const cachedCategories = categoriesCache.getCachedCategories()
+      if (cachedCategories && cachedCategories.length > 0) {
+        console.log('[CategorySelector] Using cached categories:', cachedCategories.length)
+        setCategories(cachedCategories)
+        setLoading(false)
+        setShowLoadingSpinner(false)
+        setHasInitialized(true)
+        return
+      }
+      
+      // If cache is currently loading, wait for it by calling fetchCategories
+      if (categoriesCache.isLoading()) {
+        console.log('[CategorySelector] Cache is loading, fetching will wait for existing promise...')
+        // Delay showing spinner to prevent flashing for quick loads
+        const spinnerTimeout = setTimeout(() => {
+          setShowLoadingSpinner(true)
+        }, 300)
+        
+        fetchCategories().finally(() => {
+          clearTimeout(spinnerTimeout)
+          setShowLoadingSpinner(false)
+        })
+        return
+      }
+      
+      console.log('[CategorySelector] No cached categories, fetching...')
+      setLoading(true)
+      // Delay showing spinner to prevent flashing for quick loads
+      const spinnerTimeout = setTimeout(() => {
+        setShowLoadingSpinner(true)
+      }, 300)
+      
+      fetchCategories().finally(() => {
+        clearTimeout(spinnerTimeout)
+        setShowLoadingSpinner(false)
+      })
+    }
+    
+    initializeCategories()
+  }, [hasInitialized, loading, fetchCategories])
 
   const toggleCategory = (categoryId: string) => {
     if (selectedCategoryIds.includes(categoryId)) {
