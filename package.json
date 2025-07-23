@@ -11,7 +11,9 @@
     "test:rls": "tsx scripts/test-rls.ts",
     "test:rls:cleanup": "tsx scripts/test-rls.ts --cleanup",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "gen:types": "supabase gen types typescript --local > lib/supabase/database.types.ts",
+    "gen:types:watch": "watch 'npm run gen:types' supabase/migrations --wait=10"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",

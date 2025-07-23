@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
       activity_logs: {
@@ -46,40 +51,40 @@ export type Database = {
       }
       categories: {
         Row: {
+          color: string | null
           created_at: string | null
           created_by: string
           description: string | null
+          display_order: number | null
+          icon: string | null
           id: string
           name: string
-          updated_at: string | null
-          display_order: number
           parent_id: string | null
-          icon: string | null
-          color: string | null
+          updated_at: string | null
         }
         Insert: {
+          color?: string | null
           created_at?: string | null
           created_by: string
           description?: string | null
+          display_order?: number | null
+          icon?: string | null
           id?: string
           name: string
-          updated_at?: string | null
-          display_order?: number
           parent_id?: string | null
-          icon?: string | null
-          color?: string | null
+          updated_at?: string | null
         }
         Update: {
+          color?: string | null
           created_at?: string | null
           created_by?: string
           description?: string | null
+          display_order?: number | null
+          icon?: string | null
           id?: string
           name?: string
-          updated_at?: string | null
-          display_order?: number
           parent_id?: string | null
-          icon?: string | null
-          color?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -94,6 +99,44 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      error_logs: {
+        Row: {
+          device_info: Json | null
+          error_message: string | null
+          error_type: string | null
+          id: string
+          playlist_id: string | null
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          device_info?: Json | null
+          error_message?: string | null
+          error_type?: string | null
+          id?: string
+          playlist_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          device_info?: Json | null
+          error_message?: string | null
+          error_type?: string | null
+          id?: string
+          playlist_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "error_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -182,6 +225,60 @@ export type Database = {
           },
         ]
       }
+      game_results: {
+        Row: {
+          completion_time: number | null
+          correct_tracks: number | null
+          created_at: string | null
+          id: string
+          perfect_score: boolean | null
+          playlist_id: string | null
+          score_awarded: number | null
+          total_tracks: number | null
+          user_id: string | null
+          xp_awarded: number | null
+        }
+        Insert: {
+          completion_time?: number | null
+          correct_tracks?: number | null
+          created_at?: string | null
+          id?: string
+          perfect_score?: boolean | null
+          playlist_id?: string | null
+          score_awarded?: number | null
+          total_tracks?: number | null
+          user_id?: string | null
+          xp_awarded?: number | null
+        }
+        Update: {
+          completion_time?: number | null
+          correct_tracks?: number | null
+          created_at?: string | null
+          id?: string
+          perfect_score?: boolean | null
+          playlist_id?: string | null
+          score_awarded?: number | null
+          total_tracks?: number | null
+          user_id?: string | null
+          xp_awarded?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_results_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "question_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_results_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       games: {
         Row: {
           code: string | null
@@ -245,6 +342,47 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          is_read: boolean | null
+          message: string | null
+          title: string | null
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message?: string | null
+          title?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message?: string | null
+          title?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       question_set_categories: {
         Row: {
           category_id: string
@@ -284,45 +422,57 @@ export type Database = {
           created_at: string
           description: string | null
           difficulty: string
+          icon: string | null
           id: string
           is_public: boolean | null
           name: string
           play_count: number
           question_count: number
+          required_level: number | null
+          state: string | null
           tags: string[] | null
+          total_plays: number | null
+          unique_players: number | null
           updated_at: string
           user_id: string
-          state: string | null
         }
         Insert: {
           artwork_url?: string | null
           created_at?: string
           description?: string | null
           difficulty: string
+          icon?: string | null
           id?: string
           is_public?: boolean | null
           name: string
           play_count?: number
           question_count?: number
+          required_level?: number | null
+          state?: string | null
           tags?: string[] | null
+          total_plays?: number | null
+          unique_players?: number | null
           updated_at?: string
           user_id: string
-          state?: string | null
         }
         Update: {
           artwork_url?: string | null
           created_at?: string
           description?: string | null
           difficulty?: string
+          icon?: string | null
           id?: string
           is_public?: boolean | null
           name?: string
           play_count?: number
           question_count?: number
+          required_level?: number | null
+          state?: string | null
           tags?: string[] | null
+          total_plays?: number | null
+          unique_players?: number | null
           updated_at?: string
           user_id?: string
-          state?: string | null
         }
         Relationships: [
           {
@@ -387,42 +537,69 @@ export type Database = {
       users: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           display_name: string | null
           email: string
+          email_notifications: boolean | null
+          experience: number | null
           id: string
+          is_public: boolean | null
+          level: number | null
+          location: string | null
           role: string | null
           status: string | null
           suspended_at: string | null
           suspended_by: string | null
+          total_score: number | null
+          twitter_handle: string | null
           updated_at: string
           username: string | null
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           email: string
+          email_notifications?: boolean | null
+          experience?: number | null
           id: string
+          is_public?: boolean | null
+          level?: number | null
+          location?: string | null
           role?: string | null
           status?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
+          total_score?: number | null
+          twitter_handle?: string | null
           updated_at?: string
           username?: string | null
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           email?: string
+          email_notifications?: boolean | null
+          experience?: number | null
           id?: string
+          is_public?: boolean | null
+          level?: number | null
+          location?: string | null
           role?: string | null
           status?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
+          total_score?: number | null
+          twitter_handle?: string | null
           updated_at?: string
           username?: string | null
+          website?: string | null
         }
         Relationships: [
           {
@@ -439,6 +616,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_user_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       get_question_set_with_questions: {
         Args: { set_id: string }
         Returns: Json
@@ -447,47 +628,30 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      is_current_user_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       search_question_sets: {
         Args: { search_term: string }
         Returns: {
+          artwork_url: string | null
           created_at: string
           description: string | null
           difficulty: string
+          icon: string | null
           id: string
           is_public: boolean | null
           name: string
           play_count: number
           question_count: number
+          required_level: number | null
+          state: string | null
           tags: string[] | null
+          total_plays: number | null
+          unique_players: number | null
           updated_at: string
           user_id: string
-        }[]
-      }
-      get_category_hierarchy: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          name: string
-          description: string | null
-          parent_id: string | null
-          icon: string | null
-          color: string | null
-          display_order: number
-          level: number
-          path: string[]
-        }[]
-      }
-      get_categories_with_usage: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          name: string
-          description: string | null
-          parent_id: string | null
-          icon: string | null
-          color: string | null
-          display_order: number
-          usage_count: number
         }[]
       }
     }
@@ -500,21 +664,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -532,14 +700,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -555,14 +725,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -578,14 +750,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -593,14 +767,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
