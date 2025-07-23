@@ -174,12 +174,17 @@ export function CreateQuestionSetClient() {
       
       toast.success('Question set saved successfully!')
       
-      // Redirect to questions page
-      router.push('/questions')
+      // Ensure saving state is cleared before redirect
+      setSaving(false)
+      
+      // Add small delay to ensure toast is visible
+      setTimeout(() => {
+        console.log('[CREATE-QUESTION-SET] Redirecting to /questions')
+        router.push('/questions')
+      }, 500)
     } catch (error) {
       const appError = errorHandler.handle(error)
       toast.error(errorHandler.getErrorMessage(appError))
-    } finally {
       setSaving(false)
     }
   }

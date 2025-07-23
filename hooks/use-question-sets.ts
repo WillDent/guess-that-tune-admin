@@ -32,18 +32,82 @@ export function useQuestionSets() {
       setLoading(true)
       setError(null)
 
-      const { data, error } = await supabaseClient
-        .from('question_sets')
-        .select(`
-          *,
-          questions (*)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+      // Try SDK first with a timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('SDK timeout')), 5000)
+      )
 
-      if (error) throw error
+      try {
+        const dataPromise = supabaseClient
+          .from('question_sets')
+          .select(`
+            *,
+            questions (*)
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
 
-      setQuestionSets(data || [])
+        const result = await Promise.race([dataPromise, timeoutPromise])
+        const { data, error } = result as any
+
+        if (error) throw error
+
+        setQuestionSets(data || [])
+      } catch (sdkError) {
+        // Fallback to direct REST API if SDK hangs
+        console.log('[USE-QUESTION-SETS] SDK timeout or error, falling back to REST API')
+        
+        // Get session token
+        const response = await fetch('/api/auth/session')
+        if (!response.ok) {
+          throw new Error('Failed to get session')
+        }
+        
+        const { token } = await response.json()
+        
+        // Fetch question sets directly
+        const questionSetsResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/question_sets?user_id=eq.${user.id}&order=created_at.desc&select=*`,
+          {
+            headers: {
+              'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          }
+        )
+        
+        if (!questionSetsResponse.ok) {
+          throw new Error('Failed to fetch question sets')
+        }
+        
+        const questionSetsData = await questionSetsResponse.json()
+        
+        // For each question set, fetch its questions
+        const questionSetsWithQuestions = await Promise.all(
+          questionSetsData.map(async (qs: any) => {
+            const questionsResponse = await fetch(
+              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/questions?question_set_id=eq.${qs.id}&order=order_index.asc`,
+              {
+                headers: {
+                  'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                }
+              }
+            )
+            
+            const questions = questionsResponse.ok ? await questionsResponse.json() : []
+            
+            return {
+              ...qs,
+              questions
+            }
+          })
+        )
+        
+        setQuestionSets(questionSetsWithQuestions)
+      }
     } catch (err) {
       setError(err as Error)
     } finally {
@@ -200,8 +264,9 @@ export function useQuestionSets() {
         }
       }
 
-      // Refresh the list
-      await fetchQuestionSets()
+      // Skip refreshing the list since SDK might hang
+      // The list will refresh when user navigates to /questions page
+      console.log('[USE-QUESTION-SETS] Skipping fetchQuestionSets to avoid SDK hang')
 
       return { data: questionSet, error: null }
     } catch (err) {
