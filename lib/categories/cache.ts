@@ -50,6 +50,16 @@ class CategoriesCache {
     return this.promise
   }
   
+  // Synchronous method to get cached categories without triggering a fetch
+  getCachedCategories(): Category[] | null {
+    return this.categories
+  }
+  
+  // Check if categories are currently being loaded
+  isLoading(): boolean {
+    return this.loading
+  }
+  
   clear() {
     this.categories = null
     this.loading = false

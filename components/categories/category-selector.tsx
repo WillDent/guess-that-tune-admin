@@ -45,13 +45,37 @@ export function CategorySelector({
   const [open, setOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [showLoadingSpinner, setShowLoadingSpinner] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasInitialized, setHasInitialized] = useState(false)
   const supabase = createSupabaseBrowserClient()
 
   useEffect(() => {
-    console.log('[CategorySelector] Component mounted/updated')
-    fetchCategories()
-  }, []) // Empty dependency array - only run once on mount
+    // Skip if already initialized
+    if (hasInitialized) return
+    
+    // Check if we already have cached categories to avoid showing loading state
+    const cachedCategories = categoriesCache.getCachedCategories()
+    if (cachedCategories && cachedCategories.length > 0) {
+      console.log('[CategorySelector] Using cached categories:', cachedCategories.length)
+      setCategories(cachedCategories)
+      setLoading(false)
+      setShowLoadingSpinner(false)
+      setHasInitialized(true)
+    } else {
+      console.log('[CategorySelector] No cached categories, fetching...')
+      // Delay showing spinner to prevent flashing for quick loads
+      const spinnerTimeout = setTimeout(() => {
+        if (loading) {
+          setShowLoadingSpinner(true)
+        }
+      }, 300)
+      
+      fetchCategories().finally(() => {
+        clearTimeout(spinnerTimeout)
+      })
+    }
+  }, [hasInitialized, loading])
 
   const fetchCategories = async () => {
     try {
@@ -78,10 +102,14 @@ export function CategorySelector({
       console.log('[CategorySelector] Categories loaded:', data.length, 'categories')
       setCategories(data)
       setLoading(false)
+      setShowLoadingSpinner(false)
+      setHasInitialized(true)
     } catch (err) {
       console.error('[CategorySelector] Error fetching categories:', err)
       setError('Failed to load categories')
       setLoading(false)
+      setShowLoadingSpinner(false)
+      setHasInitialized(true)
     }
   }
 
@@ -168,7 +196,7 @@ export function CategorySelector({
             className="w-full justify-between"
             disabled={loading}
           >
-            {loading ? (
+            {showLoadingSpinner ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Loading categories...</span>
