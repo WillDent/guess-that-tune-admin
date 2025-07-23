@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/tooltip'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 import type { Database } from '@/lib/supabase/database.types'
+import { categoriesCache } from '@/lib/categories/cache'
 
 type Category = Database['public']['Tables']['categories']['Row']
 
@@ -45,36 +46,40 @@ export function CategorySelector({
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [hasFetched, setHasFetched] = useState(false)
   const supabase = createSupabaseBrowserClient()
 
   useEffect(() => {
-    if (!hasFetched) {
-      fetchCategories()
-      setHasFetched(true)
-    }
-  }, [hasFetched])
+    console.log('[CategorySelector] Component mounted/updated')
+    fetchCategories()
+  }, []) // Empty dependency array - only run once on mount
 
   const fetchCategories = async () => {
     try {
+      console.log('[CategorySelector] fetchCategories called')
       setLoading(true)
       setError(null)
       
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('display_order', { ascending: true })
-        .order('name', { ascending: true })
+      // Use the cache to fetch categories
+      const data = await categoriesCache.getCategories(async () => {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .order('display_order', { ascending: true })
+          .order('name', { ascending: true })
 
-      if (error) {
-        console.error('Supabase error:', error)
-        throw error
-      }
+        if (error) {
+          console.error('[CategorySelector] Supabase error:', error)
+          throw error
+        }
 
-      setCategories(data || [])
+        return data || []
+      })
+
+      console.log('[CategorySelector] Categories loaded:', data.length, 'categories')
+      setCategories(data)
       setLoading(false)
     } catch (err) {
-      console.error('Error fetching categories:', err)
+      console.error('[CategorySelector] Error fetching categories:', err)
       setError('Failed to load categories')
       setLoading(false)
     }
@@ -162,7 +167,6 @@ export function CategorySelector({
             aria-expanded={open}
             className="w-full justify-between"
             disabled={loading}
-            key={`category-button-${loading}`}
           >
             {loading ? (
               <div className="flex items-center gap-2">

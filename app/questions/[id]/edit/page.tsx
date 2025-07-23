@@ -149,24 +149,28 @@ export default function EditQuestionSetPage() {
   // Load assigned categories for this question set
   useEffect(() => {
     const loadAssignedCategories = async () => {
-      if (!questionSetId) return
+      // Only load categories after question set data is loaded
+      if (!questionSetId || !dataLoaded) return
       
+      console.log('[EDIT-PAGE] Loading assigned categories for:', questionSetId, 'dataLoaded:', dataLoaded)
       setCategoriesLoading(true)
       try {
         const response = await fetch(`/api/questions/${questionSetId}/categories`)
+        console.log('[EDIT-PAGE] Categories API response status:', response.status)
         if (response.ok) {
           const assigned = await response.json()
+          console.log('[EDIT-PAGE] Assigned categories:', assigned)
           setSelectedCategoryIds(assigned.map((c: any) => c.category_id))
         }
       } catch (err) {
-        console.error('Failed to load categories:', err)
+        console.error('[EDIT-PAGE] Failed to load categories:', err)
       } finally {
         setCategoriesLoading(false)
       }
     }
     
     loadAssignedCategories()
-  }, [questionSetId])
+  }, [questionSetId, dataLoaded]) // Add dataLoaded as dependency
 
   // Auto-save functionality
   const debouncedAutoSave = useMemo(
