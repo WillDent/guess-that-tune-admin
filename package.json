@@ -12,6 +12,7 @@
     "test:rls:cleanup": "ts-node --project tsconfig.scripts.json scripts/test-rls.ts --cleanup",
     "test:rls:comprehensive": "ts-node --project tsconfig.scripts.json scripts/test-rls-comprehensive.ts",
     "test:performance": "ts-node --project tsconfig.scripts.json scripts/test-performance-baseline.ts",
+    "test:auth": "ts-node --project tsconfig.scripts.json scripts/test-server-auth.ts",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "gen:types": "supabase gen types typescript --local > lib/supabase/database.types.ts",
