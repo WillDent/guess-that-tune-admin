@@ -1,6 +1,10 @@
+// ABOUTME: Games page showing all created games
+// ABOUTME: Server component that fetches user's games
 import { Suspense } from 'react'
-import { requireAuth } from '@/lib/auth/server'
+import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
+import { requireAuth } from '@/utils/supabase/auth'
+import { ProtectedRoute } from '@/components/auth/protected-route'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { GamesContent } from './games-content'
 import { GAME_STATUS } from '@/lib/constants/game-status'
@@ -56,25 +60,36 @@ async function getUserGames(userId: string) {
 }
 
 export default async function GamesPage() {
-  const user = await requireAuth()
+  const supabase = await createServerClient()
+  
+  // This page requires authentication
+  let user
+  try {
+    user = await requireAuth(supabase)
+  } catch {
+    redirect('/login')
+  }
+
   const { active, completed } = await getUserGames(user.id)
 
   return (
-    <div>
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Games</h1>
-        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
-          Manage your games and join new ones
-        </p>
-      </div>
+    <ProtectedRoute>
+      <div>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Games</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
+            Manage your games and join new ones
+          </p>
+        </div>
 
-      <Suspense fallback={<LoadingSpinner />}>
-        <GamesContent 
-          activeGames={active}
-          completedGames={completed}
-          userId={user.id}
-        />
-      </Suspense>
-    </div>
+        <Suspense fallback={<LoadingSpinner />}>
+          <GamesContent 
+            activeGames={active}
+            completedGames={completed}
+            userId={user.id}
+          />
+        </Suspense>
+      </div>
+    </ProtectedRoute>
   )
 }

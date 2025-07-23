@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { cache } from 'react'
 import type { Database } from '@/lib/supabase/database.types'
@@ -10,7 +10,7 @@ type User = Database['public']['Tables']['users']['Row']
  * This function is cached per request
  */
 export const getUser = cache(async () => {
-  const supabase = await createClient()
+  const supabase = await createServerClient()
   
   const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
   
@@ -38,7 +38,7 @@ export const getUser = cache(async () => {
  * This function is cached per request
  */
 export const getSession = cache(async () => {
-  const supabase = await createClient()
+  const supabase = await createServerClient()
   
   const { data: { session }, error } = await supabase.auth.getSession()
   
@@ -91,7 +91,7 @@ export async function isAdmin() {
  * Sign out the current user
  */
 export async function signOut() {
-  const supabase = await createClient()
+  const supabase = await createServerClient()
   
   const { error } = await supabase.auth.signOut()
   

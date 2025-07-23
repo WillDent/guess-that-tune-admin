@@ -1,6 +1,7 @@
 import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from './database.types'
+import { SUPABASE_CONFIG } from './config'
 
 export async function createServerSupabaseClient(): Promise<ReturnType<typeof createSupabaseServerClient>> {
   const cookieStore = await cookies()
@@ -24,7 +25,10 @@ export async function createServerSupabaseClient(): Promise<ReturnType<typeof cr
             // user sessions.
           }
         },
-      }
+      },
+      auth: SUPABASE_CONFIG.auth,
+      db: SUPABASE_CONFIG.db,
+      global: SUPABASE_CONFIG.global,
     }
   )
 }

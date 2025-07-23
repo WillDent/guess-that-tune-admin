@@ -1,128 +1,141 @@
-"use client"
-
-import { useEffect, useState } from "react";
-import { AdminRoute } from "@/components/auth/admin-route";
-import { useAuth } from '@/contexts/auth-context';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { requireAdmin } from '@/lib/auth/server'
+import { createServerClient } from '@/lib/supabase/server'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { formatDistanceToNow } from 'date-fns'
+import { AdminUserActions } from '@/components/admin/admin-user-actions'
+import Link from 'next/link'
 
 interface User {
-  id: string;
-  email: string;
-  role: string;
-  status: string;
-  suspended_at: string | null;
-  suspended_by: string | null;
-  created_at: string;
+  id: string
+  email: string
+  name: string | null
+  role: string
+  status: string
+  suspended_at: string | null
+  suspended_by: string | null
+  created_at: string
+  updated_at: string
 }
 
-export default function AdminUsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState<{ [id: string]: boolean }>({});
-  const [actionError, setActionError] = useState<{ [id: string]: string | null }>({});
-  const { user: currentUser } = useAuth();
-
-  useEffect(() => {
-    async function fetchUsers() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/admin/users");
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to fetch users");
-        setUsers(data.users);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchUsers();
-  }, []);
-
-  async function handleAction(id: string, action: string) {
-    setActionLoading((prev) => ({ ...prev, [id]: true }));
-    setActionError((prev) => ({ ...prev, [id]: null }));
-    try {
-      const res = await fetch('/api/admin/users', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, action }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Action failed');
-      setUsers((prev) => prev.map((u) => (u.id === id ? data.user : u)));
-    } catch (err: any) {
-      setActionError((prev) => ({ ...prev, [id]: err.message }));
-    } finally {
-      setActionLoading((prev) => ({ ...prev, [id]: false }));
-    }
+async function getUsers(): Promise<User[]> {
+  const supabase = await createServerClient()
+  
+  const { data: users, error } = await supabase
+    .from('users')
+    .select('*')
+    .order('created_at', { ascending: false })
+  
+  if (error) {
+    console.error('Error fetching users:', error)
+    return []
   }
+  
+  return users
+}
 
+function getUserStatusBadge(user: User) {
+  if (user.suspended_at) {
+    return <Badge variant="destructive">Suspended</Badge>
+  }
+  return <Badge variant="default">Active</Badge>
+}
+
+function getRoleBadge(role: string) {
+  if (role === 'admin') {
+    return <Badge variant="secondary">Admin</Badge>
+  }
+  return <Badge variant="outline">User</Badge>
+}
+
+export default async function AdminUsersPage() {
+  const currentUser = await requireAdmin()
+  const users = await getUsers()
+  
   return (
-    <AdminRoute>
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Admin: User Management</h1>
-        {loading && <div className="flex items-center gap-2 text-gray-400"><span className="animate-spin">⏳</span> Loading users...</div>}
-        {error && <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">Error: {error}</div>}
-        {!loading && !error && (
-          <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-800">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-900 sticky top-0 z-10">
-                <tr>
-                  <th className="border-b px-4 py-2 text-left text-gray-300">Email</th>
-                  <th className="border-b px-4 py-2 text-left text-gray-300">Role</th>
-                  <th className="border-b px-4 py-2 text-left text-gray-300">Status</th>
-                  <th className="border-b px-4 py-2 text-left text-gray-300">Suspended At</th>
-                  <th className="border-b px-4 py-2 text-left text-gray-300">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} className="even:bg-gray-900">
-                    <td className="px-4 py-2">{user.email}</td>
-                    <td className="px-4 py-2">{user.role}</td>
-                    <td className="px-4 py-2">{user.status}</td>
-                    <td className="px-4 py-2">{user.suspended_at ? new Date(user.suspended_at).toLocaleString() : "-"}</td>
-                    <td className="px-4 py-2">
-                      {currentUser?.id === user.id ? (
-                        <span className="text-gray-400">(self)</span>
-                      ) : (
-                        <div className="flex flex-col gap-2">
-                          {user.role === 'user' ? (
-                            <Button size="sm" disabled={actionLoading[user.id]} onClick={() => handleAction(user.id, 'promote')}>
-                              Promote to Admin
-                            </Button>
-                          ) : (
-                            <Button size="sm" disabled={actionLoading[user.id]} onClick={() => handleAction(user.id, 'demote')}>
-                              Demote to User
-                            </Button>
-                          )}
-                          {user.status === 'active' ? (
-                            <Button size="sm" disabled={actionLoading[user.id]} onClick={() => handleAction(user.id, 'suspend')}>
-                              Suspend
-                            </Button>
-                          ) : (
-                            <Button size="sm" disabled={actionLoading[user.id]} onClick={() => handleAction(user.id, 'activate')}>
-                              Activate
-                            </Button>
-                          )}
-                          {actionError[user.id] && <div className="text-xs text-red-500 bg-red-100 rounded px-2 py-1 mt-1">{actionError[user.id]}</div>}
-                          <Link href={`/admin/activity-logs?user=${user.id}`} className="text-xs text-blue-500 underline mt-1">
-                            View Logs
-                          </Link>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">User Management</h1>
+        <p className="text-muted-foreground mt-2">
+          Manage user accounts, roles, and permissions
+        </p>
       </div>
-    </AdminRoute>
-  );
-} 
+      
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Joined</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <div>
+                    <div className="font-medium">{user.name || 'Unnamed User'}</div>
+                    <div className="text-sm text-muted-foreground">{user.email}</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {getRoleBadge(user.role)}
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    {getUserStatusBadge(user)}
+                    {user.suspended_at && (
+                      <div className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(user.suspended_at), { addSuffix: true })}
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {currentUser.id === user.id ? (
+                    <span className="text-sm text-muted-foreground">(You)</span>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <AdminUserActions 
+                        user={user} 
+                        currentUserId={currentUser.id}
+                      />
+                      <Link 
+                        href={`/admin/activity-logs?user=${user.id}`}
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        View Logs
+                      </Link>
+                    </div>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+      
+      <div className="text-sm text-muted-foreground">
+        Total users: {users.length} • 
+        Admins: {users.filter(u => u.role === 'admin').length} • 
+        Suspended: {users.filter(u => u.suspended_at).length}
+      </div>
+    </div>
+  )
+}

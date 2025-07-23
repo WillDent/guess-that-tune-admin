@@ -1,59 +1,59 @@
 {
-  "timestamp": "2025-07-23T00:51:49.222Z",
+  "timestamp": "2025-07-23T09:57:46.332Z",
   "summary": {
     "totalQueries": 8,
-    "totalDuration": 1451.1168750000002,
-    "averageDuration": 181.38960937500002,
+    "totalDuration": 1115.6255010000002,
+    "averageDuration": 139.45318762500003,
     "fastestQuery": {
-      "query": "Search public question sets",
-      "duration": 106.22179200000028,
-      "rowCount": 0
+      "query": "Fetch own question sets",
+      "duration": 125.24187500000016,
+      "rowCount": 6
     },
     "slowestQuery": {
       "query": "Fetch public question sets (unauth)",
-      "duration": 295.20345799999996,
+      "duration": 181.41370800000004,
       "rowCount": 8
     }
   },
   "queries": [
     {
       "query": "Fetch own user profile",
-      "duration": 194.1133749999999,
+      "duration": 142.1612090000001,
       "rowCount": 1
     },
     {
       "query": "Fetch own question sets",
-      "duration": 195.29991700000005,
+      "duration": 125.24187500000016,
       "rowCount": 6
     },
     {
       "query": "Fetch public question sets",
-      "duration": 166.85975000000008,
+      "duration": 127.14641699999993,
       "rowCount": 8
     },
     {
       "query": "Fetch question sets with categories",
-      "duration": 172.0492079999999,
+      "duration": 125.5312919999999,
       "rowCount": 8
     },
     {
       "query": "Fetch questions with full details",
-      "duration": 154.83362499999998,
+      "duration": 157.83224999999993,
       "rowCount": 50
     },
     {
       "query": "Fetch user favorites",
-      "duration": 166.53575,
+      "duration": 127.692542,
       "rowCount": 0
     },
     {
       "query": "Fetch public question sets (unauth)",
-      "duration": 295.20345799999996,
+      "duration": 181.41370800000004,
       "rowCount": 8
     },
     {
       "query": "Search public question sets",
-      "duration": 106.22179200000028,
+      "duration": 128.60620800000015,
       "rowCount": 0
     }
   ],

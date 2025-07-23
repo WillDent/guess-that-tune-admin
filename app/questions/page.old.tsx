@@ -1,6 +1,10 @@
+// ABOUTME: Questions page showing all created question sets
+// ABOUTME: Server component that fetches user's question sets
 import { Suspense } from 'react'
-import { requireAuth } from '@/lib/auth/server'
+import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
+import { requireAuth } from '@/utils/supabase/auth'
+import { ProtectedRoute } from '@/components/auth/protected-route'
 import { QuestionsContent } from './questions-content'
 import { QuestionSetGridSkeleton } from '@/components/loading/question-set-skeleton'
 import type { Database } from '@/lib/supabase/database.types'
@@ -33,24 +37,32 @@ async function getUserQuestionSets(userId: string) {
 }
 
 export default async function QuestionsPage() {
-  const user = await requireAuth()
+  const supabase = await createServerClient()
+  const user = await requireAuth(supabase)
+  
+  if (!user) {
+    redirect('/login')
+  }
+
   const questionSets = await getUserQuestionSets(user.id)
 
   return (
-    <div>
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Question Sets</h1>
-        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
-          Manage your question collections for games
-        </p>
-      </div>
+    <ProtectedRoute>
+      <div>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Question Sets</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
+            Manage your question collections for games
+          </p>
+        </div>
 
-      <Suspense fallback={<QuestionSetGridSkeleton />}>
-        <QuestionsContent 
-          initialQuestionSets={questionSets}
-          userId={user.id}
-        />
-      </Suspense>
-    </div>
+        <Suspense fallback={<QuestionSetGridSkeleton />}>
+          <QuestionsContent 
+            initialQuestionSets={questionSets}
+            userId={user.id}
+          />
+        </Suspense>
+      </div>
+    </ProtectedRoute>
   )
 }
