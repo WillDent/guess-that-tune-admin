@@ -25,9 +25,17 @@ export const SUPABASE_CONFIG = {
       const timeout = setTimeout(() => controller.abort(), 30000) // 30s timeout
       
       try {
+        // If options already has a signal, we need to handle both signals
+        let signal = controller.signal
+        if (options.signal) {
+          // Create a composite signal that aborts when either signal aborts
+          const originalSignal = options.signal as AbortSignal
+          signal = AbortSignal.any([controller.signal, originalSignal])
+        }
+        
         const response = await fetch(url, {
           ...options,
-          signal: controller.signal,
+          signal,
         })
         return response
       } finally {

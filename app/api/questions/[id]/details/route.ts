@@ -56,12 +56,34 @@ export async function GET(req: NextRequest) {
           throw questionsError
         }
         
+        // Fetch categories assigned to this question set
+        const { data: categories, error: categoriesError } = await supabase
+          .from('question_set_categories')
+          .select(`
+            category_id,
+            categories (
+              id,
+              name,
+              description,
+              icon,
+              color,
+              display_order
+            )
+          `)
+          .eq('question_set_id', questionSetId)
+          
+        if (categoriesError) {
+          console.error('[API] Categories fetch error:', categoriesError)
+          // Don't throw, just log - categories are optional
+        }
+        
         clearTimeout(timeoutId)
         
         // Combine the data
         return {
           ...questionSet,
-          questions: questions || []
+          questions: questions || [],
+          categories: categories?.map(c => c.categories).filter(Boolean) || []
         }
       } catch (error) {
         clearTimeout(timeoutId)

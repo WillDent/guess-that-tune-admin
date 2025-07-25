@@ -1,0 +1,449 @@
+{
+	"info": {
+		"_postman_id": "guess-that-tune-supabase-direct",
+		"name": "Guess That Tune - Supabase Direct API",
+		"description": "Direct Supabase API calls for mobile app integration",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "Bearer {{supabase_auth_token}}",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "Authorization",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Sign In with Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"your-password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/auth/v1/token?grant_type=password",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"auth",
+								"v1",
+								"token"
+							],
+							"query": [
+								{
+									"key": "grant_type",
+									"value": "password"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Question Sets",
+			"item": [
+				{
+					"name": "Get Question Set by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/question_sets?id=eq.{{question_set_id}}&select=*",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"question_sets"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "eq.{{question_set_id}}"
+								},
+								{
+									"key": "select",
+									"value": "*"
+								}
+							]
+						},
+						"description": "Get basic question set information"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Question Set with Questions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/question_sets?id=eq.{{question_set_id}}&select=*,questions(*)",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"question_sets"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "eq.{{question_set_id}}"
+								},
+								{
+									"key": "select",
+									"value": "*,questions(*)"
+								}
+							]
+						},
+						"description": "Get question set with all its questions"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Question Set with Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/question_sets?id=eq.{{question_set_id}}&select=*,question_set_categories(category_id,categories(id,name,description,icon,color,display_order))",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"question_sets"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "eq.{{question_set_id}}"
+								},
+								{
+									"key": "select",
+									"value": "*,question_set_categories(category_id,categories(id,name,description,icon,color,display_order))"
+								}
+							]
+						},
+						"description": "Get question set with its assigned categories"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Complete Question Set (All Data)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/question_sets?id=eq.{{question_set_id}}&select=*,questions(*),question_set_categories(category_id,categories(id,name,description,icon,color,display_order))",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"question_sets"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "eq.{{question_set_id}}"
+								},
+								{
+									"key": "select",
+									"value": "*,questions(*),question_set_categories(category_id,categories(id,name,description,icon,color,display_order))"
+								}
+							]
+						},
+						"description": "Get question set with questions and categories in one call"
+					},
+					"response": []
+				},
+				{
+					"name": "List All Public Question Sets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/question_sets?is_public=eq.true&state=eq.PUBLISHED&select=*,question_set_categories(categories(name))&order=created_at.desc",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"question_sets"
+							],
+							"query": [
+								{
+									"key": "is_public",
+									"value": "eq.true"
+								},
+								{
+									"key": "state",
+									"value": "eq.PUBLISHED"
+								},
+								{
+									"key": "select",
+									"value": "*,question_set_categories(categories(name))"
+								},
+								{
+									"key": "order",
+									"value": "created_at.desc"
+								}
+							]
+						},
+						"description": "Get all public published question sets"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Question Sets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/question_sets?user_id=eq.{{user_id}}&select=*&order=created_at.desc",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"question_sets"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "eq.{{user_id}}"
+								},
+								{
+									"key": "select",
+									"value": "*"
+								},
+								{
+									"key": "order",
+									"value": "created_at.desc"
+								}
+							]
+						},
+						"description": "Get all question sets created by the authenticated user"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/categories?select=*&order=display_order,name",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"categories"
+							],
+							"query": [
+								{
+									"key": "select",
+									"value": "*"
+								},
+								{
+									"key": "order",
+									"value": "display_order,name"
+								}
+							]
+						},
+						"description": "Get all available categories"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "RPC Functions",
+			"item": [
+				{
+					"name": "Get Question Set with Detractors (RPC)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "apikey",
+								"value": "{{supabase_anon_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"p_question_set_id\": \"{{question_set_id}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{supabase_url}}/rest/v1/rpc/get_question_set_with_details",
+							"host": [
+								"{{supabase_url}}"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"rpc",
+								"get_question_set_with_details"
+							]
+						},
+						"description": "Call a custom RPC function to get question set with properly formatted detractors (if implemented)"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Save auth token from sign in response",
+					"if (pm.request.url.path.includes('auth/v1/token')) {",
+					"    const response = pm.response.json();",
+					"    if (response.access_token) {",
+					"        pm.collectionVariables.set('supabase_auth_token', response.access_token);",
+					"        pm.collectionVariables.set('user_id', response.user.id);",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "supabase_url",
+			"value": "https://YOUR_PROJECT_ID.supabase.co",
+			"type": "string"
+		},
+		{
+			"key": "supabase_anon_key",
+			"value": "YOUR_SUPABASE_ANON_KEY",
+			"type": "string"
+		},
+		{
+			"key": "supabase_auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "question_set_id",
+			"value": "bf68e535-4d07-4880-8a52-195a82cd7bf2",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

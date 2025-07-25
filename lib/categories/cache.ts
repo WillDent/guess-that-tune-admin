@@ -49,6 +49,7 @@ class CategoriesCache {
           console.error('[CategoriesCache] Fetcher error:', err)
           this.loading = false
           this.promise = null
+          this.categories = null // Reset categories on error
           throw err
         })
     } catch (err) {

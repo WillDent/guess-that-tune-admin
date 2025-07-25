@@ -28,7 +28,8 @@ export async function createServerSupabaseClient(): Promise<ReturnType<typeof cr
       },
       auth: SUPABASE_CONFIG.auth,
       db: SUPABASE_CONFIG.db,
-      global: SUPABASE_CONFIG.global,
+      // Temporarily disable custom fetch to fix hanging issue
+      // global: SUPABASE_CONFIG.global,
     }
   )
 }

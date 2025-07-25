@@ -1,0 +1,214 @@
+{
+	"info": {
+		"_postman_id": "guess-that-tune-api-v1",
+		"name": "Guess That Tune API",
+		"description": "API collection for Guess That Tune Admin application",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Question Sets",
+			"item": [
+				{
+					"name": "Get Question Set Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/questions/{{question_set_id}}/details",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"questions",
+								"{{question_set_id}}",
+								"details"
+							]
+						},
+						"description": "Retrieves complete details of a question set including questions, detractors, and categories"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/questions/{{question_set_id}}/details",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"questions",
+										"{{question_set_id}}",
+										"details"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"id\": \"bf68e535-4d07-4880-8a52-195a82cd7bf2\",\n  \"user_id\": \"79e4c84b-a24e-4fcf-a736-4a30ca48a444\",\n  \"name\": \"Canada 2\",\n  \"description\": null,\n  \"difficulty\": \"medium\",\n  \"is_public\": false,\n  \"tags\": [\"canada\", \"geography\"],\n  \"artwork_url\": \"https://example.com/artwork.jpg\",\n  \"state\": \"NEW\",\n  \"created_at\": \"2025-07-22T10:30:00.000Z\",\n  \"updated_at\": \"2025-07-23T15:45:00.000Z\",\n  \"categories\": [\n    {\n      \"id\": \"b7e80227-d77c-4428-98e8-66c201e6942c\",\n      \"name\": \"Around The World\",\n      \"description\": null,\n      \"icon\": \"🌍\",\n      \"color\": \"#4285F4\",\n      \"display_order\": 0\n    }\n  ],\n  \"questions\": [\n    {\n      \"id\": \"q1-uuid-here\",\n      \"question_set_id\": \"bf68e535-4d07-4880-8a52-195a82cd7bf2\",\n      \"correct_song_id\": \"song-123\",\n      \"correct_song_name\": \"O Canada\",\n      \"correct_song_artist\": \"National Anthem\",\n      \"correct_song_album\": \"Anthems of the World\",\n      \"correct_song_artwork_url\": \"https://example.com/o-canada.jpg\",\n      \"correct_song_preview_url\": \"https://example.com/o-canada-preview.mp3\",\n      \"order_index\": 0,\n      \"detractors\": [\n        {\n          \"id\": \"detractor-1\",\n          \"name\": \"God Save the Queen\",\n          \"artist\": \"British National Anthem\",\n          \"album\": \"Royal Anthems\",\n          \"artwork\": \"https://example.com/god-save-queen.jpg\",\n          \"previewUrl\": \"https://example.com/god-save-preview.mp3\"\n        }\n      ]\n    }\n  ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Question Set Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/questions/{{question_set_id}}/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"questions",
+								"{{question_set_id}}",
+								"categories"
+							]
+						},
+						"description": "Retrieves categories assigned to a specific question set"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/questions/{{question_set_id}}/categories",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"questions",
+										"{{question_set_id}}",
+										"categories"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n  {\n    \"category_id\": \"b7e80227-d77c-4428-98e8-66c201e6942c\",\n    \"category_name\": \"Around The World\"\n  },\n  {\n    \"category_id\": \"7000243a-867f-485a-8d32-d5a574b8bc10\",\n    \"category_name\": \"Kids\"\n  }\n]"
+						}
+					]
+				},
+				{
+					"name": "Update Question Set Categories",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryIds\": [\n    \"b7e80227-d77c-4428-98e8-66c201e6942c\",\n    \"7000243a-867f-485a-8d32-d5a574b8bc10\"\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/questions/{{question_set_id}}/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"questions",
+								"{{question_set_id}}",
+								"categories"
+							]
+						},
+						"description": "Updates the categories assigned to a question set"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "YOUR_AUTH_TOKEN_HERE",
+			"type": "string"
+		},
+		{
+			"key": "question_set_id",
+			"value": "bf68e535-4d07-4880-8a52-195a82cd7bf2",
+			"type": "string"
+		}
+	]
+}
