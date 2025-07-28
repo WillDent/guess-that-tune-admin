@@ -75,18 +75,13 @@ export async function POST(request: Request) {
     });
 
     // Update playlist stats
-    // Increment total_plays, and unique_players if first time
-    const { data: prevResults } = await supabase
-      .from('game_results')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('playlist_id', playlist_id);
-    const isFirstPlay = prevResults && prevResults.length === 0;
-    await supabase.rpc('increment_playlist_stats', {
-      playlist_id,
-      total_plays_inc: 1,
-      unique_players_inc: isFirstPlay ? 1 : 0,
-    });
+    // Increment play_count
+    await supabase
+      .from('question_sets')
+      .update({ 
+        play_count: supabase.raw('play_count + 1')
+      })
+      .eq('id', playlist_id);
 
     // Get leaderboard position using shared utility
     const { data: leaderboardData } = await supabase

@@ -49,7 +49,7 @@ export async function GET(request: Request) {
   // Fetch paginated playlists (question sets)
   const { data: playlists, error: playlistsError, count } = await supabase
     .from('question_sets')
-    .select('id, name, icon, state, required_level, unique_players, total_plays', { count: 'exact' })
+    .select('id, name, state, play_count, question_count, artwork_url', { count: 'exact' })
     .in('id', questionSetIds)
     .range(from, to);
 

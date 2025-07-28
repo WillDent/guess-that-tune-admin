@@ -422,17 +422,13 @@ export type Database = {
           created_at: string
           description: string | null
           difficulty: string
-          icon: string | null
           id: string
           is_public: boolean | null
           name: string
           play_count: number
           question_count: number
-          required_level: number | null
           state: string | null
           tags: string[] | null
-          total_plays: number | null
-          unique_players: number | null
           updated_at: string
           user_id: string
         }
@@ -441,17 +437,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           difficulty: string
-          icon?: string | null
           id?: string
           is_public?: boolean | null
           name: string
           play_count?: number
           question_count?: number
-          required_level?: number | null
           state?: string | null
           tags?: string[] | null
-          total_plays?: number | null
-          unique_players?: number | null
           updated_at?: string
           user_id: string
         }
@@ -460,17 +452,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           difficulty?: string
-          icon?: string | null
           id?: string
           is_public?: boolean | null
           name?: string
           play_count?: number
           question_count?: number
-          required_level?: number | null
           state?: string | null
           tags?: string[] | null
-          total_plays?: number | null
-          unique_players?: number | null
           updated_at?: string
           user_id?: string
         }

@@ -12,7 +12,7 @@ export async function GET() {
   // Fetch playlists (question sets) with stats
   const { data: playlists, error: setError } = await supabase
     .from('question_sets')
-    .select('id, name, icon, state, required_level, unique_players, total_plays');
+    .select('id, name, state, play_count, question_count, artwork_url');
 
   if (catError || setError) {
     return NextResponse.json({ error: catError?.message || setError?.message }, { status: 500 });

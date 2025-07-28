@@ -28,7 +28,7 @@ export async function GET(request: Request) {
   // Fetch playlist (question set) detail
   const { data: playlist, error: playlistError } = await supabase
     .from('question_sets')
-    .select('id, name, icon, state, required_level, unique_players, total_plays')
+    .select('id, name, state, play_count, question_count, artwork_url, difficulty, description')
     .eq('id', playlistId)
     .single();
 
