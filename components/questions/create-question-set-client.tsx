@@ -20,6 +20,7 @@ import { ArtworkPreviewUpload } from '@/components/question-sets/artwork-preview
 import { useQuestionSetArtwork } from '@/hooks/use-question-set-artwork'
 import { CategorySelector } from '@/components/categories/category-selector'
 import { TagInput } from '@/components/tags/tag-input'
+import { GameType, GAME_TYPES, gameTypeLabels, gameTypeDescriptions } from '@/types/game-type'
 
 interface SelectedSong {
   id: string
@@ -38,6 +39,7 @@ export function CreateQuestionSetClient() {
   const [setName, setSetName] = useState('')
   const [description, setDescription] = useState('')
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium')
+  const [gameType, setGameType] = useState<GameType>(GAME_TYPES.GUESS_ARTIST)
   const [selectedSongs, setSelectedSongs] = useState<SelectedSong[]>([])
   const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -76,6 +78,7 @@ export function CreateQuestionSetClient() {
         body: JSON.stringify({
           selectedSongIds: selectedSongs.map(s => s.id),
           difficulty,
+          gameType,
         }),
       })
 
@@ -133,7 +136,8 @@ export function CreateQuestionSetClient() {
         difficulty,
         questions,
         isPublic,
-        tags
+        tags,
+        gameType
       )
 
       if (error) {
@@ -263,6 +267,30 @@ export function CreateQuestionSetClient() {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Game Type
+                </label>
+                <Select value={gameType} onValueChange={(v: GameType) => setGameType(v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={GAME_TYPES.GUESS_ARTIST}>
+                      <div>
+                        <div className="font-medium">{gameTypeLabels[GAME_TYPES.GUESS_ARTIST]}</div>
+                        <div className="text-xs text-gray-500">{gameTypeDescriptions[GAME_TYPES.GUESS_ARTIST]}</div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value={GAME_TYPES.GUESS_SONG}>
+                      <div>
+                        <div className="font-medium">{gameTypeLabels[GAME_TYPES.GUESS_SONG]}</div>
+                        <div className="text-xs text-gray-500">{gameTypeDescriptions[GAME_TYPES.GUESS_SONG]}</div>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
                   Difficulty

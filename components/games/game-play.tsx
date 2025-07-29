@@ -20,6 +20,7 @@ import { useGameRoom } from '@/hooks/use-game-room'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/auth-context'
+import { GAME_TYPES } from '@/types/game-type'
 
 interface GamePlayProps {
   gameId: string
@@ -58,18 +59,25 @@ export function GamePlay({ gameId }: GamePlayProps) {
     a => a.question_index === currentQuestionIndex
   )
   
-  // Prepare answer options
+  // Get game type from the game's question set
+  const gameType = game?.question_set?.game_type || GAME_TYPES.GUESS_ARTIST
+  
+  // Prepare answer options based on game type
   const answerOptions: AnswerOption[] = currentQuestion ? [
     {
       id: currentQuestion.correct_song_id,
-      name: currentQuestion.correct_song_name,
-      artist: currentQuestion.correct_song_artist,
+      name: gameType === GAME_TYPES.GUESS_SONG 
+        ? currentQuestion.correct_song_name 
+        : currentQuestion.correct_song_artist,
+      artist: gameType === GAME_TYPES.GUESS_SONG
+        ? currentQuestion.correct_song_artist
+        : '',
       artwork: currentQuestion.correct_song_artwork_url || undefined
     },
     ...(currentQuestion.detractors as any[] || []).map((d: any) => ({
       id: d.id,
-      name: d.name,
-      artist: d.artist,
+      name: gameType === GAME_TYPES.GUESS_SONG ? d.name : d.artist,
+      artist: gameType === GAME_TYPES.GUESS_SONG ? d.artist : '',
       artwork: d.artwork
     }))
   ].sort(() => Math.random() - 0.5) : []
@@ -232,11 +240,15 @@ export function GamePlay({ gameId }: GamePlayProps) {
           <Music className="h-12 w-12 mx-auto mb-3 text-purple-600" />
           <h2 className="text-xl font-semibold">
             {hasAnswered && showResult 
-              ? `The answer was: ${currentQuestion.correct_song_name}`
-              : 'Name this song!'
+              ? gameType === GAME_TYPES.GUESS_SONG
+                ? `The song was: ${currentQuestion.correct_song_name}`
+                : `The artist was: ${currentQuestion.correct_song_artist}`
+              : gameType === GAME_TYPES.GUESS_SONG
+                ? 'Name this song!'
+                : 'Name the artist!'
             }
           </h2>
-          {hasAnswered && showResult && (
+          {hasAnswered && showResult && gameType === GAME_TYPES.GUESS_SONG && (
             <p className="text-gray-600 mt-1">
               by {currentQuestion.correct_song_artist}
             </p>
@@ -275,7 +287,9 @@ export function GamePlay({ gameId }: GamePlayProps) {
                 )}
                 <div className="flex-1 text-left">
                   <p className="font-medium">{option.name}</p>
-                  <p className="text-sm text-gray-600">{option.artist}</p>
+                  {gameType === GAME_TYPES.GUESS_SONG && option.artist && (
+                    <p className="text-sm text-gray-600">{option.artist}</p>
+                  )}
                 </div>
                 {showCorrect && <Check className="h-5 w-5 text-green-600" />}
                 {showIncorrect && <X className="h-5 w-5 text-red-600" />}

@@ -2,6 +2,7 @@
 // ABOUTME: Uses similarity scoring to create appropriate difficulty levels
 
 import type { AppleMusicSong } from '@/lib/apple-music'
+import { GameType, GAME_TYPES } from '@/types/game-type'
 
 export interface GeneratedQuestion {
   correctSongId: string
@@ -12,15 +13,40 @@ export interface GeneratedQuestion {
 export interface QuestionSetOptions {
   difficulty: 'easy' | 'medium' | 'hard'
   numberOfDetractors: number // Usually 3
+  gameType?: GameType // Defaults to 'guess_artist'
 }
 
 // Calculate similarity score between two songs (0-100)
-function calculateSimilarity(song1: AppleMusicSong, song2: AppleMusicSong): number {
+function calculateSimilarity(song1: AppleMusicSong, song2: AppleMusicSong, gameType: GameType = GAME_TYPES.GUESS_ARTIST): number {
   let score = 0
   
-  // Same artist = very similar
-  if (song1.attributes.artistName === song2.attributes.artistName) {
-    score += 40
+  if (gameType === GAME_TYPES.GUESS_ARTIST) {
+    // Same artist = very similar (should not be used as detractor)
+    if (song1.attributes.artistName === song2.attributes.artistName) {
+      score += 40
+    }
+  } else if (gameType === GAME_TYPES.GUESS_SONG) {
+    // For guess song mode, avoid songs with similar titles
+    const title1 = song1.attributes.name.toLowerCase()
+    const title2 = song2.attributes.name.toLowerCase()
+    
+    // Check for exact match
+    if (title1 === title2) {
+      score += 50
+    }
+    // Check for partial matches (e.g., "Love Song" vs "Love Song (Remix)")
+    else if (title1.includes(title2) || title2.includes(title1)) {
+      score += 30
+    }
+    // Check for similar words
+    else {
+      const words1 = title1.split(/\s+/)
+      const words2 = title2.split(/\s+/)
+      const commonWords = words1.filter(w => words2.includes(w) && w.length > 3)
+      if (commonWords.length > 0) {
+        score += Math.min(commonWords.length * 10, 20)
+      }
+    }
   }
   
   // Same genre = similar
@@ -59,13 +85,15 @@ export function selectDetractors(
   allSongs: AppleMusicSong[],
   options: QuestionSetOptions
 ): AppleMusicSong[] {
+  const gameType = options.gameType || GAME_TYPES.GUESS_ARTIST
+  
   // Filter out the correct song
   const candidates = allSongs.filter(s => s.id !== correctSong.id)
   
   // Calculate similarity scores
   const scoredCandidates = candidates.map(song => ({
     song,
-    similarity: calculateSimilarity(correctSong, song)
+    similarity: calculateSimilarity(correctSong, song, gameType)
   }))
   
   // Sort by similarity

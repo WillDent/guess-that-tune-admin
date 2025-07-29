@@ -125,7 +125,8 @@ export function useQuestionSets() {
     difficulty: 'easy' | 'medium' | 'hard',
     questions: Omit<Question, 'id' | 'question_set_id' | 'created_at' | 'updated_at'>[],
     isPublic: boolean = false,
-    tags: string[] = []
+    tags: string[] = [],
+    gameType: string = 'guess_artist'
   ) => {
     console.log('[USE-QUESTION-SETS] createQuestionSet called with:', { name, difficulty, questionsCount: questions.length })
     try {
@@ -175,7 +176,8 @@ export function useQuestionSets() {
         description,
         difficulty,
         is_public: isPublic,
-        tags: tags.length > 0 ? tags : null
+        tags: tags.length > 0 ? tags : null,
+        game_type: gameType
       }
       
       console.log('[USE-QUESTION-SETS] Making authenticated request to create question set')
@@ -286,6 +288,7 @@ export function useQuestionSets() {
       tags?: string[] | null
       artwork_url?: string | null
       state?: 'NEW' | 'PUBLISHED'
+      game_type?: string
     },
     questions?: Omit<Question, 'id' | 'question_set_id' | 'created_at' | 'updated_at'>[]
   ) => {

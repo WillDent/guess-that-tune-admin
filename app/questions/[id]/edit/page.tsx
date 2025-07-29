@@ -25,6 +25,7 @@ import { debounce } from 'lodash'
 import { ArtworkUpload } from '@/components/question-sets/artwork-upload'
 import { CategorySelector } from '@/components/categories/category-selector'
 import { TagInput } from '@/components/tags/tag-input'
+import { GameType, GAME_TYPES, gameTypeLabels, gameTypeDescriptions } from '@/types/game-type'
 
 export default function EditQuestionSetPage() {
   const router = useRouter()
@@ -45,6 +46,7 @@ export default function EditQuestionSetPage() {
   const [setName, setSetName] = useState('')
   const [description, setDescription] = useState('')
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium')
+  const [gameType, setGameType] = useState<GameType>(GAME_TYPES.GUESS_ARTIST)
   const [isPublic, setIsPublic] = useState(false)
   const [tags, setTags] = useState<string[]>([])
   const [questions, setQuestions] = useState<any[]>([])
@@ -110,6 +112,7 @@ export default function EditQuestionSetPage() {
         setSetName(questionSet.name)
         setDescription(questionSet.description || '')
         setDifficulty(questionSet.difficulty as 'easy' | 'medium' | 'hard')
+        setGameType(questionSet.game_type || GAME_TYPES.GUESS_ARTIST)
         setIsPublic(questionSet.is_public || false)
         setTags(questionSet.tags || [])
         setQuestions(questionSet.questions || [])
@@ -200,12 +203,13 @@ export default function EditQuestionSetPage() {
         name: setName,
         description: description || null,
         difficulty,
+        game_type: gameType,
         is_public: isPublic,
         tags: tags.length > 0 ? tags : null,
         state
       })
     }
-  }, [setName, description, difficulty, isPublic, tags, state, hasChanges, loading, debouncedAutoSave])
+  }, [setName, description, difficulty, gameType, isPublic, tags, state, hasChanges, loading, debouncedAutoSave])
 
   // Mark form as changed
   const markAsChanged = () => setHasChanges(true)
@@ -221,6 +225,7 @@ export default function EditQuestionSetPage() {
         body: JSON.stringify({
           selectedSongIds: originalSongIds,
           difficulty,
+          gameType,
         }),
       })
 
@@ -266,6 +271,7 @@ export default function EditQuestionSetPage() {
           name: setName,
           description: description || null,
           difficulty,
+          game_type: gameType,
           is_public: isPublic,
           tags: tags.length > 0 ? tags : null,
           artwork_url: artworkUrl,
@@ -429,6 +435,37 @@ export default function EditQuestionSetPage() {
                     placeholder="Describe this question set..."
                     rows={3}
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Game Type
+                  </label>
+                  <Select 
+                    value={gameType} 
+                    onValueChange={(v: GameType) => {
+                      setGameType(v)
+                      markAsChanged()
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={GAME_TYPES.GUESS_ARTIST}>
+                        <div>
+                          <div className="font-medium">{gameTypeLabels[GAME_TYPES.GUESS_ARTIST]}</div>
+                          <div className="text-xs text-gray-500">{gameTypeDescriptions[GAME_TYPES.GUESS_ARTIST]}</div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value={GAME_TYPES.GUESS_SONG}>
+                        <div>
+                          <div className="font-medium">{gameTypeLabels[GAME_TYPES.GUESS_SONG]}</div>
+                          <div className="text-xs text-gray-500">{gameTypeDescriptions[GAME_TYPES.GUESS_SONG]}</div>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>

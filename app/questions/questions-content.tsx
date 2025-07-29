@@ -17,6 +17,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 import { useRouter } from 'next/navigation'
 import type { QuestionSetWithQuestions } from './page'
 import type { Question } from '@/types'
+import { GAME_TYPES, gameTypeLabels } from '@/types/game-type'
 
 interface QuestionsContentProps {
   initialQuestionSets: QuestionSetWithQuestions[]
@@ -192,6 +193,9 @@ export function QuestionsContent({ initialQuestionSets, userId }: QuestionsConte
                 <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
                   <span>{set.questions.length} questions</span>
                   <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {gameTypeLabels[set.game_type || GAME_TYPES.GUESS_ARTIST]}
+                    </Badge>
                     {set.state === 'PUBLISHED' ? (
                       <Badge variant="default" className="text-xs bg-green-100 text-green-800">
                         Published

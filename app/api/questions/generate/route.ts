@@ -7,6 +7,7 @@ import { generateQuestionSet } from '@/lib/question-generator'
 import { APPLE_MUSIC_CONFIG } from '@/lib/apple-music/config'
 import { createServerClient } from '@/lib/supabase/server'
 import { withSessionRoute } from '@/utils/supabase/with-session-server'
+import { GameType, GAME_TYPES } from '@/types/game-type'
 
 export async function POST(request: Request) {
   // Create Supabase client
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
       }
 
     const body = await request.json()
-    const { selectedSongIds, difficulty = 'medium' } = body
+    const { selectedSongIds, difficulty = 'medium', gameType = GAME_TYPES.GUESS_ARTIST } = body
 
       if (!selectedSongIds || selectedSongIds.length === 0) {
         throw new Error('No songs selected')
@@ -102,7 +103,8 @@ export async function POST(request: Request) {
       candidatePool,
       {
         difficulty,
-        numberOfDetractors: 3
+        numberOfDetractors: 3,
+        gameType: gameType as GameType
       }
     )
     
@@ -129,13 +131,15 @@ export async function POST(request: Request) {
           album: song.attributes.albumName,
           artwork: song.attributes.artwork.url.replace('{w}', '300').replace('{h}', '300')
         })),
-        difficulty
+        difficulty,
+        gameType
       }
       })
       
       return { 
         questions: formattedQuestions,
-        totalQuestions: formattedQuestions.length
+        totalQuestions: formattedQuestions.length,
+        gameType
       }
     } catch (error) {
       console.error('Failed to generate questions:', error)

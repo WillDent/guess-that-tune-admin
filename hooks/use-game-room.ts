@@ -80,6 +80,7 @@ export function useGameRoom(gameId: string) {
           question_set:question_sets!games_question_set_id_fkey (
             id,
             name,
+            game_type,
             questions (*)
           )
         `)
