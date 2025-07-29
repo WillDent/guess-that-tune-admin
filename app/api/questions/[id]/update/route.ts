@@ -23,9 +23,16 @@ export async function PUT(req: NextRequest) {
     const { updates, questions } = body
     
     // Update question set
+    const updateData = { ...updates }
+    
+    // If questions are being updated, update the question_count
+    if (questions) {
+      updateData.question_count = questions.length
+    }
+    
     const { error: updateError } = await supabase
       .from('question_sets')
-      .update(updates)
+      .update(updateData)
       .eq('id', questionSetId)
       .eq('user_id', user.id)
     

@@ -177,7 +177,8 @@ export function useQuestionSets() {
         difficulty,
         is_public: isPublic,
         tags: tags.length > 0 ? tags : null,
-        game_type: gameType
+        game_type: gameType,
+        question_count: questions.length
       }
       
       console.log('[USE-QUESTION-SETS] Making authenticated request to create question set')
