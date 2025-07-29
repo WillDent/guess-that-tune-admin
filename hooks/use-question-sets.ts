@@ -294,40 +294,24 @@ export function useQuestionSets() {
   ) => {
     try {
       setError(null)
-
-      // Update question set
-      const { error: updateError } = await supabaseClient
-        .from('question_sets')
-        .update(updates)
-        .eq('id', id)
-        .eq('user_id', user!.id)
-
-      if (updateError) throw updateError
-
-      // If questions provided, replace all questions
-      if (questions) {
-        // Delete existing questions
-        const { error: deleteError } = await supabaseClient
-          .from('questions')
-          .delete()
-          .eq('question_set_id', id)
-
-        if (deleteError) throw deleteError
-
-        // Insert new questions
-        if (questions.length > 0) {
-          const questionsToInsert = questions.map(q => ({
-            ...q,
-            question_set_id: id
-          }))
-
-          const { error: insertError } = await supabaseClient
-            .from('questions')
-            .insert(questionsToInsert)
-
-          if (insertError) throw insertError
-        }
+      
+      console.log('[USE-QUESTION-SETS] Updating question set via API:', id)
+      
+      const response = await fetch(`/api/questions/${id}/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ updates, questions }),
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update question set')
       }
+      
+      const result = await response.json()
+      console.log('[USE-QUESTION-SETS] Update successful:', result)
 
       // Refresh the list
       await fetchQuestionSets()

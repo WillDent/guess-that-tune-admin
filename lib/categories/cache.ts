@@ -34,30 +34,25 @@ class CategoriesCache {
     // Start loading
     console.log('[CategoriesCache] Starting fresh fetch')
     this.loading = true
-    try {
-      console.log('[CategoriesCache] Calling fetcher function...')
-      this.promise = fetcher()
-        .then(data => {
-          console.log('[CategoriesCache] Fetcher resolved with data:', data)
-          this.categories = data
-          this.loading = false
-          this.promise = null // Clear promise after completion
-          console.log('[CategoriesCache] Categories cached:', data.length)
-          return data
-        })
-        .catch(err => {
-          console.error('[CategoriesCache] Fetcher error:', err)
-          this.loading = false
-          this.promise = null
-          this.categories = null // Reset categories on error
-          throw err
-        })
-    } catch (err) {
-      console.error('[CategoriesCache] Error creating promise:', err)
-      this.loading = false
-      this.promise = null
-      throw err
-    }
+    
+    // Create the promise without timeout
+    this.promise = fetcher()
+      .then(data => {
+        console.log('[CategoriesCache] Fetcher resolved with data:', data)
+        this.categories = data
+        this.loading = false
+        this.promise = null // Clear promise after completion
+        console.log('[CategoriesCache] Categories cached:', data.length)
+        return data
+      })
+      .catch(err => {
+        console.error('[CategoriesCache] Fetcher error:', err)
+        this.loading = false
+        this.promise = null
+        this.categories = [] // Set empty array instead of null on error
+        // Return empty array instead of throwing
+        return []
+      })
     
     return this.promise
   }
@@ -73,6 +68,15 @@ class CategoriesCache {
   }
   
   clear() {
+    console.log('[CategoriesCache] Clearing cache')
+    this.categories = null
+    this.loading = false
+    this.promise = null
+  }
+  
+  // Force reset in case of stuck state
+  forceReset() {
+    console.log('[CategoriesCache] Force resetting cache state')
     this.categories = null
     this.loading = false
     this.promise = null

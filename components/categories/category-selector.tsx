@@ -59,21 +59,24 @@ export function CategorySelector({
       // Use the cache to fetch categories
       console.log('[CategorySelector] Calling categoriesCache.getCategories...')
       const data = await categoriesCache.getCategories(async () => {
-        console.log('[CategorySelector] Executing Supabase query...')
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .order('display_order', { ascending: true })
-          .order('name', { ascending: true })
-
-        console.log('[CategorySelector] Supabase response:', { data, error })
+        console.log('[CategorySelector] Fetching categories via API...')
         
-        if (error) {
-          console.error('[CategorySelector] Supabase error:', error)
-          throw error
+        try {
+          // Use our API endpoint which handles auth properly
+          const response = await fetch('/api/categories')
+          
+          if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.error || 'Failed to fetch categories')
+          }
+          
+          const categories = await response.json()
+          console.log('[CategorySelector] API response:', categories.length, 'categories')
+          return categories || []
+        } catch (err) {
+          console.error('[CategorySelector] Error fetching categories:', err)
+          throw err
         }
-
-        return data || []
       })
 
       console.log('[CategorySelector] Categories loaded:', data.length, 'categories')
@@ -95,43 +98,34 @@ export function CategorySelector({
     if (hasInitialized) return
     
     const initializeCategories = async () => {
-      // Check if we already have cached categories to avoid showing loading state
-      const cachedCategories = categoriesCache.getCachedCategories()
-      if (cachedCategories && cachedCategories.length > 0) {
-        console.log('[CategorySelector] Using cached categories:', cachedCategories.length)
-        setCategories(cachedCategories)
+      console.log('[CategorySelector] Initializing categories...')
+      
+      // Always fetch fresh categories for now to diagnose the issue
+      setLoading(true)
+      setShowLoadingSpinner(true)
+      
+      try {
+        // Directly fetch from API to bypass cache issues
+        const response = await fetch('/api/categories')
+        console.log('[CategorySelector] API response status:', response.status)
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('[CategorySelector] API returned categories:', data.length)
+          setCategories(data || [])
+        } else {
+          const error = await response.json()
+          console.error('[CategorySelector] API error:', error)
+          setError('Failed to load categories')
+        }
+      } catch (err) {
+        console.error('[CategorySelector] Fetch error:', err)
+        setError('Failed to load categories')
+      } finally {
         setLoading(false)
         setShowLoadingSpinner(false)
         setHasInitialized(true)
-        return
       }
-      
-      // If cache is currently loading, wait for it by calling fetchCategories
-      if (categoriesCache.isLoading()) {
-        console.log('[CategorySelector] Cache is loading, fetching will wait for existing promise...')
-        // Delay showing spinner to prevent flashing for quick loads
-        const spinnerTimeout = setTimeout(() => {
-          setShowLoadingSpinner(true)
-        }, 300)
-        
-        fetchCategories().finally(() => {
-          clearTimeout(spinnerTimeout)
-          setShowLoadingSpinner(false)
-        })
-        return
-      }
-      
-      console.log('[CategorySelector] No cached categories, fetching...')
-      setLoading(true)
-      // Delay showing spinner to prevent flashing for quick loads
-      const spinnerTimeout = setTimeout(() => {
-        setShowLoadingSpinner(true)
-      }, 300)
-      
-      fetchCategories().finally(() => {
-        clearTimeout(spinnerTimeout)
-        setShowLoadingSpinner(false)
-      })
     }
     
     initializeCategories()
@@ -254,7 +248,14 @@ export function CategorySelector({
                   {error}
                 </CommandEmpty>
               ) : categories.length === 0 ? (
-                <CommandEmpty>No categories available.</CommandEmpty>
+                <CommandEmpty>
+                  <div className="p-4 text-center">
+                    <p className="text-sm text-muted-foreground mb-2">No categories available</p>
+                    <p className="text-xs text-muted-foreground">
+                      Categories help organize your question sets. Contact an admin to add categories.
+                    </p>
+                  </div>
+                </CommandEmpty>
               ) : (
                 <CommandGroup>
                   {rootCategories.map(category => renderCategoryItem(category))}

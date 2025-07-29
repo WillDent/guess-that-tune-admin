@@ -8,6 +8,7 @@ const PUBLIC_ROUTES = [
   '/browse',
   '/auth',
   '/api/health-check',
+  '/api/categories', // Categories are public per RLS policy
   '/',
   '/test-health',
 ]

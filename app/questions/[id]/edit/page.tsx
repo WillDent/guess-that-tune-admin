@@ -86,6 +86,12 @@ export default function EditQuestionSetPage() {
         })
         clearTimeout(timeoutId)
         
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Invalid response from server - not JSON')
+        }
+        
         const responseData = await response.json()
         console.log('[EDIT-PAGE] API response:', { status: response.status, data: responseData })
         
@@ -158,6 +164,14 @@ export default function EditQuestionSetPage() {
       try {
         const response = await fetch(`/api/questions/${questionSetId}/categories`)
         console.log('[EDIT-PAGE] Categories API response status:', response.status)
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('[EDIT-PAGE] Categories API returned non-JSON response')
+          return
+        }
+        
         if (response.ok) {
           const assigned = await response.json()
           console.log('[EDIT-PAGE] Assigned categories:', assigned)
@@ -310,7 +324,14 @@ export default function EditQuestionSetPage() {
 
   // Save categories when they change
   const handleCategoryChange = useCallback(async (categoryIds: string[]) => {
+    console.log('[EDIT-PAGE] Updating categories:', categoryIds)
     setSelectedCategoryIds(categoryIds)
+    
+    // Don't make API call during initial load
+    if (!dataLoaded) {
+      console.log('[EDIT-PAGE] Skipping category update - data not loaded yet')
+      return
+    }
     
     try {
       const response = await fetch(`/api/questions/${questionSetId}/categories`, {
@@ -318,6 +339,8 @@ export default function EditQuestionSetPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ categoryIds }),
       })
+      
+      console.log('[EDIT-PAGE] Category update response:', response.status)
       
       if (!response.ok) {
         const data = await response.json()
@@ -329,7 +352,7 @@ export default function EditQuestionSetPage() {
       console.error('Failed to save categories:', err)
       toast.error('Failed to save categories')
     }
-  }, [questionSetId, toast])
+  }, [questionSetId, toast, dataLoaded])
 
   if (loading) {
     return (
