@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Save, Shuffle, Music, AlertCircle, Globe, Lock } from 'lucide-react'
+import { ArrowLeft, Save, Shuffle, Music, AlertCircle, Globe, Lock, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useQuestionSets } from '@/hooks/use-question-sets'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -21,6 +21,7 @@ import { useQuestionSetArtwork } from '@/hooks/use-question-set-artwork'
 import { CategorySelector } from '@/components/categories/category-selector'
 import { TagInput } from '@/components/tags/tag-input'
 import { GameType, GAME_TYPES, gameTypeLabels, gameTypeDescriptions } from '@/types/game-type'
+import { AISuggestionsModal } from '@/components/ai/ai-suggestions-modal'
 
 interface SelectedSong {
   id: string
@@ -49,6 +50,7 @@ export function CreateQuestionSetClient() {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
   const [artworkFile, setArtworkFile] = useState<File | null>(null)
   const [artworkPreview, setArtworkPreview] = useState<string | null>(null)
+  const [showAISuggestions, setShowAISuggestions] = useState(false)
 
   // Load selected songs from sessionStorage
   useEffect(() => {
@@ -267,6 +269,18 @@ export function CreateQuestionSetClient() {
                 />
               </div>
 
+              {/* AI Suggestions Button */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAISuggestions(true)}
+                className="w-full"
+                disabled={selectedSongs.length === 0}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Get AI Suggestions for Name & Description
+              </Button>
+
               <div>
                 <label className="block text-sm font-medium mb-2">
                   Game Type
@@ -467,6 +481,21 @@ export function CreateQuestionSetClient() {
           </Card>
         </div>
       </div>
+
+      {/* AI Suggestions Modal */}
+      <AISuggestionsModal
+        isOpen={showAISuggestions}
+        onClose={() => setShowAISuggestions(false)}
+        onAccept={(name, desc) => {
+          setSetName(name)
+          setDescription(desc)
+          setShowAISuggestions(false)
+          toast.success('AI suggestions applied!')
+        }}
+        songs={selectedSongs}
+        gameType={gameType as 'guess_artist' | 'guess_song'}
+        difficulty={difficulty}
+      />
     </div>
   )
 }
