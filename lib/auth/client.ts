@@ -59,19 +59,22 @@ export function useAuth() {
     
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
-          const { data: profile } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-            
-          setState({
-            user: profile,
-            loading: false,
-            isAdmin: profile?.role === 'admin',
-          })
+          // Defer async operations to avoid deadlock
+          setTimeout(async () => {
+            const { data: profile } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', session.user.id)
+              .single()
+              
+            setState({
+              user: profile,
+              loading: false,
+              isAdmin: profile?.role === 'admin',
+            })
+          }, 0)
         } else if (event === 'SIGNED_OUT') {
           setState({ user: null, loading: false, isAdmin: false })
           router.push('/login')

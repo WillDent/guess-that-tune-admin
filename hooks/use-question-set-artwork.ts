@@ -68,14 +68,20 @@ export function useQuestionSetArtwork(): UseQuestionSetArtworkReturn {
       
       try {
         const response = await fetch('/api/auth/session')
+        console.log('[ARTWORK-UPLOAD] Session response status:', response.status)
+        
         if (!response.ok) {
           const error = await response.json()
           console.error('[ARTWORK-UPLOAD] Session API error:', error)
           throw new Error(error.error || 'Failed to get session')
         }
         
-        const { token, userId: id } = await response.json()
+        const sessionData = await response.json()
+        console.log('[ARTWORK-UPLOAD] Session data received:', { hasToken: !!sessionData.token, hasUserId: !!sessionData.userId })
+        
+        const { token, userId: id } = sessionData
         if (!token || !id) {
+          console.error('[ARTWORK-UPLOAD] Missing session data:', sessionData)
           throw new Error('No session data received')
         }
         
@@ -130,6 +136,12 @@ export function useQuestionSetArtwork(): UseQuestionSetArtworkReturn {
 
       // Upload new artwork with timeout
       console.log('[ARTWORK-UPLOAD] Starting file upload...')
+      console.log('[ARTWORK-UPLOAD] Upload details:', {
+        bucket: 'question-set-artwork',
+        filePath,
+        fileSize: file.size,
+        fileType: file.type
+      })
       const uploadStart = Date.now()
       
       // Create timeout promise
@@ -149,6 +161,7 @@ export function useQuestionSetArtwork(): UseQuestionSetArtworkReturn {
       const result = await Promise.race([uploadPromise, timeoutPromise]) as any
       const uploadDuration = Date.now() - uploadStart
       console.log('[ARTWORK-UPLOAD] Upload completed in', uploadDuration, 'ms')
+      console.log('[ARTWORK-UPLOAD] Upload result:', result)
       
       if (result.error) {
         console.error('[ARTWORK-UPLOAD] Upload error:', result.error)

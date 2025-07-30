@@ -240,7 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         const authUser = session?.user ?? null
         
         if (authUser && mounted) {
@@ -249,56 +249,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false)
           setAuthInitialized(true)
           
-          try {
-            // Ensure user exists on sign in
-            if (event === 'SIGNED_IN') {
-              await ensureUserExists(authUser)
-            }
+          // Defer async operations to avoid deadlock
+          // According to Supabase docs, async calls in onAuthStateChange can cause hanging
+          setTimeout(async () => {
+            if (!mounted) return
             
-            // Check super admin on sign in
-            if (event === 'SIGNED_IN' && authUser.email) {
-              await checkAndPromoteSuperAdmin(authUser.email)
+            try {
+              // Ensure user exists on sign in
+              if (event === 'SIGNED_IN') {
+                await ensureUserExists(authUser)
+              }
+              
+              // Check super admin on sign in
+              if (event === 'SIGNED_IN' && authUser.email) {
+                await checkAndPromoteSuperAdmin(authUser.email)
+              }
+              
+              // Always fetch the latest role
+              const role = await fetchUserRole(authUser.id)
+              const userWithRole: UserWithRole = {
+                ...authUser,
+                role: role || undefined
+              }
+              
+              // Check if this is the super admin email
+              const isSuperAdmin = authUser.email === SUPER_ADMIN_EMAIL
+              
+              if (mounted) {
+                console.log('[AUTH-CONTEXT] Auth state change - Setting user with role:', { 
+                  email: authUser.email, 
+                  role, 
+                  isAdmin: role === 'admin' || isSuperAdmin,
+                  isSuperAdmin,
+                  superAdminEmail: SUPER_ADMIN_EMAIL,
+                  emailMatch: authUser.email === SUPER_ADMIN_EMAIL,
+                  roleFromDB: role
+                })
+                setUser(userWithRole)
+                setIsAdmin(role === 'admin' || isSuperAdmin)
+                setLoading(false) // Ensure loading is set to false
+                setAuthInitialized(true)
+              }
+            } catch (error) {
+              console.error('[AUTH-CONTEXT] Error in deferred auth operations:', error)
             }
+          }, 0)
             
-            // Always fetch the latest role
-            const role = await fetchUserRole(authUser.id)
-            const userWithRole: UserWithRole = {
-              ...authUser,
-              role: role || undefined
-            }
-            
-            // Check if this is the super admin email
-            const isSuperAdmin = authUser.email === SUPER_ADMIN_EMAIL
-            
-            if (mounted) {
-              console.log('[AUTH-CONTEXT] Auth state change - Setting user with role:', { 
-                email: authUser.email, 
-                role, 
-                isAdmin: role === 'admin' || isSuperAdmin,
-                isSuperAdmin,
-                superAdminEmail: SUPER_ADMIN_EMAIL,
-                emailMatch: authUser.email === SUPER_ADMIN_EMAIL,
-                roleFromDB: role
-              })
-              setUser(userWithRole)
-              setIsAdmin(role === 'admin' || isSuperAdmin)
-              setLoading(false) // Ensure loading is set to false
-              setAuthInitialized(true)
-            }
-            
-            // Handle auth events
-            if (event === 'SIGNED_IN') {
-              router.refresh()
-            }
-          } catch (error) {
-            console.error('[AUTH-CONTEXT] Error in auth state change:', error)
-            // Set user anyway to prevent blocking
-            if (mounted) {
-              setUser(authUser)
-              setIsAdmin(false)
-              setLoading(false) // Ensure loading is set to false
-              setAuthInitialized(true) // even on error
-            }
+          // Handle auth events
+          if (event === 'SIGNED_IN') {
+            router.refresh()
           }
         } else {
           setUser(null)

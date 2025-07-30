@@ -190,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('[AUTH-CONTEXT-V2] Auth state change:', event)
         
         if (!mounted) return
@@ -199,13 +199,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           case 'SIGNED_IN':
             if (session?.user) {
               events.loginStart()
-              await ensureUserExists(session.user)
-              if (session.user.email) {
-                await checkAndPromoteSuperAdmin(session.user.email)
-              }
-              const userWithRole = await enhanceUserWithRole(session.user)
-              events.loginSuccess(userWithRole)
-              router.refresh()
+              // Defer async operations to avoid deadlock
+              setTimeout(async () => {
+                if (!mounted) return
+                try {
+                  await ensureUserExists(session.user)
+                  if (session.user.email) {
+                    await checkAndPromoteSuperAdmin(session.user.email)
+                  }
+                  const userWithRole = await enhanceUserWithRole(session.user)
+                  events.loginSuccess(userWithRole)
+                  router.refresh()
+                } catch (error) {
+                  console.error('[AUTH-CONTEXT-V2] Error in deferred auth operations:', error)
+                  events.loginError(error as Error)
+                }
+              }, 0)
             }
             break
             
@@ -217,16 +226,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           case 'TOKEN_REFRESHED':
             if (session?.user) {
               events.refreshStart()
-              const userWithRole = await enhanceUserWithRole(session.user)
-              events.refreshSuccess(userWithRole)
+              // Defer async operations to avoid deadlock
+              setTimeout(async () => {
+                if (!mounted) return
+                try {
+                  const userWithRole = await enhanceUserWithRole(session.user)
+                  events.refreshSuccess(userWithRole)
+                } catch (error) {
+                  console.error('[AUTH-CONTEXT-V2] Error refreshing user:', error)
+                }
+              }, 0)
             }
             break
             
           case 'USER_UPDATED':
             if (session?.user) {
               events.refreshStart()
-              const userWithRole = await enhanceUserWithRole(session.user)
-              events.refreshSuccess(userWithRole)
+              // Defer async operations to avoid deadlock
+              setTimeout(async () => {
+                if (!mounted) return
+                try {
+                  const userWithRole = await enhanceUserWithRole(session.user)
+                  events.refreshSuccess(userWithRole)
+                } catch (error) {
+                  console.error('[AUTH-CONTEXT-V2] Error updating user:', error)
+                }
+              }, 0)
             }
             break
         }
