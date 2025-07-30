@@ -64,12 +64,14 @@ export function AISuggestionsModal({
       }
 
       const data = await response.json()
+      console.log('[AI Suggestions Modal] Received data:', data)
+      
       setSuggestions({
-        names: data.names,
-        description: data.description
+        names: data.names || [],
+        description: data.description || ''
       })
-      setEditedDescription(data.description)
-      setSelectedName(data.names[0] || '')
+      setEditedDescription(data.description || '')
+      setSelectedName(data.names?.[0] || '')
       setRemainingRequests(data.remaining)
     } catch (error) {
       const appError = errorHandler.handle(error)
@@ -117,7 +119,8 @@ export function AISuggestionsModal({
             <div>
               <h3 className="text-sm font-medium mb-3">Choose a name for your question set:</h3>
               <div className="space-y-2">
-                {suggestions.names.map((name, index) => (
+                {suggestions.names && suggestions.names.length > 0 ? (
+                  suggestions.names.map((name, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedName(name)}
@@ -134,7 +137,10 @@ export function AISuggestionsModal({
                       )}
                     </div>
                   </button>
-                ))}
+                ))
+                ) : (
+                  <p className="text-sm text-gray-500 italic">No name suggestions were generated. Try regenerating.</p>
+                )}
               </div>
             </div>
 
