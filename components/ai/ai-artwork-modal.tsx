@@ -1,14 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { Sparkles, RefreshCw, Download, Palette, Brush } from 'lucide-react'
+import { Sparkles, RefreshCw, Download, Palette, Brush, FileText } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 
 interface AIArtworkModalProps {
   isOpen: boolean
@@ -55,6 +56,89 @@ export function AIArtworkModal({
   const [colorScheme, setColorScheme] = useState<ColorOption>('vibrant')
   const [userTheme, setUserTheme] = useState('')
   const [remainingGenerations, setRemainingGenerations] = useState<number | null>(null)
+  const [prompts, setPrompts] = useState<any[]>([])
+  const [selectedPromptId, setSelectedPromptId] = useState<string>('default')
+  const [loadingPrompts, setLoadingPrompts] = useState(false)
+  const supabase = createSupabaseBrowserClient()
+
+  // Fetch available prompts
+  useEffect(() => {
+    const fetchPrompts = async () => {
+      if (!isOpen) return
+      
+      setLoadingPrompts(true)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data, error } = await supabase
+          .from('ai_artwork_prompts')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .order('is_default', { ascending: false })
+          .order('name')
+
+        if (!error && data) {
+          // If user has no prompts, initialize them
+          if (data.length === 0) {
+            const initResponse = await fetch('/api/user/init-prompts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            })
+            
+            if (initResponse.ok) {
+              // Refetch prompts after initialization
+              const { data: newPrompts } = await supabase
+                .from('ai_artwork_prompts')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('is_active', true)
+                .order('is_default', { ascending: false })
+                .order('name')
+              
+              if (newPrompts) {
+                setPrompts(newPrompts)
+                const defaultPrompt = newPrompts.find(p => p.is_default)
+                if (defaultPrompt) {
+                  setSelectedPromptId(defaultPrompt.id)
+                  setStyle(defaultPrompt.style)
+                  setColorScheme(defaultPrompt.color_scheme)
+                }
+              }
+            }
+          } else {
+            setPrompts(data)
+            // Select default prompt if available
+            const defaultPrompt = data.find(p => p.is_default)
+            if (defaultPrompt) {
+              setSelectedPromptId(defaultPrompt.id)
+              setStyle(defaultPrompt.style)
+              setColorScheme(defaultPrompt.color_scheme)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching prompts:', error)
+      } finally {
+        setLoadingPrompts(false)
+      }
+    }
+
+    fetchPrompts()
+  }, [isOpen])
+
+  // Update style/color when prompt changes
+  const handlePromptChange = (promptId: string) => {
+    setSelectedPromptId(promptId)
+    if (promptId !== 'default') {
+      const prompt = prompts.find(p => p.id === promptId)
+      if (prompt) {
+        setStyle(prompt.style)
+        setColorScheme(prompt.color_scheme)
+      }
+    }
+  }
 
   const generateArtwork = async () => {
     setLoading(true)
@@ -69,7 +153,8 @@ export function AIArtworkModal({
           gameType,
           style,
           colorScheme,
-          userTheme: userTheme.trim() || undefined
+          userTheme: userTheme.trim() || undefined,
+          promptId: selectedPromptId !== 'default' ? selectedPromptId : undefined
         })
       })
 
@@ -174,6 +259,37 @@ export function AIArtworkModal({
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Prompt Selection */}
+            <div>
+              <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Prompt Template
+              </label>
+              <Select 
+                value={selectedPromptId} 
+                onValueChange={handlePromptChange}
+                disabled={loadingPrompts}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={loadingPrompts ? "Loading prompts..." : "Select a prompt"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Default (Built-in)</SelectItem>
+                  {prompts.map((prompt) => (
+                    <SelectItem key={prompt.id} value={prompt.id}>
+                      {prompt.name}
+                      {prompt.is_default && ' ⭐'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedPromptId !== 'default' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {prompts.find(p => p.id === selectedPromptId)?.description}
+                </p>
+              )}
+            </div>
+
             {/* Style Options */}
             <div className="space-y-4">
               <div>
@@ -181,7 +297,11 @@ export function AIArtworkModal({
                   <Brush className="h-4 w-4" />
                   Art Style
                 </label>
-                <Select value={style} onValueChange={(v: StyleOption) => setStyle(v)}>
+                <Select 
+                  value={style} 
+                  onValueChange={(v: StyleOption) => setStyle(v)}
+                  disabled={selectedPromptId !== 'default'}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -200,7 +320,11 @@ export function AIArtworkModal({
                   <Palette className="h-4 w-4" />
                   Color Scheme
                 </label>
-                <Select value={colorScheme} onValueChange={(v: ColorOption) => setColorScheme(v)}>
+                <Select 
+                  value={colorScheme} 
+                  onValueChange={(v: ColorOption) => setColorScheme(v)}
+                  disabled={selectedPromptId !== 'default'}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -213,6 +337,11 @@ export function AIArtworkModal({
                   </SelectContent>
                 </Select>
               </div>
+              {selectedPromptId !== 'default' && (
+                <p className="text-xs text-gray-500">
+                  Style and color are controlled by the selected prompt template
+                </p>
+              )}
 
               <div>
                 <label className="block text-sm font-medium mb-2">
