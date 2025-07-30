@@ -163,7 +163,8 @@ export async function POST(request: NextRequest) {
     // Download and upload to Supabase Storage
     const imageResponse = await fetch(imageUrl)
     const imageBlob = await imageResponse.blob()
-    const fileName = `ai-artwork-${user.id}-${Date.now()}.png`
+    // Use path format that matches RLS policy: user_id/path/filename
+    const fileName = `${user.id}/ai-artwork/${Date.now()}.png`
     
     // Try to upload with user's session first
     let uploadError = null
@@ -180,19 +181,19 @@ export async function POST(request: NextRequest) {
     uploadData = data
     uploadError = error
 
-    // If RLS policy blocks upload, try with service role (if available)
+    // If RLS policy blocks upload, try with path that matches policy
     if (uploadError && uploadError.message?.includes('row-level security policy')) {
-      console.log('[AI Artwork] RLS policy blocked upload, trying alternative method...')
+      console.log('[AI Artwork] RLS policy blocked upload, trying with correct path format...')
       
-      // For now, we'll create a simpler file path that might work better with policies
-      const simplifiedFileName = `ai/${user.id}/${Date.now()}.png`
+      // The RLS policy expects the user ID as the first folder in the path
+      const policyCompliantFileName = `${user.id}/ai-artwork/${Date.now()}.png`
       
       const retryResult = await supabase.storage
         .from('question-set-artwork')
-        .upload(simplifiedFileName, imageBlob, {
+        .upload(policyCompliantFileName, imageBlob, {
           contentType: 'image/png',
           cacheControl: '3600',
-          upsert: true // Allow overwriting in case of conflicts
+          upsert: false
         })
       
       if (retryResult.error) {
