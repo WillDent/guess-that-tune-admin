@@ -22,6 +22,7 @@ import { CategorySelector } from '@/components/categories/category-selector'
 import { TagInput } from '@/components/tags/tag-input'
 import { GameType, GAME_TYPES, gameTypeLabels, gameTypeDescriptions } from '@/types/game-type'
 import { AISuggestionsModal } from '@/components/ai/ai-suggestions-modal'
+import { AIArtworkModal } from '@/components/ai/ai-artwork-modal'
 
 interface SelectedSong {
   id: string
@@ -52,6 +53,7 @@ export function CreateQuestionSetClient() {
   const [artworkPreview, setArtworkPreview] = useState<string | null>(null)
   const [showAISuggestions, setShowAISuggestions] = useState(false)
   const [aiContext, setAiContext] = useState('')
+  const [showAIArtwork, setShowAIArtwork] = useState(false)
 
   // Load selected songs from sessionStorage
   useEffect(() => {
@@ -387,6 +389,7 @@ export function CreateQuestionSetClient() {
                     setArtworkFile(file)
                     setArtworkPreview(preview)
                   }}
+                  onGenerateAI={() => setShowAIArtwork(true)}
                 />
               </div>
 
@@ -514,6 +517,29 @@ export function CreateQuestionSetClient() {
         gameType={gameType as 'guess_artist' | 'guess_song'}
         difficulty={difficulty}
         userContext={aiContext}
+      />
+
+      {/* AI Artwork Modal */}
+      <AIArtworkModal
+        isOpen={showAIArtwork}
+        onClose={() => setShowAIArtwork(false)}
+        onAccept={async (imageUrl) => {
+          // Download the image and convert to File
+          try {
+            const response = await fetch(imageUrl)
+            const blob = await response.blob()
+            const file = new File([blob], 'ai-artwork.png', { type: 'image/png' })
+            
+            setArtworkFile(file)
+            setArtworkPreview(imageUrl)
+            setShowAIArtwork(false)
+            toast.success('AI artwork generated!')
+          } catch (error) {
+            toast.error('Failed to save artwork')
+          }
+        }}
+        songs={selectedSongs}
+        gameType={gameType as 'guess_artist' | 'guess_song'}
       />
     </div>
   )

@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { Upload, X, Image as ImageIcon, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 
 interface ArtworkPreviewUploadProps {
   onFileSelect: (file: File | null, preview: string | null) => void
+  onGenerateAI?: () => void
   className?: string
 }
 
@@ -16,6 +17,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
 export function ArtworkPreviewUpload({
   onFileSelect,
+  onGenerateAI,
   className
 }: ArtworkPreviewUploadProps) {
   const { toast } = useToast()
@@ -163,6 +165,20 @@ export function ArtworkPreviewUpload({
       <p className="text-xs text-gray-500">
         JPEG, PNG or WebP • Max 5MB
       </p>
+
+      {/* AI Generation Button */}
+      {onGenerateAI && !preview && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onGenerateAI}
+          className="w-full"
+        >
+          <Sparkles className="h-4 w-4 mr-2" />
+          Generate with AI
+        </Button>
+      )}
     </div>
   )
 }
