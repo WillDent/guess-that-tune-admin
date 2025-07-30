@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Settings, Edit } from 'lucide-react'
-import { EditProfileModal } from './edit-profile-modal'
+import { EditProfileModal } from './edit-profile-modal-stub'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/client'
 
