@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     const fileName = `ai-artwork-${Date.now()}.png`
     
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('question-sets')
+      .from('question-set-artwork')
       .upload(fileName, imageBlob, {
         contentType: 'image/png',
         cacheControl: '3600'
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
 
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
-      .from('question-sets')
+      .from('question-set-artwork')
       .getPublicUrl(fileName)
 
     // Log usage
