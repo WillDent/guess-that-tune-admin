@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Upload, X, Loader2, Image as ImageIcon, Sparkles } from 'lucide-react'
+import { Upload, X, Loader2, Image as ImageIcon, Sparkles, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useQuestionSetArtwork } from '@/hooks/use-question-set-artwork'
@@ -175,7 +175,7 @@ export function ArtworkUpload({
       <div className="flex flex-col gap-2">
         {/* Change image button (when image exists) */}
         {preview && !isUploading && (
-          <div className="flex justify-center">
+          <div className="flex gap-2 justify-center">
             <Button
               type="button"
               variant="outline"
@@ -185,6 +185,17 @@ export function ArtworkUpload({
               <ImageIcon className="h-4 w-4 mr-2" />
               Change Image
             </Button>
+            {onGenerateAI && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onGenerateAI}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Regenerate with AI
+              </Button>
+            )}
           </div>
         )}
         
