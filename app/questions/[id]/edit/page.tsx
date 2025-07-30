@@ -27,6 +27,7 @@ import { CategorySelector } from '@/components/categories/category-selector'
 import { TagInput } from '@/components/tags/tag-input'
 import { GameType, GAME_TYPES, gameTypeLabels, gameTypeDescriptions } from '@/types/game-type'
 import { AISuggestionsModal } from '@/components/ai/ai-suggestions-modal'
+import { AIArtworkModal } from '@/components/ai/ai-artwork-modal'
 
 export default function EditQuestionSetPage() {
   const router = useRouter()
@@ -61,6 +62,7 @@ export default function EditQuestionSetPage() {
   // AI suggestions state
   const [showAISuggestions, setShowAISuggestions] = useState(false)
   const [aiContext, setAiContext] = useState('')
+  const [showAIArtwork, setShowAIArtwork] = useState(false)
 
   // Categories state
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
@@ -639,6 +641,7 @@ export default function EditQuestionSetPage() {
                       setArtworkUrl(null)
                       setHasChanges(true)
                     }}
+                    onGenerateAI={() => setShowAIArtwork(true)}
                     questionSetId={questionSetId}
                   />
                 </div>
@@ -770,6 +773,24 @@ export default function EditQuestionSetPage() {
           gameType={gameType as 'guess_artist' | 'guess_song'}
           difficulty={difficulty}
           userContext={aiContext}
+        />
+
+        {/* AI Artwork Modal */}
+        <AIArtworkModal
+          isOpen={showAIArtwork}
+          onClose={() => setShowAIArtwork(false)}
+          onAccept={async (imageUrl) => {
+            try {
+              setArtworkUrl(imageUrl)
+              setHasChanges(true)
+              setShowAIArtwork(false)
+              toast.success('AI artwork generated!')
+            } catch (error) {
+              toast.error('Failed to save artwork')
+            }
+          }}
+          songs={songsForAI}
+          gameType={gameType as 'guess_artist' | 'guess_song'}
         />
       </div>
     </ProtectedRoute>

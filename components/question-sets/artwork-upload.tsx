@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react'
+import { Upload, X, Loader2, Image as ImageIcon, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useQuestionSetArtwork } from '@/hooks/use-question-set-artwork'
@@ -10,6 +10,7 @@ interface ArtworkUploadProps {
   currentArtworkUrl?: string | null
   onUpload: (url: string) => void
   onRemove: () => void
+  onGenerateAI?: () => void
   questionSetId: string
   className?: string
 }
@@ -18,6 +19,7 @@ export function ArtworkUpload({
   currentArtworkUrl,
   onUpload,
   onRemove,
+  onGenerateAI,
   questionSetId,
   className
 }: ArtworkUploadProps) {
@@ -164,20 +166,37 @@ export function ArtworkUpload({
         disabled={isUploading}
       />
 
-      {/* Change image button (when image exists) */}
-      {preview && !isUploading && (
-        <div className="flex justify-center">
+      {/* Action buttons */}
+      <div className="flex flex-col gap-2">
+        {/* Change image button (when image exists) */}
+        {preview && !isUploading && (
+          <div className="flex justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Change Image
+            </Button>
+          </div>
+        )}
+        
+        {/* AI Generation button (when no image exists) */}
+        {!preview && onGenerateAI && !isUploading && (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={onGenerateAI}
+            className="w-full"
           >
-            <ImageIcon className="h-4 w-4 mr-2" />
-            Change Image
+            <Sparkles className="h-4 w-4 mr-2" />
+            Generate with AI
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
