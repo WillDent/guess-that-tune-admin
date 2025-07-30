@@ -227,10 +227,11 @@ export default function EditQuestionSetPage() {
         game_type: gameType,
         is_public: isPublic,
         tags: tags.length > 0 ? tags : null,
+        artwork_url: artworkUrl,
         state
       })
     }
-  }, [setName, description, difficulty, gameType, isPublic, tags, state, hasChanges, loading, debouncedAutoSave])
+  }, [setName, description, difficulty, gameType, isPublic, tags, artworkUrl, state, hasChanges, loading, debouncedAutoSave])
 
   // Mark form as changed
   const markAsChanged = () => setHasChanges(true)
@@ -667,6 +668,11 @@ export default function EditQuestionSetPage() {
                       <>
                         <LoadingSpinner size="sm" className="mr-2" />
                         Saving...
+                      </>
+                    ) : !hasChanges ? (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        All Changes Saved
                       </>
                     ) : (
                       <>
