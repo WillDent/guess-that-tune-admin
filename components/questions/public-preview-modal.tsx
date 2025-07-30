@@ -30,9 +30,18 @@ export function PublicPreviewModal({ isOpen, onClose, questionSet }: PublicPrevi
           artwork: q.correct_song_artwork_url || undefined,
           previewUrl: q.correct_song_preview_url || undefined
         },
-        detractors: Array.isArray(q.detractors) ? q.detractors : []
+        detractors: Array.isArray(q.detractors) 
+          ? (q.detractors as any[]).map((d: any) => ({
+              id: d.id || '',
+              name: d.name || '',
+              artist: d.artist || '',
+              album: d.album,
+              artwork: d.artwork,
+              previewUrl: d.previewUrl
+            }))
+          : []
       }))
-      setTransformedQuestions(transformed as QuestionType[])
+      setTransformedQuestions(transformed)
     }
   }, [questions])
 
