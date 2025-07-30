@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
         return {
           ...questionSet,
           questions: questions || [],
-          categories: categories?.map(c => c.categories).filter(Boolean) || []
+          categories: categories?.map((c: any) => c.categories).filter(Boolean) || []
         }
       } catch (error) {
         clearTimeout(timeoutId)
