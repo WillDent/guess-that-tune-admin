@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Upload, X, Loader2, Image as ImageIcon, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -27,6 +27,11 @@ export function ArtworkUpload({
   const [preview, setPreview] = useState<string | null>(currentArtworkUrl || null)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Update preview when currentArtworkUrl changes
+  useEffect(() => {
+    setPreview(currentArtworkUrl || null)
+  }, [currentArtworkUrl])
 
   // Handle file selection
   const handleFileSelect = useCallback(async (file: File) => {
