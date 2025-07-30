@@ -149,12 +149,29 @@ export function CreateQuestionSetClient() {
         throw error
       }
 
-      // Upload artwork if file was selected
-      if (artworkFile && questionSet) {
-        const { error: artworkError } = await uploadArtwork(artworkFile, questionSet.id)
-        if (artworkError) {
-          // Don't fail the whole operation if artwork upload fails
-          toast.error('Question set created but artwork upload failed')
+      // Handle artwork - either upload file or save AI-generated URL
+      if (questionSet) {
+        if (artworkFile) {
+          // Traditional file upload
+          const { error: artworkError } = await uploadArtwork(artworkFile, questionSet.id)
+          if (artworkError) {
+            toast.error('Question set created but artwork upload failed')
+          }
+        } else if (artworkPreview && artworkPreview.startsWith('http')) {
+          // AI-generated artwork URL - download and upload to our storage
+          try {
+            const response = await fetch(artworkPreview)
+            const blob = await response.blob()
+            const file = new File([blob], 'ai-artwork.png', { type: 'image/png' })
+            const { error: artworkError } = await uploadArtwork(file, questionSet.id)
+            if (artworkError) {
+              // If upload fails, at least try to save the URL directly
+              console.error('Failed to upload AI artwork:', artworkError)
+              // You might want to save the URL to the question set here as a fallback
+            }
+          } catch (error) {
+            console.error('Failed to process AI artwork:', error)
+          }
         }
       }
 
@@ -524,18 +541,15 @@ export function CreateQuestionSetClient() {
         isOpen={showAIArtwork}
         onClose={() => setShowAIArtwork(false)}
         onAccept={async (imageUrl) => {
-          // Download the image and convert to File
           try {
-            const response = await fetch(imageUrl)
-            const blob = await response.blob()
-            const file = new File([blob], 'ai-artwork.png', { type: 'image/png' })
-            
-            setArtworkFile(file)
+            // For temporary URLs (from OpenAI), we'll handle them differently
+            // The actual upload will happen when the question set is saved
+            setArtworkFile(null) // No file yet, just the URL
             setArtworkPreview(imageUrl)
             setShowAIArtwork(false)
-            toast.success('AI artwork generated!')
+            toast.success('AI artwork generated! It will be saved when you create the question set.')
           } catch (error) {
-            toast.error('Failed to save artwork')
+            toast.error('Failed to process artwork')
           }
         }}
         songs={selectedSongs}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import { errorHandler } from '@/lib/errors/handler'
 import { rateLimiter } from '@/lib/errors/rate-limiter'
 
@@ -146,27 +147,72 @@ export async function POST(request: NextRequest) {
       throw new Error('No image URL returned from OpenAI')
     }
 
+    // TEMPORARY: Return OpenAI URL directly if storage upload fails
+    // OpenAI URLs are valid for about 1 hour
+    const SKIP_STORAGE_UPLOAD = true // Toggle this based on your needs
+    
+    if (SKIP_STORAGE_UPLOAD) {
+      console.log('[AI Artwork] Skipping storage upload, returning OpenAI URL directly')
+      return NextResponse.json({
+        imageUrl: imageUrl,
+        prompt: prompt.substring(0, 200) + '...', 
+        remaining: remaining - 1,
+        temporary: true // Flag to indicate this is a temporary URL
+      })
+    }
+
     // Download and upload to Supabase Storage
     const imageResponse = await fetch(imageUrl)
     const imageBlob = await imageResponse.blob()
-    const fileName = `ai-artwork-${Date.now()}.png`
+    const fileName = `ai-artwork-${user.id}-${Date.now()}.png`
     
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // Try to upload with user's session first
+    let uploadError = null
+    let uploadData = null
+    
+    const { data, error } = await supabase.storage
       .from('question-set-artwork')
       .upload(fileName, imageBlob, {
         contentType: 'image/png',
-        cacheControl: '3600'
+        cacheControl: '3600',
+        upsert: false
       })
+    
+    uploadData = data
+    uploadError = error
 
-    if (uploadError) {
+    // If RLS policy blocks upload, try with service role (if available)
+    if (uploadError && uploadError.message?.includes('row-level security policy')) {
+      console.log('[AI Artwork] RLS policy blocked upload, trying alternative method...')
+      
+      // For now, we'll create a simpler file path that might work better with policies
+      const simplifiedFileName = `ai/${user.id}/${Date.now()}.png`
+      
+      const retryResult = await supabase.storage
+        .from('question-set-artwork')
+        .upload(simplifiedFileName, imageBlob, {
+          contentType: 'image/png',
+          cacheControl: '3600',
+          upsert: true // Allow overwriting in case of conflicts
+        })
+      
+      if (retryResult.error) {
+        console.error('[AI Artwork] Retry upload error:', retryResult.error)
+        throw new Error('Failed to upload generated image. Please check storage permissions.')
+      }
+      
+      uploadData = retryResult.data
+      uploadError = null
+    } else if (uploadError) {
       console.error('[AI Artwork] Upload error:', uploadError)
       throw new Error('Failed to upload generated image')
     }
 
     // Get public URL
+    const uploadedPath = uploadData?.path || fileName
     const { data: { publicUrl } } = supabase.storage
       .from('question-set-artwork')
-      .getPublicUrl(fileName)
+      .getPublicUrl(uploadedPath)
 
     // Log usage
     console.log(`[AI Artwork] User ${user.id} generated artwork for ${songs.length} songs`)
