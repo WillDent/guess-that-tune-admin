@@ -51,6 +51,7 @@ export function CreateQuestionSetClient() {
   const [artworkFile, setArtworkFile] = useState<File | null>(null)
   const [artworkPreview, setArtworkPreview] = useState<string | null>(null)
   const [showAISuggestions, setShowAISuggestions] = useState(false)
+  const [aiContext, setAiContext] = useState('')
 
   // Load selected songs from sessionStorage
   useEffect(() => {
@@ -267,6 +268,23 @@ export function CreateQuestionSetClient() {
                   placeholder="Describe this question set..."
                   rows={3}
                 />
+              </div>
+
+              {/* AI Context Input */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  AI Context (optional)
+                </label>
+                <Textarea
+                  value={aiContext}
+                  onChange={(e) => setAiContext(e.target.value)}
+                  placeholder="E.g., 'for a summer party', 'nostalgic vibes', 'focus on guitar solos'..."
+                  rows={2}
+                  className="text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Provide additional context to guide the AI suggestions
+                </p>
               </div>
 
               {/* AI Suggestions Button */}
@@ -495,6 +513,7 @@ export function CreateQuestionSetClient() {
         songs={selectedSongs}
         gameType={gameType as 'guess_artist' | 'guess_song'}
         difficulty={difficulty}
+        userContext={aiContext}
       />
     </div>
   )

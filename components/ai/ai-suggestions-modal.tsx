@@ -23,6 +23,7 @@ interface AISuggestionsModalProps {
   }>
   gameType: 'guess_artist' | 'guess_song'
   difficulty: 'easy' | 'medium' | 'hard'
+  userContext?: string
 }
 
 export function AISuggestionsModal({
@@ -31,7 +32,8 @@ export function AISuggestionsModal({
   onAccept,
   songs,
   gameType,
-  difficulty
+  difficulty,
+  userContext
 }: AISuggestionsModalProps) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
@@ -54,7 +56,8 @@ export function AISuggestionsModal({
         body: JSON.stringify({
           songs,
           gameType,
-          difficulty
+          difficulty,
+          userContext
         })
       })
 

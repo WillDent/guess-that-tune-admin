@@ -21,6 +21,7 @@ interface SuggestionRequest {
   songs: SongData[]
   gameType: 'guess_artist' | 'guess_song'
   difficulty: 'easy' | 'medium' | 'hard'
+  userContext?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body: SuggestionRequest = await request.json()
-    const { songs, gameType, difficulty } = body
+    const { songs, gameType, difficulty, userContext } = body
 
     if (!songs || songs.length === 0) {
       return NextResponse.json(
@@ -74,10 +75,12 @@ export async function POST(request: NextRequest) {
 - Difficulty: ${difficulty}
 - Featured Artists: ${artistList}
 - Genres: ${genreText}
+${userContext ? `- User Context: ${userContext}` : ''}
 
 Requirements:
 - Names should be memorable and fun
 - Reflect the musical theme or era
+${userContext ? '- Incorporate the user-provided context where appropriate' : ''}
 - Be appropriate for all ages
 - Maximum 50 characters each
 - Do not use generic terms like "Music Quiz" or "Song Test"
@@ -88,11 +91,13 @@ Example: {"names": ["Name 1", "Name 2", "Name 3", "Name 4", "Name 5"]}`
     // Generate description
     const descriptionPrompt = `Write an engaging, concise description for a music quiz featuring these songs:
 ${songList}
+${userContext ? `\nUser Context: ${userContext}` : ''}
 
 The description should:
 - Summarize the musical theme in 1-2 sentences
 - Mention 2-3 notable artists or songs without listing them all
 - Include the time period if songs are from a specific era
+${userContext ? '- Incorporate the user-provided context naturally' : ''}
 - Be exciting and inviting for players
 - MUST be under 200 characters (this is very important)
 - Do not mention difficulty level or game type
