@@ -73,14 +73,14 @@ export function DiscoveryModal({ isOpen, onClose, onSelectSongs }: DiscoveryModa
     try {
       const params: AdvancedSearchParams = {
         theme: theme as any,
-        decade: decade as any,
-        genre: genre || undefined,
+        decade: decade !== 'any' ? decade as any : undefined,
+        genre: genre !== 'any' ? genre : undefined,
         explicit: explicitAllowed,
         limit: resultLimit
       }
 
       // If no decade selected but year range adjusted, use year range
-      if (!decade && (yearRange[0] !== 1970 || yearRange[1] !== 2024)) {
+      if ((!decade || decade === 'any') && (yearRange[0] !== 1970 || yearRange[1] !== 2024)) {
         params.yearRange = { start: yearRange[0], end: yearRange[1] }
       }
 
@@ -184,7 +184,7 @@ export function DiscoveryModal({ isOpen, onClose, onSelectSongs }: DiscoveryModa
                   <SelectValue placeholder="Any genre" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any genre</SelectItem>
+                  <SelectItem value="any">Any genre</SelectItem>
                   {GENRES.map(g => (
                     <SelectItem key={g} value={g}>{g}</SelectItem>
                   ))}
@@ -200,7 +200,7 @@ export function DiscoveryModal({ isOpen, onClose, onSelectSongs }: DiscoveryModa
                   <SelectValue placeholder="Any decade" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any decade</SelectItem>
+                  <SelectItem value="any">Any decade</SelectItem>
                   {DECADES.map(d => (
                     <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
                   ))}
@@ -209,7 +209,7 @@ export function DiscoveryModal({ isOpen, onClose, onSelectSongs }: DiscoveryModa
             </div>
 
             {/* Year Range (if no decade selected) */}
-            {!decade && (
+            {(!decade || decade === 'any') && (
               <div>
                 <Label>Year Range: {yearRange[0]} - {yearRange[1]}</Label>
                 <div className="px-3 py-2">
