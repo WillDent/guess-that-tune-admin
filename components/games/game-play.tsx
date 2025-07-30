@@ -20,7 +20,7 @@ import { useGameRoom } from '@/hooks/use-game-room'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/auth-context'
-import { GAME_TYPES } from '@/types/game-type'
+import { GAME_TYPES, GameType } from '@/types/game-type'
 
 interface GamePlayProps {
   gameId: string
@@ -59,9 +59,8 @@ export function GamePlay({ gameId }: GamePlayProps) {
     a => a.question_index === currentQuestionIndex
   )
   
-  // Get game type - for now default to GUESS_ARTIST
-  // TODO: Fetch game type from question set if needed
-  const gameType = GAME_TYPES.GUESS_ARTIST
+  // Get game type from game data, default to GUESS_ARTIST if not set
+  const gameType = (game?.game_mode as GameType) || GAME_TYPES.GUESS_ARTIST
   
   // Prepare answer options based on game type
   const answerOptions: AnswerOption[] = currentQuestion ? [
