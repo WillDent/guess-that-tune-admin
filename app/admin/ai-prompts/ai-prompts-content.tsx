@@ -13,6 +13,7 @@ import { Plus, Trash2, Edit, Save, X, TestTube, Copy } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { AIPromptTestModal } from '@/components/admin/ai-prompt-test-modal'
 
 interface AIPrompt {
   id: string
@@ -42,6 +43,7 @@ export function AIPromptsContent({ initialPrompts, userId }: AIPromptsContentPro
   const [isCreating, setIsCreating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const [testingPrompt, setTestingPrompt] = useState<AIPrompt | null>(null)
   
   const [formData, setFormData] = useState({
     name: '',
@@ -157,7 +159,7 @@ export function AIPromptsContent({ initialPrompts, userId }: AIPromptsContentPro
   }
 
   const handleTest = async (prompt: AIPrompt) => {
-    toast.info('Test functionality coming soon!')
+    setTestingPrompt(prompt)
   }
 
   const handleDuplicate = (prompt: AIPrompt) => {
@@ -429,6 +431,15 @@ export function AIPromptsContent({ initialPrompts, userId }: AIPromptsContentPro
             Create Your First Prompt
           </Button>
         </Card>
+      )}
+
+      {/* Test Modal */}
+      {testingPrompt && (
+        <AIPromptTestModal
+          isOpen={!!testingPrompt}
+          onClose={() => setTestingPrompt(null)}
+          prompt={testingPrompt}
+        />
       )}
     </div>
   )
