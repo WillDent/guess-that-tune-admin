@@ -147,8 +147,8 @@ export async function POST(request: NextRequest) {
       throw new Error('No image URL returned from OpenAI')
     }
 
-    // TEMPORARY: Return OpenAI URL directly to avoid storage issues
-    const SKIP_STORAGE_UPLOAD = true // Skip storage upload for now
+    // Enable storage upload to prevent broken images
+    const SKIP_STORAGE_UPLOAD = false // Upload to storage for permanent URLs
     
     if (SKIP_STORAGE_UPLOAD) {
       console.log('[AI Artwork] Skipping storage upload, returning OpenAI URL directly')

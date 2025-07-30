@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast'
 import { errorHandler } from '@/lib/errors/handler'
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 import { useRouter } from 'next/navigation'
+import { ArtworkImage } from '@/components/ui/artwork-image'
 import type { QuestionSetWithQuestions } from './page'
 import type { Question } from '@/types'
 import { GAME_TYPES, GameType, gameTypeLabels } from '@/types/game-type'
@@ -182,10 +183,11 @@ export function QuestionsContent({ initialQuestionSets, userId }: QuestionsConte
 
                 {set.artwork_url && (
                   <div className="mb-3 sm:mb-4 -mx-4 sm:-mx-6 -mt-2">
-                    <img 
+                    <ArtworkImage
                       src={set.artwork_url} 
                       alt={set.name}
                       className="w-full h-24 sm:h-32 object-cover"
+                      fallbackClassName="w-full h-24 sm:h-32 bg-gray-100"
                     />
                   </div>
                 )}
