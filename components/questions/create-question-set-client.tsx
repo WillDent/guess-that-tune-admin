@@ -158,19 +158,27 @@ export function CreateQuestionSetClient() {
             toast.error('Question set created but artwork upload failed')
           }
         } else if (artworkPreview && artworkPreview.startsWith('http')) {
-          // AI-generated artwork URL - download and upload to our storage
+          // AI-generated artwork URL - save it directly to the question set
+          console.log('[CREATE-QUESTION-SET] Saving AI artwork URL:', artworkPreview)
           try {
-            const response = await fetch(artworkPreview)
-            const blob = await response.blob()
-            const file = new File([blob], 'ai-artwork.png', { type: 'image/png' })
-            const { error: artworkError } = await uploadArtwork(file, questionSet.id)
-            if (artworkError) {
-              // If upload fails, at least try to save the URL directly
-              console.error('Failed to upload AI artwork:', artworkError)
-              // You might want to save the URL to the question set here as a fallback
+            const response = await fetch(`/api/questions/${questionSet.id}/artwork`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ artworkUrl: artworkPreview }),
+            })
+            
+            if (!response.ok) {
+              const error = await response.json()
+              throw new Error(error.error || 'Failed to save artwork')
             }
+            
+            console.log('[CREATE-QUESTION-SET] AI artwork URL saved successfully')
+            toast.success('AI artwork saved successfully!')
           } catch (error) {
-            console.error('Failed to process AI artwork:', error)
+            console.error('[CREATE-QUESTION-SET] Failed to save AI artwork:', error)
+            toast.error('Failed to save AI artwork. You can add it later in the edit page.')
           }
         }
       }
