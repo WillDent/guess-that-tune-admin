@@ -181,8 +181,15 @@ export function AIArtworkModal({
   const handleAccept = () => {
     if (imageUrl) {
       onAccept(imageUrl)
-      onClose()
+      handleClose()
     }
+  }
+
+  const handleClose = () => {
+    // Reset state when closing
+    setImageUrl(null)
+    setUserTheme('')
+    onClose()
   }
 
   const handleRegenerate = () => {
@@ -190,13 +197,10 @@ export function AIArtworkModal({
     generateArtwork()
   }
 
-  // Auto-generate when modal opens
-  if (isOpen && !imageUrl && !loading && songs.length > 0) {
-    generateArtwork()
-  }
+  // Removed auto-generation to allow users to select options first
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -247,7 +251,7 @@ export function AIArtworkModal({
                 Regenerate
               </Button>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={onClose}>
+                <Button variant="outline" onClick={handleClose}>
                   Cancel
                 </Button>
                 <Button onClick={handleAccept}>
@@ -362,7 +366,7 @@ export function AIArtworkModal({
 
             {/* Generate Button */}
             <div className="flex justify-between items-center">
-              <Button variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
               <Button onClick={generateArtwork} disabled={songs.length === 0}>
