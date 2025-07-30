@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Save, Shuffle, AlertCircle, RefreshCw, Globe, Lock, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Shuffle, AlertCircle, RefreshCw, Globe, Lock, Loader2, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useQuestionSets } from '@/hooks/use-question-sets'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -26,6 +26,7 @@ import { ArtworkUpload } from '@/components/question-sets/artwork-upload'
 import { CategorySelector } from '@/components/categories/category-selector'
 import { TagInput } from '@/components/tags/tag-input'
 import { GameType, GAME_TYPES, gameTypeLabels, gameTypeDescriptions } from '@/types/game-type'
+import { AISuggestionsModal } from '@/components/ai/ai-suggestions-modal'
 
 export default function EditQuestionSetPage() {
   const router = useRouter()
@@ -56,6 +57,10 @@ export default function EditQuestionSetPage() {
   
   // Track unsaved changes
   const [hasChanges, setHasChanges] = useState(false)
+  
+  // AI suggestions state
+  const [showAISuggestions, setShowAISuggestions] = useState(false)
+  const [aiContext, setAiContext] = useState('')
 
   // Categories state
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
@@ -227,6 +232,17 @@ export default function EditQuestionSetPage() {
 
   // Mark form as changed
   const markAsChanged = () => setHasChanges(true)
+  
+  // Prepare songs data for AI suggestions
+  const songsForAI = useMemo(() => {
+    return questions.map(q => ({
+      id: q.correct_song_id || q.correctSong?.id || '',
+      name: q.correct_song_name || q.correctSong?.name || '',
+      artist: q.correct_song_artist || q.correctSong?.artist || '',
+      album: q.correct_song_album || q.correctSong?.album,
+      genre: undefined // We don't have genre data in questions
+    }))
+  }, [questions])
 
   const regenerateQuestions = async () => {
     setRegenerating(true)
@@ -459,6 +475,35 @@ export default function EditQuestionSetPage() {
                     rows={3}
                   />
                 </div>
+
+                {/* AI Context Input */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    AI Context (optional)
+                  </label>
+                  <Textarea
+                    value={aiContext}
+                    onChange={(e) => setAiContext(e.target.value)}
+                    placeholder="E.g., 'for a summer party', 'nostalgic vibes', 'focus on guitar solos'..."
+                    rows={2}
+                    className="text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Provide additional context to guide the AI suggestions
+                  </p>
+                </div>
+
+                {/* AI Suggestions Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAISuggestions(true)}
+                  className="w-full"
+                  disabled={questions.length === 0}
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Get AI Suggestions for Name & Description
+                </Button>
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
@@ -709,6 +754,23 @@ export default function EditQuestionSetPage() {
             </Card>
           </div>
         </div>
+
+        {/* AI Suggestions Modal */}
+        <AISuggestionsModal
+          isOpen={showAISuggestions}
+          onClose={() => setShowAISuggestions(false)}
+          onAccept={(name, desc) => {
+            setSetName(name)
+            setDescription(desc)
+            setShowAISuggestions(false)
+            markAsChanged()
+            toast.success('AI suggestions applied!')
+          }}
+          songs={songsForAI}
+          gameType={gameType as 'guess_artist' | 'guess_song'}
+          difficulty={difficulty}
+          userContext={aiContext}
+        />
       </div>
     </ProtectedRoute>
   )
