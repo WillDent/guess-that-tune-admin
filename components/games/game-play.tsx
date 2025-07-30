@@ -59,8 +59,9 @@ export function GamePlay({ gameId }: GamePlayProps) {
     a => a.question_index === currentQuestionIndex
   )
   
-  // Get game type from the game's question set
-  const gameType = game?.question_set?.game_type || GAME_TYPES.GUESS_ARTIST
+  // Get game type - for now default to GUESS_ARTIST
+  // TODO: Fetch game type from question set if needed
+  const gameType = GAME_TYPES.GUESS_ARTIST
   
   // Prepare answer options based on game type
   const answerOptions: AnswerOption[] = currentQuestion ? [

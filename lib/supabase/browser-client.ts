@@ -15,7 +15,6 @@ export function createSupabaseBrowserClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: SUPABASE_CONFIG.auth,
-      db: SUPABASE_CONFIG.db,
       // Temporarily disable custom fetch to fix hanging issue
       // global: SUPABASE_CONFIG.global,
     }

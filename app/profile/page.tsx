@@ -60,7 +60,7 @@ async function getProfileStats(userId: string): Promise<ProfileStats> {
     .eq('user_id', userId)
   
   const totalGamesPlayed = gameStats?.length || 0
-  const totalGamesWon = gameStats?.filter(g => g.placement === 1).length || 0
+  const totalGamesWon = gameStats?.filter((g: any) => g.placement === 1).length || 0
   const winRate = totalGamesPlayed > 0 ? (totalGamesWon / totalGamesPlayed) * 100 : 0
   
   // For now, we'll use mock data for question accuracy

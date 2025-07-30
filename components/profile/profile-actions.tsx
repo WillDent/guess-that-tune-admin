@@ -41,8 +41,8 @@ export function ProfileActions({ userId }: ProfileActionsProps) {
       </div>
       
       <EditProfileModal
-        open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
       />
     </>
   )

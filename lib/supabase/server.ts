@@ -14,9 +14,9 @@ export async function createServerSupabaseClient(): Promise<ReturnType<typeof cr
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: any[]) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) => {
+            cookiesToSet.forEach(({ name, value, options }: { name: string; value: string; options: any }) => {
               cookieStore.set(name, value, options)
             })
           } catch (error) {
@@ -27,7 +27,6 @@ export async function createServerSupabaseClient(): Promise<ReturnType<typeof cr
         },
       },
       auth: SUPABASE_CONFIG.auth,
-      db: SUPABASE_CONFIG.db,
       // Temporarily disable custom fetch to fix hanging issue
       // global: SUPABASE_CONFIG.global,
     }
@@ -37,3 +36,6 @@ export async function createServerSupabaseClient(): Promise<ReturnType<typeof cr
 export function createServerClient(): Promise<ReturnType<typeof createSupabaseServerClient>> {
   return createServerSupabaseClient();
 }
+
+// Alias for backward compatibility
+export const createClient = createServerSupabaseClient;

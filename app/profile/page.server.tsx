@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { formatDistanceToNow } from 'date-fns'
 import { ProfileStats } from '@/components/profile/profile-stats'
 import { ProfileActions } from '@/components/profile/profile-actions'
+import { MapPin, Link as LinkIcon, Twitter } from 'lucide-react'
 
 export default async function ProfilePage() {
   const user = await requireAuth()
@@ -34,7 +35,7 @@ export default async function ProfilePage() {
   const stats = {
     questionSetsCreated: questionSets?.length || 0,
     gamesPlayed: games?.length || 0,
-    totalScore: games?.reduce((sum, g) => sum + (g.score || 0), 0) || 0,
+    totalScore: games?.reduce((sum: number, g: any) => sum + (g.score || 0), 0) || 0,
     favoritesCount: favorites?.length || 0,
   }
   

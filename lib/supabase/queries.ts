@@ -105,7 +105,7 @@ export async function getUserDashboardStats(userId: string) {
   const supabase = await createServerClient()
   
   // Run all queries in parallel
-  const [questionSets, games, favorites] = await Promise.all([
+  const [questionSets, games, favorites]: any[] = await Promise.all([
     measureSupabaseQuery('countUserSets', 'question_sets', async (client) => 
       client
         .from('question_sets')

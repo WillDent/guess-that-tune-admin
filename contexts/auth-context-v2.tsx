@@ -212,7 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   router.refresh()
                 } catch (error) {
                   console.error('[AUTH-CONTEXT-V2] Error in deferred auth operations:', error)
-                  events.loginError(error as Error)
+                  events.loginFailure(error as Error)
                 }
               }, 0)
             }

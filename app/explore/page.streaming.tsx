@@ -84,7 +84,7 @@ async function Categories() {
     <aside className="w-64">
       <h3 className="font-semibold mb-4">Categories</h3>
       <nav className="space-y-2">
-        {categories?.map(category => (
+        {categories?.map((category: any) => (
           <a
             key={category.id}
             href={`/explore?category=${category.id}`}

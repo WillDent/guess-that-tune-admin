@@ -27,7 +27,7 @@ import { PublicPreviewModal } from '@/components/questions/public-preview-modal'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { PublicQuestionSet, SortOption, DifficultyFilter } from './types'
-import { GAME_TYPES, gameTypeLabels } from '@/types/game-type'
+import { GAME_TYPES, GameType, gameTypeLabels } from '@/types/game-type'
 
 interface BrowseContentProps {
   initialQuestionSets: PublicQuestionSet[]
@@ -314,7 +314,7 @@ export function BrowseContent({
                   <h3 className="text-base sm:text-lg font-semibold line-clamp-2">{set.name}</h3>
                   <div className="flex gap-2">
                     <Badge variant="outline" className="text-xs">
-                      {gameTypeLabels[set.game_type || GAME_TYPES.GUESS_ARTIST]}
+                      {gameTypeLabels[(set.game_type as GameType) || GAME_TYPES.GUESS_ARTIST]}
                     </Badge>
                     <Badge variant="outline" className={getDifficultyColor(set.difficulty)}>
                       {set.difficulty}

@@ -32,7 +32,7 @@ export function PublicPreviewModal({ isOpen, onClose, questionSet }: PublicPrevi
         },
         detractors: Array.isArray(q.detractors) ? q.detractors : []
       }))
-      setTransformedQuestions(transformed)
+      setTransformedQuestions(transformed as QuestionType[])
     }
   }, [questions])
 
