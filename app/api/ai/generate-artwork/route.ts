@@ -22,6 +22,7 @@ interface ArtworkRequest {
   style?: 'abstract' | 'realistic' | 'artistic' | 'minimalist'
   colorScheme?: 'vibrant' | 'dark' | 'pastel' | 'monochrome'
   userTheme?: string
+  promptId?: string // Use a specific prompt template
 }
 
 // Style descriptions for prompts
@@ -67,13 +68,57 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body: ArtworkRequest = await request.json()
-    const { songs, gameType, style = 'artistic', colorScheme = 'vibrant', userTheme } = body
+    const { songs, gameType, style = 'artistic', colorScheme = 'vibrant', userTheme, promptId } = body
 
     if (!songs || songs.length === 0) {
       return NextResponse.json(
         { error: 'No songs provided' },
         { status: 400 }
       )
+    }
+
+    let prompt = ''
+    let promptTemplate = null
+    let appliedStyle = style
+    let appliedColorScheme = colorScheme
+
+    // Check if user wants to use a custom prompt
+    if (promptId) {
+      const { data: customPrompt, error: promptError } = await supabase
+        .from('ai_artwork_prompts')
+        .select('*')
+        .eq('id', promptId)
+        .eq('is_active', true)
+        .single()
+
+      if (!promptError && customPrompt) {
+        promptTemplate = customPrompt
+        appliedStyle = customPrompt.style
+        appliedColorScheme = customPrompt.color_scheme
+        
+        // Update usage count
+        await supabase
+          .from('ai_artwork_prompts')
+          .update({ usage_count: customPrompt.usage_count + 1 })
+          .eq('id', promptId)
+      }
+    }
+
+    // If no custom prompt or not found, check for default
+    if (!promptTemplate) {
+      const { data: defaultPrompt } = await supabase
+        .from('ai_artwork_prompts')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_default', true)
+        .eq('is_active', true)
+        .single()
+
+      if (defaultPrompt) {
+        promptTemplate = defaultPrompt
+        appliedStyle = style || defaultPrompt.style // Allow override
+        appliedColorScheme = colorScheme || defaultPrompt.color_scheme // Allow override
+      }
     }
 
     // Analyze songs for common themes
@@ -93,41 +138,61 @@ export async function POST(request: NextRequest) {
       era = 'jazz'
     }
 
-    // Build the prompt
-    let prompt = `Create album cover artwork for a music collection. `
-    
-    // Add style and color
-    prompt += `Style: ${styleDescriptions[style]} with ${colorDescriptions[colorScheme]}. `
-    
-    // Add musical context
+    // Build theme context
+    let themeContext = ''
     if (era) {
-      prompt += `Theme: ${era} music aesthetics. `
+      themeContext = `Theme: ${era} music aesthetics.`
     } else if (genres.length > 0) {
-      prompt += `Genre: ${genres.join(', ')} music. `
+      themeContext = `Genre: ${genres.join(', ')} music.`
     } else {
-      prompt += `Modern music collection. `
+      themeContext = 'Modern music collection.'
     }
-    
+
     // Add user theme if provided
     if (userTheme) {
-      prompt += `Additional theme: ${userTheme}. `
+      themeContext += ` Additional theme: ${userTheme}.`
     }
-    
-    // Add visual elements based on genre/era
+
+    // Build visual elements based on genre/era
+    let visualElements = ''
     if (era === '80s rock') {
-      prompt += 'Include neon lights, electric guitars, geometric shapes. '
+      visualElements = 'Include neon lights, electric guitars, geometric shapes.'
     } else if (era === '70s disco') {
-      prompt += 'Include disco balls, sparkles, groovy patterns. '
+      visualElements = 'Include disco balls, sparkles, groovy patterns.'
     } else if (era === 'classical') {
-      prompt += 'Include orchestral instruments, sheet music elements, elegant composition. '
+      visualElements = 'Include orchestral instruments, sheet music elements, elegant composition.'
     } else if (genres.includes('electronic')) {
-      prompt += 'Include synthesizers, waveforms, digital patterns. '
+      visualElements = 'Include synthesizers, waveforms, digital patterns.'
     } else {
-      prompt += 'Include musical notes, instruments, rhythmic patterns. '
+      visualElements = 'Include musical notes, instruments, rhythmic patterns.'
     }
-    
-    // Always end with no text instruction
-    prompt += 'No text, words, or typography in the image. Focus on visual elements only.'
+
+    // Use template if available, otherwise fallback to default
+    if (promptTemplate && promptTemplate.prompt_template) {
+      // Replace variables in template
+      const variables = {
+        style_description: styleDescriptions[appliedStyle],
+        color_description: colorDescriptions[appliedColorScheme],
+        theme_context: themeContext,
+        visual_elements: visualElements,
+        artists: artists.join(', '),
+        genres: genres.join(', '),
+        song_count: songs.length.toString(),
+        game_type: gameType
+      }
+
+      prompt = promptTemplate.prompt_template
+      Object.entries(variables).forEach(([key, value]) => {
+        prompt = prompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value)
+      })
+    } else {
+      // Fallback to original prompt building
+      prompt = `Create album cover artwork for a music collection. `
+      prompt += `Style: ${styleDescriptions[appliedStyle]} with ${colorDescriptions[appliedColorScheme]}. `
+      prompt += `${themeContext} `
+      prompt += `${visualElements} `
+      prompt += 'No text, words, or typography in the image. Focus on visual elements only.'
+    }
 
     console.log(`[AI Artwork] Generating with prompt: ${prompt}`)
 

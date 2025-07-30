@@ -32,6 +32,10 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-medium text-white mb-2">Analytics</h3>
             <p className="text-gray-400">View platform usage statistics</p>
           </Link>
+          <Link href="/admin/ai-prompts" className="bg-gray-700 rounded-lg p-4 hover:bg-pink-900 transition-colors block">
+            <h3 className="text-lg font-medium text-white mb-2">AI Prompts</h3>
+            <p className="text-gray-400">Manage AI artwork generation prompts</p>
+          </Link>
         </div>
       </div>
     </div>
