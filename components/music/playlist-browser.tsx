@@ -72,10 +72,19 @@ export function PlaylistBrowser() {
       if (!response.ok) throw new Error(data.error || 'Failed to fetch playlists')
       
       if (loadMore) {
-        setPlaylists(prev => [...prev, ...data.playlists])
+        // Merge playlists and remove duplicates based on ID
+        setPlaylists(prev => {
+          const existingIds = new Set(prev.map(p => p.id))
+          const newPlaylists = data.playlists.filter(p => !existingIds.has(p.id))
+          return [...prev, ...newPlaylists]
+        })
         setOffset(prev => prev + 25)
       } else {
-        setPlaylists(data.playlists)
+        // Remove any duplicates in the initial load as well
+        const uniquePlaylists = data.playlists.filter((playlist, index, self) =>
+          index === self.findIndex(p => p.id === playlist.id)
+        )
+        setPlaylists(uniquePlaylists)
         setOffset(25)
       }
       
@@ -167,9 +176,9 @@ export function PlaylistBrowser() {
       {/* Playlists Grid */}
       <div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {playlists.map(playlist => (
+          {playlists.map((playlist, index) => (
             <Card 
-              key={playlist.id} 
+              key={`${playlist.id}-${index}`} 
               className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => fetchPlaylistTracks(playlist.id)}
             >
