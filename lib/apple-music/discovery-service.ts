@@ -100,7 +100,7 @@ export class MusicDiscoveryService {
       const searchResults = await appleMusicClient.search({
         term: playlistQuery,
         types: 'playlists',
-        limit: 10
+        limit: 10 // Well within the 25 limit
       })
       
       const playlists = searchResults.results.playlists?.data || []
@@ -112,9 +112,9 @@ export class MusicDiscoveryService {
         return { songs: [], playlistNames: [] }
       }
       
-      // Get tracks from top playlists
+      // Get tracks from top playlists (Apple Music API max is 25 per request)
       const songPromises = relevantPlaylists.slice(0, 3).map(playlist =>
-        appleMusicClient.getPlaylistTracks(playlist.id, 'us', 100, 0)
+        appleMusicClient.getPlaylistTracks(playlist.id, 'us', 25, 0)
           .catch(err => {
             console.error(`[MusicDiscovery] Failed to get tracks from playlist ${playlist.id}:`, err)
             return []
@@ -140,10 +140,13 @@ export class MusicDiscoveryService {
     limit: number
   ): Promise<{ songs: AppleMusicSong[] }> {
     try {
+      // Apple Music API has a max limit of 25 per request
+      const apiLimit = Math.min(25, limit)
+      
       const searchResults = await appleMusicClient.search({
         term: searchQuery,
         types: 'songs',
-        limit: limit * 2 // Get extra to account for filtering
+        limit: apiLimit
       })
       
       return {

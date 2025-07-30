@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       // Default to chart-based generation
       const chartData = await appleMusicClient.getTopCharts({
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       songs = chartData.results.songs?.[0]?.data || []
       categoryInfo = {

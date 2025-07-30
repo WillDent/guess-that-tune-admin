@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       console.log('Not enough candidates, fetching from Top 100...')
       const chartData = await appleMusicClient.getTopCharts({
         types: 'songs',
-        limit: 100
+        limit: 25
       })
       
       for (const chartSong of chartData.results.songs?.[0]?.data || []) {

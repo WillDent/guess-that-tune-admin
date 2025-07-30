@@ -76,7 +76,7 @@ export class AppleMusicClient {
    * Get top charts (songs, albums, playlists)
    */
   async getTopCharts(params: ChartParams): Promise<AppleMusicChart> {
-    const { storefront = 'us', types = 'songs', limit = 100, genre } = params
+    const { storefront = 'us', types = 'songs', limit = 25, genre } = params
     
     // Log the actual parameters being sent to Apple Music API
     console.log('[AppleMusicClient.getTopCharts] Request params:', params);

@@ -192,6 +192,27 @@ export function QuestionsContent({ initialQuestionSets, userId }: QuestionsConte
                   </div>
                 )}
 
+                {/* Categories */}
+                {set.question_set_categories && set.question_set_categories.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {set.question_set_categories.map((qsc) => (
+                      <Badge
+                        key={qsc.category.id}
+                        variant="outline"
+                        className="text-xs"
+                        style={{
+                          borderColor: qsc.category.color,
+                          color: qsc.category.color,
+                          backgroundColor: `${qsc.category.color}15`
+                        }}
+                      >
+                        <span className="mr-1">{qsc.category.icon}</span>
+                        {qsc.category.name}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
                   <span>{set.questions.length} questions</span>
                   <div className="flex items-center gap-2">

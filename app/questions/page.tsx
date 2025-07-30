@@ -10,6 +10,14 @@ type Question = Database['public']['Tables']['questions']['Row']
 
 export interface QuestionSetWithQuestions extends QuestionSet {
   questions: Question[]
+  question_set_categories?: {
+    category: {
+      id: string
+      name: string
+      color: string
+      icon: string
+    }
+  }[]
 }
 
 async function getUserQuestionSets(userId: string) {
@@ -19,7 +27,15 @@ async function getUserQuestionSets(userId: string) {
     .from('question_sets')
     .select(`
       *,
-      questions (*)
+      questions (*),
+      question_set_categories (
+        category:categories (
+          id,
+          name,
+          color,
+          icon
+        )
+      )
     `)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
