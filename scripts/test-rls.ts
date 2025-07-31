@@ -158,10 +158,10 @@ async function testGameAccess() {
   const { data: game, error: createError } = await clients.userA
     .from('games')
     .insert({
-      name: 'RLS Test Game',
-      host_user_id: TEST_USERS.userA.id!,
+      host_id: TEST_USERS.userA.id!,
       question_set_id: questionSet.id,
-      status: 'waiting'
+      game_code: 'TEST01',
+      status: 'pending'
     })
     .select()
     .single()
@@ -216,7 +216,7 @@ async function testGameAccess() {
   console.log('\n✏️  Test 5: User B cannot update the game')
   const { error: updateError } = await clients.userB
     .from('games')
-    .update({ name: 'Hacked Game Name' })
+    .update({ status: 'active' })
     .eq('id', game.id)
 
   if (updateError) {

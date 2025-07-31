@@ -39,15 +39,15 @@ export async function GET(req: NextRequest) {
     // Since Supabase doesn't support groupBy in the client library, we'll get all games and aggregate in memory
     const { data: allGames } = await supabase
       .from('games')
-      .select('host_user_id')
-      .not('host_user_id', 'is', null)
+      .select('host_id')
+      .not('host_id', 'is', null)
     
     let topUsersWithEmail: Array<{ host_user_id: string; count: number; email: string }> = []
     if (allGames && allGames.length > 0) {
-      // Count games by host_user_id
-      const hostCounts = allGames.reduce((acc: Record<string, number>, game) => {
-        if (game.host_user_id) {
-          acc[game.host_user_id] = (acc[game.host_user_id] || 0) + 1
+      // Count games by host_id
+      const hostCounts = allGames.reduce((acc: Record<string, number>, game: any) => {
+        if (game.host_id) {
+          acc[game.host_id] = (acc[game.host_id] || 0) + 1
         }
         return acc
       }, {})

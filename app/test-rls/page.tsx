@@ -24,8 +24,8 @@ export default function TestRLSPage() {
       const { data, error } = await supabase
         .from('games')
         .insert({
-          name: `RLS Test Game ${Date.now()}`,
-          host_user_id: user?.id,
+          game_code: `TEST${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          host_id: user?.id || '',
           question_set_id: 'test-id',
           status: 'waiting'
         })
@@ -54,8 +54,8 @@ export default function TestRLSPage() {
       const { data, error } = await supabase
         .from('games')
         .insert({
-          name: `RLS Violation Test ${Date.now()}`,
-          host_user_id: 'different-user-id', // Not the current user!
+          game_code: `VIOL${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          host_id: 'different-user-id', // Not the current user!
           question_set_id: 'test-id',
           status: 'waiting'
         })

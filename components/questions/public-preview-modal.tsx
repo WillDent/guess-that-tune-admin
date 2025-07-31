@@ -23,23 +23,21 @@ export function PublicPreviewModal({ isOpen, onClose, questionSet }: PublicPrevi
       // Transform database questions to match QuestionSet type
       const transformed = questions.map(q => ({
         correctSong: {
-          id: q.correct_song_id,
-          name: q.correct_song_name,
-          artist: q.correct_song_artist,
-          album: q.correct_song_album || undefined,
-          artwork: q.correct_song_artwork_url || undefined,
-          previewUrl: q.correct_song_preview_url || undefined
+          id: q.id,
+          name: q.correct_answer,
+          artist: '',
+          album: undefined,
+          artwork: undefined,
+          previewUrl: undefined
         },
-        detractors: Array.isArray(q.detractors) 
-          ? (q.detractors as any[]).map((d: any) => ({
-              id: d.id || '',
-              name: d.name || '',
-              artist: d.artist || '',
-              album: d.album,
-              artwork: d.artwork,
-              previewUrl: d.previewUrl
-            }))
-          : []
+        detractors: q.wrong_answers.map((answer: string, idx: number) => ({
+          id: `wrong-${idx}`,
+          name: answer,
+          artist: '',
+          album: '',
+          artwork: '',
+          previewUrl: ''
+        }))
       }))
       setTransformedQuestions(transformed)
     }

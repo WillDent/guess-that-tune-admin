@@ -77,53 +77,20 @@ export default function ProfilePage() {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-6">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name || ''} />
+                <AvatarImage src={(profile as any).avatar_url || undefined} alt={(profile as any).name || ''} />
                 <AvatarFallback className="text-2xl">
-                  {getInitials(profile.display_name || profile.email || 'U')}
+                  {getInitials((profile as any).name || (profile as any).email || 'U')}
                 </AvatarFallback>
               </Avatar>
               
               <div>
-                <h2 className="text-2xl font-bold">{profile.display_name || 'Unnamed User'}</h2>
-                {profile.username && (
-                  <p className="text-gray-600">@{profile.username}</p>
-                )}
-                <p className="text-sm text-gray-500 mt-1">{profile.email}</p>
+                <h2 className="text-2xl font-bold">{(profile as any).name || 'Unnamed User'}</h2>
+                {/* (profile as any).username && (
+                  <p className="text-gray-600">@{(profile as any).username}</p>
+                ) */}
+                <p className="text-sm text-gray-500 mt-1">{(profile as any).email}</p>
                 
-                {profile.bio && (
-                  <p className="mt-3 text-gray-700 max-w-md">{profile.bio}</p>
-                )}
-                
-                <div className="flex items-center gap-4 mt-4 text-sm text-gray-600">
-                  {profile.location && (
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {profile.location}
-                    </span>
-                  )}
-                  {profile.website && (
-                    <a 
-                      href={profile.website} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 hover:text-purple-600"
-                    >
-                      <LinkIcon className="h-4 w-4" />
-                      Website
-                    </a>
-                  )}
-                  {profile.twitter_handle && (
-                    <a 
-                      href={`https://twitter.com/${profile.twitter_handle}`}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 hover:text-purple-600"
-                    >
-                      <Twitter className="h-4 w-4" />
-                      @{profile.twitter_handle}
-                    </a>
-                  )}
-                </div>
+                {/* Bio and social fields not available yet */}
               </div>
             </div>
             
@@ -317,27 +284,16 @@ export default function ProfilePage() {
             <div className="flex justify-between">
               <span className="text-gray-600">Member since</span>
               <span className="font-medium">
-                {profile.created_at ? formatDistanceToNow(new Date(profile.created_at), { addSuffix: true }) : 'Unknown'}
+                {(profile as any).created_at ? formatDistanceToNow(new Date((profile as any).created_at), { addSuffix: true }) : 'Unknown'}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Last updated</span>
               <span className="font-medium">
-                {profile.updated_at ? formatDistanceToNow(new Date(profile.updated_at), { addSuffix: true }) : 'Never'}
+                {(profile as any).updated_at ? formatDistanceToNow(new Date((profile as any).updated_at), { addSuffix: true }) : 'Never'}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Email verified</span>
-              <Badge variant={profile.email_confirmed_at ? "outline" : "secondary"}>
-                {profile.email_confirmed_at ? 'Verified' : 'Unverified'}
-              </Badge>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Profile visibility</span>
-              <Badge variant="outline">
-                {profile.is_public ? 'Public' : 'Private'}
-              </Badge>
-            </div>
+            {/* Additional profile fields not available yet */}
           </div>
         </Card>
 

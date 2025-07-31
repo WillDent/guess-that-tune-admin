@@ -43,14 +43,14 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   // Form state
-  const [displayName, setDisplayName] = useState(profile.display_name || '')
-  const [username, setUsername] = useState(profile.username || '')
-  const [bio, setBio] = useState(profile.bio || '')
-  const [location, setLocation] = useState(profile.location || '')
-  const [website, setWebsite] = useState(profile.website || '')
-  const [twitterHandle, setTwitterHandle] = useState(profile.twitter_handle || '')
-  const [isPublic, setIsPublic] = useState(profile.is_public ?? true)
-  const [emailNotifications, setEmailNotifications] = useState(profile.email_notifications ?? true)
+  const [displayName, setDisplayName] = useState((profile as any).name || '')
+  const [username, setUsername] = useState((profile as any).username || '')
+  const [bio, setBio] = useState((profile as any).bio || '')
+  const [location, setLocation] = useState((profile as any).location || '')
+  const [website, setWebsite] = useState((profile as any).website || '')
+  const [twitterHandle, setTwitterHandle] = useState((profile as any).twitter_handle || '')
+  const [isPublic, setIsPublic] = useState((profile as any).is_public ?? true)
+  const [emailNotifications, setEmailNotifications] = useState((profile as any).email_notifications ?? true)
   
   // Avatar state
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
@@ -64,14 +64,14 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setDisplayName(profile.display_name || '')
-      setUsername(profile.username || '')
-      setBio(profile.bio || '')
-      setLocation(profile.location || '')
-      setWebsite(profile.website || '')
-      setTwitterHandle(profile.twitter_handle || '')
-      setIsPublic(profile.is_public ?? true)
-      setEmailNotifications(profile.email_notifications ?? true)
+      setDisplayName((profile as any).name || '')
+      setUsername((profile as any).username || '')
+      setBio((profile as any).bio || '')
+      setLocation((profile as any).location || '')
+      setWebsite((profile as any).website || '')
+      setTwitterHandle((profile as any).twitter_handle || '')
+      setIsPublic((profile as any).is_public ?? true)
+      setEmailNotifications((profile as any).email_notifications ?? true)
       setAvatarPreview(null)
       setUsernameError(null)
       setUsernameAvailable(false)
@@ -80,7 +80,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
   
   // Debounced username check
   useEffect(() => {
-    if (!username || username === profile.username) {
+    if (!username || username === (profile as any).username) {
       setUsernameError(null)
       setUsernameAvailable(false)
       return
@@ -97,7 +97,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
     checkUsername()
     
     return () => checkUsername.cancel()
-  }, [username, profile.username, checkUsernameAvailability])
+  }, [username, (profile as any).username, checkUsernameAvailability])
   
   const getInitials = (name: string) => {
     return name
@@ -159,7 +159,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
   
   const handleSave = async () => {
     // Validate username if changed
-    if (username !== profile.username && (usernameError || !usernameAvailable)) {
+    if (username !== (profile as any).username && (usernameError || !usernameAvailable)) {
       return
     }
     
@@ -186,14 +186,14 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
   }
   
   const hasChanges = 
-    displayName !== (profile.display_name || '') ||
-    username !== (profile.username || '') ||
-    bio !== (profile.bio || '') ||
-    location !== (profile.location || '') ||
-    website !== (profile.website || '') ||
-    twitterHandle !== (profile.twitter_handle || '') ||
-    isPublic !== (profile.is_public ?? true) ||
-    emailNotifications !== (profile.email_notifications ?? true) ||
+    displayName !== ((profile as any).name || '') ||
+    username !== ((profile as any).username || '') ||
+    bio !== ((profile as any).bio || '') ||
+    location !== ((profile as any).location || '') ||
+    website !== ((profile as any).website || '') ||
+    twitterHandle !== ((profile as any).twitter_handle || '') ||
+    isPublic !== ((profile as any).is_public ?? true) ||
+    emailNotifications !== ((profile as any).email_notifications ?? true) ||
     avatarPreview !== null
   
   return (
@@ -306,7 +306,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
               {checkingUsername && (
                 <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-gray-400" />
               )}
-              {!checkingUsername && username && username !== profile.username && (
+              {!checkingUsername && username && username !== (profile as any).username && (
                 <>
                   {usernameAvailable && (
                     <Check className="absolute right-3 top-3 h-4 w-4 text-green-600" />
@@ -407,7 +407,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
           </div>
           
           {/* Error Alert */}
-          {usernameError && username !== profile.username && (
+          {usernameError && username !== (profile as any).username && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{usernameError}</AlertDescription>
@@ -422,7 +422,7 @@ export function EditProfileModal({ isOpen, onClose, profile }: EditProfileModalP
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={!hasChanges || updating || (username !== profile.username && !!usernameError)}
+            disabled={!hasChanges || updating || (username !== (profile as any).username && !!usernameError)}
           >
             {updating ? (
               <>

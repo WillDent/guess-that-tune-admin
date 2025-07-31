@@ -16,7 +16,7 @@ export default async function AIPromptsPage() {
   }
 
   // Fetch existing prompts
-  const { data: prompts, error: promptsError } = await supabase
+  const { data: prompts, error: promptsError } = await (supabase as any)
     .from('ai_artwork_prompts')
     .select('*')
     .order('created_at', { ascending: false })

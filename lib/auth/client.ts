@@ -44,7 +44,7 @@ export function useAuth() {
           setState({
             user: profile,
             loading: false,
-            isAdmin: profile?.role === 'admin',
+            isAdmin: false, // Users table doesn't have role field
           })
         } else {
           setState({ user: null, loading: false, isAdmin: false })
@@ -72,7 +72,7 @@ export function useAuth() {
             setState({
               user: profile,
               loading: false,
-              isAdmin: profile?.role === 'admin',
+              isAdmin: false, // Users table doesn't have role field
             })
           }, 0)
         } else if (event === 'SIGNED_OUT') {

@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { data: prompts, error } = await supabase
+    const { data: prompts, error } = await (supabase as any)
       .from('ai_artwork_prompts')
       .select('*')
       .order('created_at', { ascending: false })
@@ -76,14 +76,14 @@ export async function POST(request: NextRequest) {
 
     // If setting as default, unset other defaults
     if (is_default) {
-      await supabase
+      await (supabase as any)
         .from('ai_artwork_prompts')
         .update({ is_default: false })
         .eq('user_id', user.id)
         .eq('is_default', true)
     }
 
-    const { data: prompt, error } = await supabase
+    const { data: prompt, error } = await (supabase as any)
       .from('ai_artwork_prompts')
       .insert({
         user_id: user.id,

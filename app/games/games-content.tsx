@@ -137,9 +137,9 @@ export function GamesContent({ activeGames, completedGames, userId }: GamesConte
     <Card key={game.id} className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start mb-3 sm:mb-4">
         <div className="flex-1 mr-2">
-          <h3 className="text-base sm:text-lg font-semibold">{game.name}</h3>
+          <h3 className="text-base sm:text-lg font-semibold">{game.question_set.name}</h3>
           <p className="text-xs sm:text-sm text-gray-600 mt-1">
-            {game.question_set.name}
+            Game Code: {game.game_code}
           </p>
         </div>
         {getStatusBadge(game.status)}
@@ -148,22 +148,22 @@ export function GamesContent({ activeGames, completedGames, userId }: GamesConte
       <div className="space-y-2 mb-3 sm:mb-4">
         <div className="flex items-center text-xs sm:text-sm text-gray-600">
           <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-          {formatDate(game.created_at)}
+          {formatDate(game.created_at || '')}
         </div>
         <div className="flex items-center text-xs sm:text-sm text-gray-600">
           <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
           {game.participant_count || 0} participants
         </div>
-        {game.code && game.status === GAME_STATUS.PENDING && (
+        {game.game_code && game.status === GAME_STATUS.PENDING && (
           <div className="flex items-center text-xs sm:text-sm">
             <Hash className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
             <code className="font-mono bg-gray-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm">
-              {game.code}
+              {game.game_code}
             </code>
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => handleCopyJoinCode(game.code!)}
+              onClick={() => handleCopyJoinCode(game.game_code!)}
               className="ml-1 sm:ml-2 p-1 sm:p-2"
             >
               <Copy className="h-3 w-3" />
@@ -173,7 +173,7 @@ export function GamesContent({ activeGames, completedGames, userId }: GamesConte
       </div>
 
       <div className="flex gap-1 sm:gap-2">
-        {game.status === GAME_STATUS.PENDING && game.host_user_id === userId ? (
+        {game.status === GAME_STATUS.PENDING && game.host_id === userId ? (
           <Button 
             size="sm" 
             className="flex-1"

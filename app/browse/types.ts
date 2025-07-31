@@ -4,7 +4,7 @@ type QuestionSet = Database['public']['Tables']['question_sets']['Row']
 type User = Database['public']['Tables']['users']['Row']
 
 export interface PublicQuestionSet extends QuestionSet {
-  user: Pick<User, 'id' | 'display_name' | 'email'>
+  user: Pick<User, 'id' | 'name' | 'email'>
   is_favorited?: boolean
   question_count: number
 }

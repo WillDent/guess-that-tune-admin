@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user wants to use a custom prompt
     if (promptId) {
-      const { data: customPrompt, error: promptError } = await supabase
+      const { data: customPrompt, error: promptError } = await (supabase as any)
         .from('ai_artwork_prompts')
         .select('*')
         .eq('id', promptId)
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         appliedColorScheme = customPrompt.color_scheme
         
         // Update usage count
-        await supabase
+        await (supabase as any)
           .from('ai_artwork_prompts')
           .update({ usage_count: customPrompt.usage_count + 1 })
           .eq('id', promptId)
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     // If no custom prompt or not found, check for default
     if (!promptTemplate) {
-      const { data: defaultPrompt } = await supabase
+      const { data: defaultPrompt } = await (supabase as any)
         .from('ai_artwork_prompts')
         .select('*')
         .eq('user_id', user.id)

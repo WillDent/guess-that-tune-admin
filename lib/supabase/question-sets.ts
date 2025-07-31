@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import type { TablesInsert } from '@/lib/supabase/database.types'
+import type { Database } from '@/lib/supabase/database.types'
 
 export interface CreateQuestionSetData {
   name: string
@@ -38,7 +38,7 @@ export const questionSetService = {
     if (setError) throw setError
     
     // Then insert all questions
-    const questions: TablesInsert<'questions'>[] = data.questions.map((q, index) => ({
+    const questions: any[] = data.questions.map((q, index) => ({
       question_set_id: questionSet.id,
       order_index: index,
       correct_song_id: q.correctSong.id,
@@ -91,7 +91,7 @@ export const questionSetService = {
       if (deleteError) throw deleteError
       
       // Insert new questions
-      const questions: TablesInsert<'questions'>[] = data.questions.map((q, index) => ({
+      const questions: any[] = data.questions.map((q, index) => ({
         question_set_id: id,
         order_index: index,
         correct_song_id: q.correctSong.id,
@@ -130,8 +130,12 @@ export const questionSetService = {
   async getWithQuestions(id: string) {
     const supabase = createClient()
     
+    // Fetch question set with questions using regular query
     const { data, error } = await supabase
-      .rpc('get_question_set_with_questions', { set_id: id })
+      .from('question_sets')
+      .select('*, questions(*)')
+      .eq('id', id)
+      .single()
     
     if (error) throw error
     
@@ -141,8 +145,13 @@ export const questionSetService = {
   async searchPublic(searchTerm: string) {
     const supabase = createClient()
     
+    // Search question sets using regular query with ilike
     const { data, error } = await supabase
-      .rpc('search_question_sets', { search_term: searchTerm })
+      .from('question_sets')
+      .select('*, user:users(id, name, email)')
+      .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
     
     if (error) throw error
     

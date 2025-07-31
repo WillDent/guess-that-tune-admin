@@ -8,7 +8,7 @@ import { useAuthStateMachine } from '@/hooks/use-auth-state-machine'
 import type { Database } from '@/lib/supabase/database.types'
 import type { UserWithRole } from '@/utils/supabase/auth'
 
-type UserRole = Database['public']['Tables']['users']['Row']['role']
+type UserRole = 'user' | 'admin' // Users table doesn't have a role field
 
 interface AuthContextType {
   user: UserWithRole | null
@@ -80,19 +80,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const superAdminEmail = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL
     
     if (superAdminEmail && email === superAdminEmail) {
-      try {
-        const { error } = await supabase
-          .from('users')
-          .update({ role: 'admin' })
-          .eq('email', email)
-        
-        if (!error) {
-          console.log('Super admin promoted successfully')
-          return true
-        }
-      } catch (err) {
-        console.error('Error promoting super admin:', err)
-      }
+      // Users table doesn't have a role field
+      // Admin status is determined by email match
+      console.log('Super admin detected')
+      return true
     }
     return false
   }
@@ -102,22 +93,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('role')
+        .select('email')
         .eq('id', userId)
         .maybeSingle()
       
       if (error) {
-        console.error('Error fetching user role:', error)
+        console.error('Error fetching user:', error)
         if (error.code === 'PGRST116' || error.code === '42501') {
           return null
         }
         throw error
       }
-      // Ensure the role is one of the expected values
-      if (data?.role === 'admin' || data?.role === 'user') {
-        return data.role
+      
+      // Check if user is admin based on email
+      const superAdminEmail = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL
+      if (data?.email && superAdminEmail && data.email === superAdminEmail) {
+        return 'admin'
       }
-      return null
+      
+      return 'user'
     } catch (err) {
       console.error('Error fetching user role:', err)
       return null

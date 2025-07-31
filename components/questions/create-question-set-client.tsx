@@ -132,7 +132,13 @@ export function CreateQuestionSetClient() {
           album: d.album || '',
           artwork: d.artwork || '',
           previewUrl: d.previewUrl || ''
-        }))
+        })),
+        // Add required fields for question structure
+        metadata: {},
+        type: 'multiple_choice',
+        correct_answer: gameType === 'guess_song' ? q.correctSong.name : q.correctSong.artist,
+        question: gameType === 'guess_song' ? 'Name this song!' : 'Who is the artist?',
+        wrong_answers: q.detractors.map((d: any) => gameType === 'guess_song' ? d.name : d.artist)
       }))
 
       const { data: questionSet, error } = await createQuestionSet(

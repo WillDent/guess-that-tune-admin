@@ -145,7 +145,7 @@ export function CategorySelector({
 
   const renderCategoryItem = (category: Category, level: number = 0) => {
     const isSelected = selectedCategoryIds.includes(category.id)
-    const childCategories = categories.filter(cat => cat.parent_id === category.id)
+    const childCategories = categories.filter(cat => (cat as any).parent_id === category.id)
 
     return (
       <div key={category.id}>
@@ -183,7 +183,7 @@ export function CategorySelector({
     )
   }
 
-  const rootCategories = categories.filter(cat => !cat.parent_id)
+  const rootCategories = categories.filter(cat => !(cat as any).parent_id)
 
   return (
     <div className={cn("space-y-2", className)}>

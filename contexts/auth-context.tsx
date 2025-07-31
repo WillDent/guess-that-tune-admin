@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import type { Database } from '@/lib/supabase/database.types'
 import { SUPER_ADMIN_EMAIL } from '@/lib/constants'
 
-type UserRole = Database['public']['Tables']['users']['Row']['role']
+type UserRole = 'user' | 'admin' // Users table doesn't have a role field
 type UserWithRole = User & {
   role?: UserRole
 }
@@ -69,22 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Function to check and promote super admin
   const checkAndPromoteSuperAdmin = async (email: string) => {
     if (SUPER_ADMIN_EMAIL && email === SUPER_ADMIN_EMAIL) {
-      try {
-        // Update user role directly to admin
-        const { error } = await supabase
-          .from('users')
-          .update({ role: 'admin' })
-          .eq('email', email)
-        
-        if (error) {
-          console.error('Error promoting super admin:', error)
-        } else {
-          console.log('[AUTH-CONTEXT] Promoted super admin:', email)
-          return true
-        }
-      } catch (err) {
-        console.error('Error promoting super admin:', err)
-      }
+      // Users table doesn't have a role field
+      // Admin status is determined by email match
+      console.log('[AUTH-CONTEXT] Super admin detected:', email)
+      return true
     }
     return false
   }
@@ -95,12 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('[AUTH-CONTEXT] Fetching role for user:', userId)
       const { data, error } = await supabase
         .from('users')
-        .select('id, role')
+        .select('id, email')
         .eq('id', userId)
         .single()
       
       if (error) {
-        console.error('Error fetching user role:', error.message, error.code, error.details)
+        console.error('Error fetching user:', error.message, error.code, error.details)
         // If it's an RLS error or row not found, return null instead of throwing
         if (error.code === 'PGRST116' || error.code === '42501') {
           return null
@@ -108,8 +96,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error
       }
       
-      console.log('[AUTH-CONTEXT] User role data:', data)
-      return data?.role || null
+      console.log('[AUTH-CONTEXT] User data:', data)
+      
+      // Check if user is admin based on email
+      if (data?.email && SUPER_ADMIN_EMAIL && data.email === SUPER_ADMIN_EMAIL) {
+        return 'admin'
+      }
+      
+      return 'user'
     } catch (err) {
       console.error('Error fetching user role:', err)
       return null
@@ -162,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (sessionUser) {
         // Set basic user state but keep loading true until role is fetched
         if (mounted) {
-          setUser(sessionUser)
+          setUser(sessionUser as UserWithRole)
           setAuthInitialized(true)
           // Don't set loading to false yet - wait until role is fetched
         }
@@ -245,7 +239,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (authUser && mounted) {
           // Immediately set user to prevent loading hang
-          setUser(authUser)
+          setUser(authUser as UserWithRole)
           setLoading(false)
           setAuthInitialized(true)
           

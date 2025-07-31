@@ -131,7 +131,13 @@ export default function NewQuestionSetPage() {
           album: d.album || '',
           artwork: d.artwork || '',
           previewUrl: d.previewUrl || ''
-        }))
+        })),
+        // Add required fields for question structure
+        metadata: {},
+        type: 'multiple_choice',
+        correct_answer: q.correctSong.artist,
+        question: 'Who is the artist?',
+        wrong_answers: q.detractors.map((d: any) => d.artist)
       }))
 
       console.log('[NEW-QUESTION-SET] Prepared questions:', questions)

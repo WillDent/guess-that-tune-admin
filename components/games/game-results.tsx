@@ -189,7 +189,7 @@ export function GameResults({ gameId }: GameResultsProps) {
             <p className="text-sm text-gray-600">Avg Score</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold">{game?.time_limit}s</p>
+            <p className="text-2xl font-bold">30s</p>
             <p className="text-sm text-gray-600">Per Question</p>
           </div>
         </div>

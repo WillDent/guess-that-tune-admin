@@ -12,7 +12,7 @@ type QuestionSet = Database['public']['Tables']['question_sets']['Row']
 type User = Database['public']['Tables']['users']['Row']
 
 export interface PublicQuestionSet extends QuestionSet {
-  user: Pick<User, 'id' | 'display_name' | 'email'>
+  user: Pick<User, 'id' | 'name' | 'email'>
   is_favorited?: boolean
   question_count: number
 }
@@ -109,9 +109,9 @@ export function usePublicQuestionSets(options: UsePublicQuestionSetsOptions = {}
       }
 
       // Transform the data to include question count
-      const transformedData = (data || []).map(set => ({
+      const transformedData = (data || []).map((set: any) => ({
         ...set,
-        user: set.user as Pick<User, 'id' | 'display_name' | 'email'>,
+        user: set.user as Pick<User, 'id' | 'name' | 'email'>,
         question_count: Array.isArray(set.questions) ? set.questions.length : (set.questions as any)?.count || 0
       }))
 

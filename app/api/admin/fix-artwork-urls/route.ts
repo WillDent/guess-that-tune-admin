@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     // Update them to null (or you could set a default image)
     if (brokenSets && brokenSets.length > 0) {
-      const updates = brokenSets.map(set => ({
+      const updates = brokenSets.map((set: any) => ({
         id: set.id,
         artwork_url: null // Remove broken URLs
       }))
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         message: `Fixed ${brokenSets.length} question sets with broken artwork URLs`,
-        fixedIds: brokenSets.map(s => s.id)
+        fixedIds: brokenSets.map((s: any) => s.id)
       })
     }
 

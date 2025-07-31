@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch the prompt template
-    const { data: promptTemplate, error: promptError } = await supabase
+    const { data: promptTemplate, error: promptError } = await (supabase as any)
       .from('ai_artwork_prompts')
       .select('*')
       .eq('id', promptId)

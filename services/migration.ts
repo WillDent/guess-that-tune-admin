@@ -252,15 +252,10 @@ export class MigrationService {
           .from('games')
           .insert({
             question_set_id: questionSet.id,
-            host_user_id: userId,
-            name: localGame.name || `Game from ${new Date(localGame.createdAt || Date.now()).toLocaleDateString()}`,
+            host_id: userId,
+            game_code: `MIG${Date.now().toString(36).toUpperCase()}`,
             status: localGame.status || 'completed',
-            game_mode: 'single',
-            max_players: 1,
-            time_limit: localGame.timeLimit || 30,
-            created_at: localGame.createdAt || new Date().toISOString(),
-            started_at: localGame.startedAt || localGame.createdAt || new Date().toISOString(),
-            ended_at: localGame.endedAt || new Date().toISOString()
+            created_at: localGame.createdAt || new Date().toISOString()
           })
           
         if (gameError) {

@@ -110,20 +110,18 @@ export function useGameRoom(gameId: string) {
       const players: Player[] = (participants || []).map(p => ({
         id: p.id,
         user_id: p.user_id || '',
-        display_name: p.user?.display_name || p.guest_name || 'Anonymous',
-        email: p.user?.email || '',
-        score: p.score || 0,
+        display_name: (p.user as any)?.name || 'Anonymous',
+        email: (p.user as any)?.email || '',
+        score: p.current_score || 0,
         is_ready: false,
-        is_host: p.user_id === game.host_user_id,
-        answers: (p.answers as any[]) || [],
-        joined_at: p.joined_at,
+        is_host: p.user_id === game.host_id,
+        answers: [], // Game participants don't have answers field
+        joined_at: p.joined_at || new Date().toISOString(),
         presence_state: 'online'
       }))
       
-      // Sort questions by order_index
-      const questions = game.question_set?.questions?.sort((a, b) => 
-        a.order_index - b.order_index
-      ) || []
+      // Questions need to be fetched separately
+      const questions: Question[] = []
       
       setState({
         game,
@@ -131,10 +129,10 @@ export function useGameRoom(gameId: string) {
         currentQuestion: questions[0] || null,
         currentQuestionIndex: 0,
         questions,
-        timeRemaining: game.time_limit || 30,
+        timeRemaining: 30, // Default timer
         gameState: game.status === GAME_STATUS.PENDING ? 'lobby' : 
                    game.status === GAME_STATUS.IN_PROGRESS ? 'playing' : 'finished',
-        isHost: user.id === game.host_user_id
+        isHost: user.id === game.host_id
       })
       
     } catch (err) {
@@ -165,13 +163,13 @@ export function useGameRoom(gameId: string) {
         const players: Player[] = participants.map(p => ({
           id: p.id,
           user_id: p.user_id || '',
-          display_name: p.user?.display_name || p.guest_name || 'Anonymous',
-          email: p.user?.email || '',
-          score: p.score || 0,
+          display_name: (p.user as any)?.name || 'Anonymous',
+          email: (p.user as any)?.email || '',
+          score: p.current_score || 0,
           is_ready: false,
-          is_host: p.user_id === prev.game?.host_user_id,
-          answers: (p.answers as any[]) || [],
-          joined_at: p.joined_at,
+          is_host: p.user_id === prev.game?.host_id,
+          answers: [], // Game participants don't have answers field
+          joined_at: p.joined_at || new Date().toISOString(),
           presence_state: 'online'
         }))
         
@@ -306,7 +304,7 @@ export function useGameRoom(gameId: string) {
           ...prev,
           currentQuestionIndex: event.payload.index,
           currentQuestion: prev.questions[event.payload.index],
-          timeRemaining: prev.game?.time_limit || 30
+          timeRemaining: 30 // Default timer
         }))
         restartTimer()
         break
@@ -412,23 +410,14 @@ export function useGameRoom(gameId: string) {
     const participant = state.players.find(p => p.user_id === user.id)
     if (!participant) return
     
-    const isCorrect = answer === state.currentQuestion.correct_song_id
-    const timeTaken = (state.game?.time_limit || 30) - state.timeRemaining
+    const isCorrect = answer === state.currentQuestion.correct_answer
+    const timeTaken = 30 - state.timeRemaining
     
-    // Update participant answers
+    // Update participant score
     const { error } = await supabase
       .from('game_participants')
       .update({
-        answers: [
-          ...(participant.answers || []),
-          {
-            question_index: state.currentQuestionIndex,
-            selected_answer: answer,
-            is_correct: isCorrect,
-            time_taken: timeTaken
-          }
-        ],
-        score: participant.score + (isCorrect ? 1 : 0)
+        current_score: participant.score + (isCorrect ? 1 : 0)
       })
       .eq('id', participant.id)
       

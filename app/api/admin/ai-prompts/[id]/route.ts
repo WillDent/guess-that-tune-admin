@@ -4,9 +4,10 @@ import { errorHandler } from '@/lib/errors/handler'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createServerClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
@@ -25,10 +26,10 @@ export async function GET(
       )
     }
 
-    const { data: prompt, error } = await supabase
+    const { data: prompt, error } = await (supabase as any)
       .from('ai_artwork_prompts')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) {
@@ -48,9 +49,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createServerClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
@@ -83,15 +85,15 @@ export async function PUT(
 
     // If setting as default, unset other defaults
     if (is_default) {
-      await supabase
+      await (supabase as any)
         .from('ai_artwork_prompts')
         .update({ is_default: false })
         .eq('user_id', user.id)
         .eq('is_default', true)
-        .neq('id', params.id)
+        .neq('id', id)
     }
 
-    const { data: prompt, error } = await supabase
+    const { data: prompt, error } = await (supabase as any)
       .from('ai_artwork_prompts')
       .update({
         name,
@@ -103,7 +105,7 @@ export async function PUT(
         is_active,
         is_default
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .select()
       .single()
@@ -125,9 +127,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createServerClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
@@ -146,10 +149,10 @@ export async function DELETE(
       )
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('ai_artwork_prompts')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
 
     if (error) {

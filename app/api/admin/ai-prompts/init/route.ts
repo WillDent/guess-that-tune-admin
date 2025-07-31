@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already has prompts
-    const { data: existingPrompts } = await supabase
+    const { data: existingPrompts } = await (supabase as any)
       .from('ai_artwork_prompts')
       .select('id')
       .eq('user_id', user.id)
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       is_default: true
     }
 
-    const { data: prompt, error } = await supabase
+    const { data: prompt, error } = await (supabase as any)
       .from('ai_artwork_prompts')
       .insert(defaultPrompt)
       .select()

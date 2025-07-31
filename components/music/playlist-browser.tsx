@@ -74,15 +74,15 @@ export function PlaylistBrowser() {
       if (loadMore) {
         // Merge playlists and remove duplicates based on ID
         setPlaylists(prev => {
-          const existingIds = new Set(prev.map(p => p.id))
-          const newPlaylists = data.playlists.filter(p => !existingIds.has(p.id))
+          const existingIds = new Set(prev.map((p: any) => p.id))
+          const newPlaylists = data.playlists.filter((p: any) => !existingIds.has(p.id))
           return [...prev, ...newPlaylists]
         })
         setOffset(prev => prev + 25)
       } else {
         // Remove any duplicates in the initial load as well
-        const uniquePlaylists = data.playlists.filter((playlist, index, self) =>
-          index === self.findIndex(p => p.id === playlist.id)
+        const uniquePlaylists = data.playlists.filter((playlist: any, index: number, self: any[]) =>
+          index === self.findIndex((p: any) => p.id === playlist.id)
         )
         setPlaylists(uniquePlaylists)
         setOffset(25)

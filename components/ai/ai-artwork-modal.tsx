@@ -71,7 +71,7 @@ export function AIArtworkModal({
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('ai_artwork_prompts')
           .select('*')
           .eq('user_id', user.id)
@@ -89,7 +89,7 @@ export function AIArtworkModal({
             
             if (initResponse.ok) {
               // Refetch prompts after initialization
-              const { data: newPrompts } = await supabase
+              const { data: newPrompts } = await (supabase as any)
                 .from('ai_artwork_prompts')
                 .select('*')
                 .eq('user_id', user.id)
@@ -99,7 +99,7 @@ export function AIArtworkModal({
               
               if (newPrompts) {
                 setPrompts(newPrompts)
-                const defaultPrompt = newPrompts.find(p => p.is_default)
+                const defaultPrompt = newPrompts.find((p: any) => p.is_default)
                 if (defaultPrompt) {
                   setSelectedPromptId(defaultPrompt.id)
                   setStyle(defaultPrompt.style)
@@ -110,7 +110,7 @@ export function AIArtworkModal({
           } else {
             setPrompts(data)
             // Select default prompt if available
-            const defaultPrompt = data.find(p => p.is_default)
+            const defaultPrompt = data.find((p: any) => p.is_default)
             if (defaultPrompt) {
               setSelectedPromptId(defaultPrompt.id)
               setStyle(defaultPrompt.style)

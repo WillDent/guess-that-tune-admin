@@ -4,9 +4,10 @@ import { errorHandler } from '@/lib/errors/handler'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createServerClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
@@ -30,7 +31,7 @@ export async function POST(
     const { data: questionSet, error: fetchError } = await supabase
       .from('question_sets')
       .select('user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (fetchError || !questionSet) {
@@ -54,7 +55,7 @@ export async function POST(
         artwork_url: artworkUrl,
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (updateError) {
       throw updateError

@@ -49,8 +49,8 @@ export function GameLobby({ gameId }: GameLobbyProps) {
   const allReady = players.length > 1 && readyCount === players.length
 
   const copyGameCode = () => {
-    if (game?.code) {
-      navigator.clipboard.writeText(game.code)
+    if (game?.game_code) {
+      navigator.clipboard.writeText(game.game_code)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
       toast.success('Game code copied!')
@@ -97,7 +97,7 @@ export function GameLobby({ gameId }: GameLobbyProps) {
         <h2 className="text-2xl font-semibold mb-2">Game Code</h2>
         <div className="flex items-center justify-center gap-4">
           <div className="text-6xl font-mono font-bold tracking-wider">
-            {game.code}
+            {game.game_code}
           </div>
           <Button
             size="lg"
@@ -117,20 +117,12 @@ export function GameLobby({ gameId }: GameLobbyProps) {
         <h3 className="font-semibold mb-4">Game Settings</h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-600">Question Set:</span>
-            <span className="font-medium">{game.name}</span>
+            <span className="text-gray-600">Game ID:</span>
+            <span className="font-medium">{game.id.slice(0, 8)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Max Players:</span>
-            <span className="font-medium">{game.max_players}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Time per Question:</span>
-            <span className="font-medium">{game.time_limit}s</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Game Mode:</span>
-            <span className="font-medium capitalize">{game.game_mode}</span>
+            <span className="text-gray-600">Status:</span>
+            <span className="font-medium capitalize">{game.status}</span>
           </div>
         </div>
       </Card>
@@ -140,7 +132,7 @@ export function GameLobby({ gameId }: GameLobbyProps) {
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Players ({players.length}/{game.max_players})
+            Players ({players.length})
           </h3>
           {!isHost && (
             <div className="flex items-center gap-3">
@@ -208,7 +200,7 @@ export function GameLobby({ gameId }: GameLobbyProps) {
           ))}
           
           {/* Empty slots */}
-          {game.max_players && Array.from({ length: Math.max(0, game.max_players - players.length) }).map((_, i) => (
+          {false && Array.from({ length: Math.max(0, 0) }).map((_, i) => (
             <div
               key={`empty-${i}`}
               className="flex items-center justify-center p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700"

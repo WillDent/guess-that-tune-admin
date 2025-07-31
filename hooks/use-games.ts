@@ -40,7 +40,7 @@ export function useGames(status?: GameStatus) {
       if (error) throw error
 
       // Transform and enrich game data
-      const transformedGames = (data || []).map(game => ({
+      const transformedGames = (data || []).map((game: any) => ({
         ...game,
         participant_count: game.participants?.length || 0
       })) as GameWithDetails[]

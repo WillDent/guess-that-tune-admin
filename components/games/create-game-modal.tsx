@@ -139,7 +139,7 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                           <div className="flex flex-col">
                             <span>{set.name}</span>
                             <span className="text-sm text-gray-500">
-                              by {set.user?.display_name || set.user?.email || 'Unknown'} • {set.question_count || 0} questions • {set.difficulty}
+                              by {(set.user as any)?.name || (set.user as any)?.email || 'Unknown'} • {set.question_count || 0} questions • {set.difficulty}
                             </span>
                           </div>
                         </SelectItem>

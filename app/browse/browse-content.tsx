@@ -331,7 +331,7 @@ export function BrowseContent({
               <div className="space-y-2 mb-3 sm:mb-4">
                 <div className="flex items-center text-sm text-gray-600">
                   <User className="h-4 w-4 mr-2" />
-                  <span>{set.user?.display_name || set.user?.email || 'Unknown'}</span>
+                  <span>{(set as any).user?.name || (set as any).user?.email || 'Unknown'}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span>{set.question_count || 0} questions</span>

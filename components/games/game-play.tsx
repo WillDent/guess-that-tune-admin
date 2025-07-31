@@ -60,40 +60,28 @@ export function GamePlay({ gameId }: GamePlayProps) {
   )
   
   // Get game type from game data, default to GUESS_ARTIST if not set
-  const gameType = (game?.game_mode as GameType) || GAME_TYPES.GUESS_ARTIST
+  const gameType = GAME_TYPES.GUESS_ARTIST // Games don't have game_mode field
   
   // Prepare answer options based on game type
   const answerOptions: AnswerOption[] = currentQuestion ? [
     {
-      id: currentQuestion.correct_song_id,
-      name: gameType === GAME_TYPES.GUESS_SONG 
-        ? currentQuestion.correct_song_name 
-        : currentQuestion.correct_song_artist,
-      artist: gameType === GAME_TYPES.GUESS_SONG
-        ? currentQuestion.correct_song_artist
-        : '',
-      artwork: currentQuestion.correct_song_artwork_url || undefined
+      id: currentQuestion.id,
+      name: currentQuestion.correct_answer,
+      artist: '',
+      artwork: undefined
     },
-    ...(currentQuestion.detractors as any[] || []).map((d: any) => ({
-      id: d.id,
-      name: gameType === GAME_TYPES.GUESS_SONG ? d.name : d.artist,
-      artist: gameType === GAME_TYPES.GUESS_SONG ? d.artist : '',
-      artwork: d.artwork
+    ...currentQuestion.wrong_answers.map((answer, idx) => ({
+      id: `wrong-${idx}`,
+      name: answer,
+      artist: '',
+      artwork: undefined
     }))
   ].sort(() => Math.random() - 0.5) : []
   
   // Handle audio preview
   useEffect(() => {
-    if (currentQuestion?.correct_song_preview_url) {
-      const audio = new Audio(currentQuestion.correct_song_preview_url)
-      audio.volume = isMuted ? 0 : 0.5
-      setAudioElement(audio)
-      
-      return () => {
-        audio.pause()
-        audio.src = ''
-      }
-    }
+    // Questions don't have preview URLs in the current schema
+    // This would need to be stored in metadata or fetched separately
   }, [currentQuestion, isMuted])
   
   useEffect(() => {
@@ -164,7 +152,7 @@ export function GamePlay({ gameId }: GamePlayProps) {
   
   // Calculate progress
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100
-  const timeProgress = (timeRemaining / (game?.time_limit || 30)) * 100
+  const timeProgress = (timeRemaining / 30) * 100 // Default 30 second timer
   
   // Get players who have answered
   const answeredPlayers = players.filter(p => 
@@ -207,7 +195,7 @@ export function GamePlay({ gameId }: GamePlayProps) {
             <Progress value={timeProgress} className="w-32 h-2" />
           </div>
           
-          {currentQuestion.correct_song_preview_url && (
+          {false && (
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
@@ -240,25 +228,16 @@ export function GamePlay({ gameId }: GamePlayProps) {
           <Music className="h-12 w-12 mx-auto mb-3 text-purple-600" />
           <h2 className="text-xl font-semibold">
             {hasAnswered && showResult 
-              ? gameType === GAME_TYPES.GUESS_SONG
-                ? `The song was: ${currentQuestion.correct_song_name}`
-                : `The artist was: ${currentQuestion.correct_song_artist}`
-              : gameType === GAME_TYPES.GUESS_SONG
-                ? 'Name this song!'
-                : 'Name the artist!'
+              ? `The answer was: ${currentQuestion.correct_answer}`
+              : currentQuestion.question
             }
           </h2>
-          {hasAnswered && showResult && gameType === GAME_TYPES.GUESS_SONG && (
-            <p className="text-gray-600 mt-1">
-              by {currentQuestion.correct_song_artist}
-            </p>
-          )}
         </div>
         
         {/* Answer Options */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
           {answerOptions.map((option) => {
-            const isCorrect = option.id === currentQuestion.correct_song_id
+            const isCorrect = option.name === currentQuestion.correct_answer
             const isSelected = option.id === selectedAnswer
             const showCorrect = showResult && isCorrect
             const showIncorrect = showResult && isSelected && !isCorrect
@@ -287,9 +266,6 @@ export function GamePlay({ gameId }: GamePlayProps) {
                 )}
                 <div className="flex-1 text-left">
                   <p className="font-medium">{option.name}</p>
-                  {gameType === GAME_TYPES.GUESS_SONG && option.artist && (
-                    <p className="text-sm text-gray-600">{option.artist}</p>
-                  )}
                 </div>
                 {showCorrect && <Check className="h-5 w-5 text-green-600" />}
                 {showIncorrect && <X className="h-5 w-5 text-red-600" />}

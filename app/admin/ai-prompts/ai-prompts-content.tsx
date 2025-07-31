@@ -45,12 +45,20 @@ export function AIPromptsContent({ initialPrompts, userId }: AIPromptsContentPro
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const [testingPrompt, setTestingPrompt] = useState<AIPrompt | null>(null)
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string
+    description: string
+    prompt_template: string
+    style: 'abstract' | 'realistic' | 'artistic' | 'minimalist'
+    color_scheme: 'vibrant' | 'dark' | 'pastel' | 'monochrome'
+    is_active: boolean
+    is_default: boolean
+  }>({
     name: '',
     description: '',
     prompt_template: 'Create album cover artwork for a music collection. Style: {{style_description}} with {{color_description}}. {{theme_context}} {{visual_elements}} No text, words, or typography in the image. Focus on visual elements only.',
-    style: 'artistic' as const,
-    color_scheme: 'vibrant' as const,
+    style: 'artistic',
+    color_scheme: 'vibrant',
     is_active: true,
     is_default: false
   })

@@ -68,7 +68,7 @@ async function getQuestionSets(searchParams: Awaited<PageProps['searchParams']>)
   // Transform the data to include question count
   return (data || []).map((set: any) => ({
     ...set,
-    user: set.user as Pick<Database['public']['Tables']['users']['Row'], 'id' | 'display_name' | 'email'>,
+    user: set.user as Pick<Database['public']['Tables']['users']['Row'], 'id' | 'name' | 'email'>,
     question_count: Array.isArray(set.questions) ? set.questions.length : (set.questions as any)?.count || 0
   })) as PublicQuestionSet[]
 }

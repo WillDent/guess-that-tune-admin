@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Search, Play, Plus, Music, AlertCircle, ShoppingCart, Globe, ListMusic, Sparkles } from 'lucide-react'
+import { Search, Play, Plus, Music, AlertCircle, ShoppingCart, Globe, ListMusic, Sparkles, Brain } from 'lucide-react'
 import { GENRES } from '@/lib/apple-music'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { useToast } from '@/hooks/use-toast'
@@ -23,6 +23,7 @@ import { SongListItem } from '@/components/music/song-list-item'
 import { PlaylistBrowser } from '@/components/music/playlist-browser'
 import { SearchSuggestions } from '@/components/music/search-suggestions'
 import { DiscoveryModal } from '@/components/music/discovery-modal'
+import { ThemeDiscoveryModal } from '@/components/music/theme-discovery-modal'
 
 const genreOptions = [
   { value: GENRES.POP, label: 'Pop' },
@@ -78,6 +79,7 @@ export default function MusicPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchDebounce, setSearchDebounce] = useState<NodeJS.Timeout | null>(null)
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false)
+  const [isThemeDiscoveryOpen, setIsThemeDiscoveryOpen] = useState(false)
 
   // Fetch Top 100 on mount
   useEffect(() => {
@@ -180,6 +182,15 @@ export default function MusicPage() {
     setIsDiscoveryOpen(false)
   }
 
+  const handleThemeDiscoverySongs = (discoveredSongs: any[]) => {
+    // Convert discovered songs to cart format and add them
+    discoveredSongs.forEach(song => {
+      addToCart(mapSongToCartSong(song))
+    })
+    toast.success(`${discoveredSongs.length} songs added to your cart from AI theme discovery`)
+    setIsThemeDiscoveryOpen(false)
+  }
+
   return (
     <ProtectedRoute>
       <div>
@@ -189,13 +200,23 @@ export default function MusicPage() {
               <h1 className="text-3xl font-bold text-gray-900">Browse Apple Music</h1>
               <p className="mt-2 text-gray-600">Search the catalog and select songs to create question sets</p>
             </div>
-            <Button 
-              onClick={() => setIsDiscoveryOpen(true)}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              <Sparkles className="h-4 w-4 mr-2" />
-              Discover Songs
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setIsDiscoveryOpen(true)}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Discover Songs
+              </Button>
+              <Button 
+                onClick={() => setIsThemeDiscoveryOpen(true)}
+                variant="outline"
+                className="border-purple-600 text-purple-600 hover:bg-purple-50"
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                AI Theme Search
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -431,6 +452,13 @@ export default function MusicPage() {
           isOpen={isDiscoveryOpen}
           onClose={() => setIsDiscoveryOpen(false)}
           onSelectSongs={handleDiscoverySongs}
+        />
+        
+        {/* AI Theme Discovery Modal */}
+        <ThemeDiscoveryModal
+          isOpen={isThemeDiscoveryOpen}
+          onClose={() => setIsThemeDiscoveryOpen(false)}
+          onSelectSongs={handleThemeDiscoverySongs}
         />
       </div>
     </ProtectedRoute>

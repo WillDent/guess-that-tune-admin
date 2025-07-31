@@ -295,7 +295,13 @@ export default function EditQuestionSetPage() {
         correct_song_artwork_url: (q.correctSong?.artwork || q.correct_song_artwork_url) || null,
         correct_song_preview_url: (q.correctSong?.previewUrl || q.correct_song_preview_url) || null,
         order_index: index,
-        detractors: q.detractors || q.detractors
+        detractors: q.detractors || q.detractors,
+        // Add required fields for question structure
+        metadata: q.metadata || {},
+        type: q.type || 'multiple_choice',
+        correct_answer: q.correct_answer || (q.correctSong?.name || q.correct_song_name),
+        question: q.question || `Who is the artist?`,
+        wrong_answers: q.wrong_answers || (q.detractors || []).map((d: any) => d.artist || d.name)
       }))
 
       const { error } = await updateQuestionSet(

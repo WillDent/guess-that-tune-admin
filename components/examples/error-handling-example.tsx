@@ -24,8 +24,8 @@ export function ErrorHandlingExample() {
         const { data, error } = await supabase
           .from('games')
           .insert({
-            name: 'Test Game',
-            host_user_id: session.user.id,
+            game_code: `TEST${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+            host_id: session.user.id,
             question_set_id: 'some-id',
             status: 'waiting'
           })
